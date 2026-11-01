@@ -67,10 +67,10 @@ jobs:
         run: |
           godot --headless --import || true
           mkdir -v -p build/android
-          godot --headless --export-debug "Android" build/android/ppo-debug.apk
+          godot --headless --export-debug "Android" build/android/hpo-debug.apk
           ls -la build/android
       - uses: actions/upload-artifact@v4
         with:
-          name: ppo-android-debug-apk
-          path: build/android/ppo-debug.apk
+          name: hpo-android-debug-apk
+          path: build/android/hpo-debug.apk
           retention-days: 30

@@ -18,7 +18,7 @@ func _ready() -> void:
 	logo_box.position = Vector2(-500, 40); logo_box.size = Vector2(1000, 180)
 	logo_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	logo_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var logo := UIKit.outlined("Pilgrim's Progress Online", 78, Color("fff1c8"), G.font_title)
+	var logo := UIKit.outlined("Heavenward Pathway Online", 78, Color("fff1c8"), G.font_title)
 	logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	logo.add_theme_color_override("font_outline_color", Color("5a3600"))
 	logo.add_theme_constant_override("outline_size", 14)
@@ -80,7 +80,7 @@ func _yr(d: int) -> void:
 func _age_ok() -> void:
 	var age := 2026 - year
 	if age < 13:
-		age_msg.text = "Pilgrim's Progress Online is for players 13 and older. Thank you for your interest; please come back when you are older."
+		age_msg.text = "Heavenward Pathway Online is for players 13 and older. Thank you for your interest; please come back when you are older."
 		age_msg.add_theme_color_override("font_color", Color("a8342a"))
 		return
 	G.minor = age < 18

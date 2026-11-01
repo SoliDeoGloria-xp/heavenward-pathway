@@ -1,11 +1,11 @@
 extends Node
 ## Scripted run used in CI/dev to smoke-test the whole first session and capture screenshots.
-## Run: godot --path . -- --autotest   (screens saved to user://autotest/ or $PPO_SHOTS)
+## Run: godot --path . -- --autotest   (screens saved to user://autotest/ or $HPO_SHOTS)
 
 var dir := ""
 
 func _ready() -> void:
-	dir = OS.get_environment("PPO_SHOTS")
+	dir = OS.get_environment("HPO_SHOTS")
 	if dir == "":
 		dir = OS.get_user_data_dir() + "/autotest"
 	DirAccess.make_dir_recursive_absolute(dir)

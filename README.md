@@ -1,6 +1,6 @@
-# Pilgrim's Progress Online: first-session demo
+# Heavenward Pathway Online: first-session demo
 
-A playable demo of the opening of *Pilgrim's Progress Online*, a Reformed, allegorical, Ragnarok-style mobile MMORPG after John Bunyan.
+A playable demo of the opening of *Heavenward Pathway Online* (HPO), a Reformed, allegorical, Ragnarok-style mobile MMORPG after John Bunyan.
 
 - **Look:** classic Ragnarok Online, with 2D pixel sprites on a lit 3D map, a fixed three-quarter camera and RO-style windows.
 - **Controls:** Ragnarok M / Origin style for phones, with a floating joystick, an Attack button with a skill arc, and Auto.
@@ -12,7 +12,7 @@ A playable demo of the opening of *Pilgrim's Progress Online*, a Reformed, alleg
 | Where | How |
 | --- | --- |
 | Phone browser | Open the GitHub Pages link (Settings → Pages) in landscape. Every push to `main` rebuilds it. |
-| Android phone | Actions → latest **Build demo** run → download **ppo-android-debug-apk** → install the APK (allow "install unknown apps"). |
+| Android phone | Actions → latest **Build demo** run → download **hpo-android-debug-apk** → install the APK (allow "install unknown apps"). |
 | Play Console (internal testing) | Run **Android release (Play Console AAB)** manually after adding the signing secrets (see below), then upload the `.aab`. |
 | Desktop | Open the folder in Godot 4.3 and press Play. A mouse works as touch. |
 
@@ -99,10 +99,10 @@ The sprite sheet should be drawn at 2× and keep hard pixels. Import settings ar
 ## Android signing for the Play Store
 
 1. Create an upload keystore once and keep it safe:
-   `keytool -genkeypair -v -keystore upload.keystore -alias ppo -keyalg RSA -keysize 2048 -validity 10000`
+   `keytool -genkeypair -v -keystore upload.keystore -alias hpo -keyalg RSA -keysize 2048 -validity 10000`
 2. Add these repository secrets: `RELEASE_KEYSTORE_BASE64` (`base64 -w0 upload.keystore`), `RELEASE_KEYSTORE_PASSWORD` and `RELEASE_KEY_ALIAS`.
 3. Run **Android release (Play Console AAB)** with a new `version_code`, then upload the AAB to an internal testing track.
-4. **Before the first upload, confirm the package name** in `export_presets.cfg` (`package/unique_name`, currently `com.solideogloria.ppo`). Google Play never lets you change it later.
+4. **Before the first upload, confirm the package name** in `export_presets.cfg` (`package/unique_name`, currently `com.solideogloria.hpo`). Google Play never lets you change it later.
 
 ## Theology and content rules kept in code
 

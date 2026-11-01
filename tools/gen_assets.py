@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate placeholder pixel-art and UI assets for the Pilgrim's Progress Online Godot demo.
+"""Generate placeholder pixel-art and UI assets for the Heavenward Pathway Online Godot demo.
 
 All art here is ORIGINAL placeholder art drawn procedurally. It is meant to be replaced
 by the commissioned sprite/UI art (Art Asset Brief v2). File names and sheet layouts are

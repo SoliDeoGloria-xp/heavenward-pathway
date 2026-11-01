@@ -3,8 +3,8 @@ config_version=5
 
 [application]
 
-config/name="Pilgrim's Progress Online"
-config/description="Pilgrim's Progress Online - first-session demo"
+config/name="Heavenward Pathway Online"
+config/description="Heavenward Pathway Online - first-session demo"
 config/version="0.1.0"
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
