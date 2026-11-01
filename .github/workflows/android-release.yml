@@ -1,10 +1,12 @@
 name: Android release (Play Console AAB)
 
-# Manual only. Needs four repository secrets (Settings > Secrets and variables > Actions):
-#   RELEASE_KEYSTORE_BASE64   base64 of your upload keystore (.jks / .keystore)
-#   RELEASE_KEYSTORE_PASSWORD keystore password
-#   RELEASE_KEY_ALIAS         key alias inside the keystore
-#   VERSION_CODE              (optional input below overrides) integer, must increase every upload
+# Manual only. Easiest (works from a phone): ONE secret, HPO_KEY_PASSPHRASE (12+ characters, long and random).
+#   The first run generates an upload key, encrypts it with that passphrase and commits signing/upload.keystore.enc.
+#   Later runs decrypt it. Keep the passphrase safe; with it lost, ask Google to reset the upload key.
+# Or, if you already have a keystore, three secrets: RELEASE_KEYSTORE_BASE64, RELEASE_KEYSTORE_PASSWORD, RELEASE_KEY_ALIAS.
+# With no secrets the build signs with a throwaway key and is for pipeline testing only.
+permissions:
+  contents: write
 on:
   workflow_dispatch:
     inputs:
@@ -39,21 +41,48 @@ jobs:
           echo "SDK=$SDK sdkmanager=$SM"
           yes | "$SM" --sdk_root="$SDK" --licenses > /dev/null || true
           "$SM" --sdk_root="$SDK" "platforms;android-36" "build-tools;36.0.0"
-      - name: Write keystore (or a throwaway one to test the pipeline)
+      - name: Upload key (phone-friendly passphrase mode, full secrets, or throwaway)
         id: ks
         env:
+          PASS: ${{ secrets.HPO_KEY_PASSPHRASE }}
           KS_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
-          KS_PASS: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           KS_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
+          set -e
+          ENC=signing/upload.keystore.enc
           if [ -n "$KS_B64" ]; then
             echo "$KS_B64" | base64 -d > /tmp/upload.keystore
-            echo "pass=$KS_PASS" >> "$GITHUB_OUTPUT"; echo "alias=$KS_ALIAS" >> "$GITHUB_OUTPUT"; echo "real=yes" >> "$GITHUB_OUTPUT"
+            echo "mode=full" >> "$GITHUB_OUTPUT"; echo "alias=$KS_ALIAS" >> "$GITHUB_OUTPUT"; echo "real=yes" >> "$GITHUB_OUTPUT"
+          elif [ -n "$PASS" ]; then
+            if [ ${#PASS} -lt 12 ]; then echo "::error::HPO_KEY_PASSPHRASE must be at least 12 characters (the encrypted key is stored in this public repo, so make it long)."; exit 1; fi
+            if [ -f "$ENC" ]; then
+              echo "Decrypting the stored upload key."
+              openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in "$ENC" -out /tmp/upload.keystore -pass env:PASS
+              keytool -list -keystore /tmp/upload.keystore -storepass:env PASS > /dev/null
+            else
+              echo "No stored upload key yet: generating one."
+              keytool -genkeypair -keystore /tmp/upload.keystore -storepass:env PASS -keypass:env PASS -alias hpo-upload -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Heavenward Pathway Online upload key"
+              mkdir -p signing
+              openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in /tmp/upload.keystore -out "$ENC" -pass env:PASS
+              git config --global --add safe.directory "$GITHUB_WORKSPACE"
+              git config user.name "hpo-release-bot"; git config user.email "hpo-release-bot@users.noreply.github.com"
+              git add "$ENC"
+              git commit -m "Add encrypted upload key (AES-256, needs HPO_KEY_PASSPHRASE) [skip ci]"
+              git push origin HEAD:${{ github.ref_name }}
+              echo "generated=yes" >> "$GITHUB_OUTPUT"
+            fi
+            echo "mode=passphrase" >> "$GITHUB_OUTPUT"; echo "alias=hpo-upload" >> "$GITHUB_OUTPUT"; echo "real=yes" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::No RELEASE_KEYSTORE_BASE64 secret: signing with a THROWAWAY key. This AAB is for pipeline testing only; do not upload it to Play."
-            keytool -genkeypair -v -keystore /tmp/upload.keystore -storepass throwaway -keypass throwaway -alias throwaway -keyalg RSA -keysize 2048 -validity 365 -dname "CN=PPO Test"
-            echo "pass=throwaway" >> "$GITHUB_OUTPUT"; echo "alias=throwaway" >> "$GITHUB_OUTPUT"; echo "real=no" >> "$GITHUB_OUTPUT"
+            echo "::warning::No signing secret set: signing with a THROWAWAY key. This AAB is for pipeline testing only; do not upload it to Play."
+            keytool -genkeypair -keystore /tmp/upload.keystore -storepass throwaway -keypass throwaway -alias throwaway -keyalg RSA -keysize 2048 -validity 365 -dname "CN=HPO Test"
+            echo "mode=throwaway" >> "$GITHUB_OUTPUT"; echo "alias=throwaway" >> "$GITHUB_OUTPUT"; echo "real=no" >> "$GITHUB_OUTPUT"
           fi
+      - name: Back up the newly generated key (encrypted, so safe to keep)
+        if: steps.ks.outputs.generated == 'yes'
+        uses: actions/upload-artifact@v4
+        with:
+          name: hpo-upload-key-ENCRYPTED-backup
+          path: signing/upload.keystore.enc
       - name: Switch preset to a Gradle AAB build
         run: |
           sed -i 's/^gradle_build\/use_gradle_build=false/gradle_build\/use_gradle_build=true/' export_presets.cfg
@@ -66,7 +95,7 @@ jobs:
         env:
           GODOT_ANDROID_KEYSTORE_RELEASE_PATH: /tmp/upload.keystore
           GODOT_ANDROID_KEYSTORE_RELEASE_USER: ${{ steps.ks.outputs.alias }}
-          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ steps.ks.outputs.pass }}
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ steps.ks.outputs.mode == 'passphrase' && secrets.HPO_KEY_PASSPHRASE || steps.ks.outputs.mode == 'full' && secrets.RELEASE_KEYSTORE_PASSWORD || 'throwaway' }}
         run: |
           godot --headless --import || true
           # install the Gradle build template by hand (the CLI flag is unreliable headless in 4.3)
