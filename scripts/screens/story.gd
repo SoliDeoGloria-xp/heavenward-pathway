@@ -34,6 +34,13 @@ func _ready() -> void:
 				{"quote": "“I saw a man clothed with rags, standing in a certain place, with his face from his own house, a book in his hand, and a great burden upon his back.”", "src": PD, "art": "burden"},
 				{"who": "The Dreamer", "text": "You wake in the City of Destruction, born in Adam, with a burden upon your back.", "art": "city"}]
 			next_screen = "world"; next_data = {"map": "city"}
+		"onward":
+			cards = [
+				{"who": "The Dreamer", "text": "So the pilgrim ran, and the way led on: through the Slough of Despond, where Help drew him out; to the Wicket Gate; to the House of the Interpreter.", "art": "way"},
+				{"who": "The Dreamer", "text": "At the Cross his burden loosed from off his shoulders and tumbled into the sepulchre, and he saw it no more. Then up the Hill Difficulty, alone, on hands and knees.", "src": "Paraphrasing " + PD, "art": "cross"},
+				{"quote": "“He lift up his eyes, and behold there was a very stately palace before him, the name of which was Beautiful; and it stood just by the highway side.”", "src": PD, "art": "palace"},
+				{"who": "Demo preview", "text": "Skipping ahead to the end of Act II. The Palace Beautiful is the first House, where pilgrims who walked the Way alone meet one another.", "art": "palace"}]
+			next_screen = "world"; next_data = {"map": "palace"}
 	art = StoryArt.new(); art.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	art.position = Vector2(-220, 40); art.size = Vector2(440, 260); add_child(art)
 	holder = CenterContainer.new(); UIKit.full_rect(holder); holder.offset_top = 300; holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -115,6 +122,29 @@ class StoryArt extends Panel:
 					draw_circle(c + Vector2(0, -30), 26, Color("f1d2b6"))
 					draw_rect(Rect2(c.x - 26, c.y - 4, 52, 70), Color("6e6a62"))
 					draw_circle(c + Vector2(30, 10), 30, Color("8a6438"))
+			"way":
+				draw_rect(Rect2(0, c.y + 30, size.x, c.y - 30), Color("6a8a4e"))
+				draw_colored_polygon(PackedVector2Array([Vector2(c.x - 8, c.y + 30), Vector2(c.x + 8, c.y + 30), Vector2(c.x + 90, size.y), Vector2(c.x - 90, size.y)]), Color("d8c690"))
+				draw_rect(Rect2(c.x - 30, c.y - 40, 60, 70), Color("8a7a5e")); draw_rect(Rect2(c.x - 12, c.y - 8, 24, 38), Color("3a2a1e"))
+				draw_circle(c + Vector2(0, -70), 16, Color(1, 0.96, 0.8))
+			"cross":
+				draw_colored_polygon(PackedVector2Array([Vector2(0, size.y), Vector2(c.x, c.y - 10), Vector2(size.x, size.y)]), Color("5e7e46"))
+				draw_rect(Rect2(c.x - 6, c.y - 90, 12, 90), Color("6e4a2c")); draw_rect(Rect2(c.x - 34, c.y - 68, 68, 12), Color("6e4a2c"))
+				for r in range(90, 0, -15):
+					draw_circle(c + Vector2(0, -60), r, Color(1, 0.95, 0.75, 0.05))
+				draw_circle(c + Vector2(70, 80), 22, Color("8a6438"))
+			"palace":
+				draw_rect(Rect2(0, c.y + 40, size.x, c.y - 40), Color("6faa58"))
+				for r in range(130, 0, -13):
+					draw_circle(c + Vector2(0, -20), r, Color(1, 0.96, 0.8, 0.04))
+				draw_rect(Rect2(c.x - 110, c.y - 40, 220, 82), Color("e9e2cc"))
+				for tx in [-110, 80]:
+					draw_rect(Rect2(c.x + tx, c.y - 90, 30, 132), Color("f2ecd8"))
+					draw_colored_polygon(PackedVector2Array([Vector2(c.x + tx - 4, c.y - 90), Vector2(c.x + tx + 15, c.y - 126), Vector2(c.x + tx + 34, c.y - 90)]), Color("4a6aa8"))
+				draw_colored_polygon(PackedVector2Array([Vector2(c.x - 120, c.y - 40), Vector2(c.x, c.y - 96), Vector2(c.x + 120, c.y - 40)]), Color("5a7ab8"))
+				draw_rect(Rect2(c.x - 18, c.y, 36, 42), Color("6e4a2c"))
+				for wx in [-70, -40, 30, 60]:
+					draw_rect(Rect2(c.x + wx, c.y - 22, 12, 16), Color("ffd98a"))
 			"serpent":
 				draw_rect(Rect2(c.x + 40, c.y - 10, 20, 120), Color("5e3e26"))
 				draw_circle(c + Vector2(50, -40), 80, Color("4e7f3e"))

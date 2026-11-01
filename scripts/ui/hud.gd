@@ -136,7 +136,7 @@ func _build_quest(L: bool) -> void:
 	quest_box.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/chip.png", 10, 12))
 	quest_box.custom_minimum_size = Vector2(390, 0)
 	var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 2)
-	var t := UIKit.outlined("▸ The Way  ·  tap to auto-path", 16, Color("ffd36a"))
+	var t := UIKit.outlined("▸ %s  ·  tap to auto-path" % str(world.info("layer")), 16, Color("ffd36a"))
 	v.add_child(t)
 	quest_lbl = UIKit.outlined("", 21, Color.WHITE); quest_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quest_lbl.custom_minimum_size = Vector2(360, 0)
@@ -269,7 +269,7 @@ func refresh() -> void:
 	exp_txt.text = "Base %.1f%%  ·  Job %.1f%%  ·  Manna %s" % [G.base_pct() * 100.0, G.job_pct() * 100.0, str(snappedf(G.manna, 0.1))]
 	for c in status_row.get_children():
 		c.queue_free()
-	if G.burden or (world and world.map_id == "city"):
+	if G.burden:
 		status_row.add_child(_chip("Burden", Color("8a6438")))
 	if G.weary:
 		status_row.add_child(_chip("Weariness", Color("5c6e98")))
@@ -284,7 +284,7 @@ func refresh() -> void:
 		var pts := (G.lvl - 1) * 2 + (G.job - 1) * 2
 		more_btn.badge = "+%d" % pts if pts > 0 else ""
 		more_btn.queue_redraw()
-	var city: bool = world != null and world.map_id == "city"
+	var city: bool = world != null and world.is_combat()
 	for n in combat_nodes:
 		n.visible = city and snapshot_ui == null
 
@@ -298,6 +298,7 @@ func _chip(t: String, c: Color) -> Control:
 func _process(_d: float) -> void:
 	if world == null or not is_instance_valid(world):
 		return
+	_muster_tick(_d)
 	# HP damage trail: the white chunk waits 0.35 s, then drains
 	if hp_trail.value > plate_hp.value:
 		trail_delay -= _d
@@ -326,10 +327,10 @@ func _process(_d: float) -> void:
 		act_btn.set_icon(n.icon)
 	else:
 		act_btn.visible = false
-	if world.map_id == "eden" and act_btn.visible:
+	if not world.is_combat() and act_btn.visible:
 		_corner(act_btn, G.settings.left_handed, false, 40, 40)
 	var p: Vector3 = world.player.position
-	coord_lbl.text = "%s  %d, %d" % ["eden_isle" if world.map_id == "eden" else "destruction", int(p.x * 4 + 120), int(-p.z * 4 + 80)]
+	coord_lbl.text = "%s  %d, %d   %s" % [world.info("code"), int(p.x * 4 + 120), int(-p.z * 4 + 80), world.secrets_text()]
 	minimap.queue_redraw()
 	root.modulate.a = G.settings.hud_opacity
 
@@ -427,7 +428,7 @@ func open_more() -> void:
 	var w := UIKit.window("Menu", Vector2(720, 0))
 	var grid := GridContainer.new(); grid.columns = 5; grid.add_theme_constant_override("h_separation", 12); grid.add_theme_constant_override("v_separation", 12)
 	var items := [["bag", "Satchel", "bag"], ["equip", "Equipment", "equip"], ["skills", "Skills", "skills"], ["status", "Status", "status"], ["way", "The Way", "quest"],
-		["", "Congregation", "congregation"], ["", "Friends", "friends"], ["", "Veiled Library", "library"], ["chat", "Chat log", "talk"], ["settings", "Settings", "settings"]]
+		["waymark", "Waymark", "scroll"], ["", "Congregation", "congregation"], ["", "Friends", "friends"], ["chat", "Chat log", "talk"], ["settings", "Settings", "settings"]]
 	for it in items:
 		var b := Button.new(); b.custom_minimum_size = Vector2(128, 128); b.focus_mode = Control.FOCUS_NONE
 		var v := VBoxContainer.new(); v.alignment = BoxContainer.ALIGNMENT_CENTER; UIKit.full_rect(v); v.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -437,6 +438,7 @@ func open_more() -> void:
 		var tab: String = it[0]; var nm: String = it[1]
 		b.pressed.connect(func():
 			if tab == "chat": open_chat()
+			elif tab == "waymark": waymark_place()
 			elif tab == "": _locked(nm)
 			else: open_sheet(tab))
 		grid.add_child(b)
@@ -445,7 +447,7 @@ func open_more() -> void:
 
 func _locked(nm: String) -> void:
 	clear_overlay()
-	var msg := {"Congregation": "Congregations open at the Palace Beautiful (vertical slice).", "Friends": "Friends and mentorship need online play, which this offline demo does not include.",
+	var msg := {"Congregation": "Congregations open at the Palace Beautiful (vertical slice).", "Friends": "Friends, mentorship and walking the Way together need online play, which this offline demo does not include.",
 		"Veiled Library": "The Veiled Library (codex, Westminster Shorter Catechism, full Scripture readings) arrives in a later build."}
 	G.say(msg.get(nm, "Not in this demo."), G.WARN)
 
@@ -464,7 +466,7 @@ func open_chat() -> void:
 		var c: Color = l[1]
 		s += "[color=#%s]%s[/color]\n" % [c.darkened(0.45).to_html(false), l[0]]
 	r.text = s; sc.add_child(r); w.body.add_child(sc)
-	w.body.add_child(UIKit.label("Local chat and emotes are online-only. There is no world chat (by design).", 16, UIKit.SUB))
+	w.body.add_child(UIKit.label("Local chat is heard only in Houses and Wilds. There is no world chat (by design). Other pilgrims are simulated in this demo.", 16, UIKit.SUB, false, true))
 	_center(w.root)
 
 func open_sheet(tab: String) -> void:
@@ -724,6 +726,175 @@ func show_ko(spoil: float) -> void:
 	w.root.offset_left = -360; w.root.offset_right = 360; w.root.offset_top = -380; w.root.offset_bottom = -30
 	overlay.add_child(w.root)
 
+# ------------------------------------------------------------------ world model UI (GDD v0.3)
+func secret_card(title: String, text: String, n: int, total: int) -> void:
+	var w := UIKit.window("Secret found  ·  %d of %d on this map" % [n, total], Vector2(640, 0))
+	w.body.add_child(UIKit.label(title, 26, UIKit.BLUE_INK, true))
+	w.body.add_child(UIKit.label(text, 19, UIKit.INK, false, true))
+	if n >= total:
+		w.body.add_child(UIKit.label("Every secret on this map is found. A stamp is set on your map.", 17, Color("2f7a3a"), true, true))
+	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
+	row.add_child(UIKit.button("Keep walking", func(): clear_overlay(), 200, true)); w.body.add_child(row)
+	_dim(); _center(w.root)
+
+func waymark_read(wm: Dictionary) -> void:
+	_dim()
+	var w := UIKit.window("Waymark", Vector2(600, 0))
+	w.body.add_child(UIKit.label("“%s”" % wm.phrase, 28, UIKit.BLUE_INK, true, true))
+	var who: String = "you" if wm.mine else wm.author
+	var sub := UIKit.label("Raised by %s  ·  %d pilgrims found this helpful" % [who, wm.thanks], 17, UIKit.SUB, false, true)
+	w.body.add_child(sub)
+	w.body.add_child(UIKit.label("Waymarks use set phrases and Scripture references only, after the pillar Christian and Hopeful raised at the By-path stile to warn those who came after.", 15, UIKit.SUB, false, true))
+	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END; row.add_theme_constant_override("separation", 8)
+	if not wm.mine:
+		var tb := UIKit.button("Thanks" if not wm.thanked else "Thanked", func():
+			if not wm.thanked:
+				wm.thanked = true; wm.thanks += 1
+				G.say("You thanked %s for the Waymark." % wm.author, G.SYS)
+			clear_overlay(), 180, not wm.thanked)
+		row.add_child(tb)
+	row.add_child(UIKit.button("Close", func(): clear_overlay(), 140))
+	w.body.add_child(row)
+	_center(w.root)
+
+func waymark_place() -> void:
+	_dim()
+	var w := UIKit.window("Raise a Waymark here", Vector2(640, 0))
+	w.body.add_child(UIKit.label("Leave a word for pilgrims who walk this way after you. Set phrases only, so nothing unkind can be written.", 17, UIKit.SUB, false, true))
+	for ph in world.waymark_phrases:
+		var phrase: String = ph
+		w.body.add_child(UIKit.button(phrase, func(): clear_overlay(); world.place_waymark(phrase)))
+	_center(w.root)
+
+const MUSTERS := [
+	{"id": "lions", "name": "Giant Grim at the Lions' Gate", "meta": "Party of 4 · Normal · about 5 min", "open": true},
+	{"id": "castle", "name": "Doubting Castle Demolished", "meta": "Party of 5 · Trial · weekly loot", "open": false, "why": "Act III"},
+	{"id": "pride", "name": "Field boss: Pride the Wanderer", "meta": "Wild · Valley of Humiliation · shared credit", "open": false, "why": "Act III"},
+	{"id": "mansoul", "name": "The Siege of Mansoul", "meta": "Alliance of 20 · Emmanuel's soldiers", "open": false, "why": "Act IV"}]
+var muster_t := -1.0
+var muster_slots: Array = []
+var muster_win: Dictionary = {}
+
+func muster_board() -> void:
+	_dim()
+	var w := UIKit.window("Muster Board  ·  Palace Beautiful", Vector2(860, 0))
+	w.body.add_child(UIKit.label("Answer a muster for battles Bunyan gives to a company. Bring friends, or the board finds pilgrims for you; empty places fill with Stewards of the House after 60 seconds.", 17, UIKit.SUB, false, true))
+	for m in MUSTERS:
+		var md: Dictionary = m
+		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 12))
+		var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 12)
+		var v := VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		v.add_child(UIKit.label(md.name, 21, UIKit.INK if md.open else UIKit.SUB, true))
+		v.add_child(UIKit.label(md.meta, 16, UIKit.SUB))
+		h.add_child(v)
+		if md.open:
+			h.add_child(UIKit.button("Join", func(): muster_queue(md), 140, true))
+		else:
+			h.add_child(UIKit.label("Opens in %s" % md.why, 16, UIKit.SUB))
+		p.add_child(h); w.body.add_child(p)
+	w.body.add_child(UIKit.label("Rewards are the same with any company; each pilgrim beside you adds Fellowship Marks. No speed rankings.", 15, UIKit.SUB, false, true))
+	_center(w.root)
+
+func muster_queue(md: Dictionary) -> void:
+	_dim(false)
+	var w := UIKit.window("Mustering: %s" % md.name, Vector2(720, 0))
+	muster_win = w
+	var tl := UIKit.label("Searching…  0:00", 22, UIKit.BLUE_INK, true); w.body.add_child(tl)
+	w.root.set_meta("timer", tl)
+	muster_slots = [{"name": G.pname + " (you)", "role": "—", "ai": false, "look": [G.hair_style, G.hair_col, G.robe_col], "filled": true}]
+	var box := VBoxContainer.new(); box.add_theme_constant_override("separation", 6); w.body.add_child(box)
+	w.root.set_meta("box", box)
+	w.body.add_child(UIKit.label("Demo: the other pilgrims are simulated, and the 60-second AI fill is shortened to 6 seconds.", 15, UIKit.SUB, false, true))
+	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END; row.add_theme_constant_override("separation", 8)
+	row.add_child(UIKit.button("Leave queue", func(): muster_t = -1.0; clear_overlay(), 180))
+	var go := UIKit.button("Enter the Lions' Gate", func(): muster_enter(), 260, true); go.disabled = true
+	row.add_child(go); w.root.set_meta("go", go)
+	w.body.add_child(row)
+	_center(w.root)
+	muster_t = 0.0
+	_muster_render()
+
+func _muster_render() -> void:
+	if muster_win.is_empty() or not is_instance_valid(muster_win.root):
+		return
+	var box: VBoxContainer = muster_win.root.get_meta("box")
+	for c in box.get_children():
+		c.queue_free()
+	for i in 4:
+		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 10))
+		var h := HBoxContainer.new()
+		if i < muster_slots.size():
+			var sl: Dictionary = muster_slots[i]
+			var l := UIKit.label(sl.name + ("  (AI)" if sl.ai else ""), 19, UIKit.INK, true); l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			h.add_child(l); h.add_child(UIKit.label(sl.role, 17, UIKit.SUB))
+		else:
+			h.add_child(UIKit.label("Waiting for a pilgrim…", 18, UIKit.SUB))
+		p.add_child(h); box.add_child(p)
+
+func _muster_tick(d: float) -> void:
+	if muster_t < 0.0 or muster_win.is_empty() or not is_instance_valid(muster_win.root):
+		return
+	var before := muster_slots.size()
+	muster_t += d
+	if muster_t > 1.6 and muster_slots.size() == 1:
+		muster_slots.append({"name": "Lumen", "role": "support", "ai": false, "look": [2, 2, 1]})
+	if muster_t > 3.4 and muster_slots.size() == 2:
+		muster_slots.append({"name": "Rook", "role": "defender", "ai": false, "look": [0, 1, 5]})
+	if muster_t > 6.0 and muster_slots.size() == 3:
+		muster_slots.append({"name": "Steward of the House", "role": "damage", "ai": true, "look": [0, 4, 5]})
+	var tl: Label = muster_win.root.get_meta("timer")
+	if muster_slots.size() >= 4:
+		tl.text = "Your company is ready."
+		var go: Button = muster_win.root.get_meta("go"); go.disabled = false
+		if before < 4:
+			G.say("Muster formed: Lumen, Rook and a Steward of the House.", G.INFO); G.haptic(30)
+		muster_t = -1.0
+	else:
+		tl.text = "Searching…  0:%02d" % int(muster_t)
+	if muster_slots.size() != before:
+		_muster_render()
+
+func muster_enter() -> void:
+	var party: Array = []
+	for i in range(1, muster_slots.size()):
+		party.append(muster_slots[i])
+	clear_overlay()
+	world.enter_muster(party)
+
+var boss_ui: Control
+func boss_bar(nm: String, frac: float) -> void:
+	if frac < 0.0:
+		if boss_ui: boss_ui.queue_free(); boss_ui = null
+		return
+	if boss_ui == null:
+		boss_ui = BossBar.new(); boss_ui.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+		boss_ui.position = Vector2(-260, 74); boss_ui.size = Vector2(520, 46); boss_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		root.add_child(boss_ui); hud_nodes.append(boss_ui)
+	boss_ui.set("nm", nm); boss_ui.set("frac", frac); boss_ui.queue_redraw()
+
+func muster_cleared(humans: int) -> void:
+	var w := UIKit.window("Muster cleared", Vector2(620, 0))
+	w.body.add_child(UIKit.label("Giant Grim is driven from the way.", 26, UIKit.BLUE_INK, true))
+	w.body.add_child(UIKit.label("•  Grim's Broken Chain\n•  Fellowship Marks +%d  (one per pilgrim in your company; Stewards add none, and nothing is lost for walking alone)\n•  Base and Job experience" % humans, 18, UIKit.INK, false, true))
+	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
+	row.add_child(UIKit.button("Well fought", func(): clear_overlay(), 200, true)); w.body.add_child(row)
+	_dim(); _center(w.root)
+
+class BossBar extends Control:
+	var nm := ""
+	var frac := 1.0
+	var shown := 1.0
+	func _process(d: float) -> void:
+		shown = lerpf(shown, frac, d * 3.0) if shown > frac else frac
+		queue_redraw()
+	func _draw() -> void:
+		var r := Rect2(Vector2(0, 22), Vector2(size.x, 18))
+		draw_rect(r.grow(3), Color(0.06, 0.04, 0.06, 0.85))
+		draw_rect(Rect2(r.position, Vector2(r.size.x * shown, r.size.y)), Color(1, 0.95, 0.85, 0.9))
+		draw_rect(Rect2(r.position, Vector2(r.size.x * frac, r.size.y)), Color("c83a2a"))
+		draw_string_outline(G.font_ui_bold, Vector2(4, 18), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 6, Color(0.05, 0.03, 0.05))
+		draw_string(G.font_ui_bold, Vector2(4, 18), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("ffd8c8"))
+
 # ------------------------------------------------------------------ snapshot mode
 func enter_snapshot() -> void:
 	for n in hud_nodes:
@@ -733,7 +904,7 @@ func enter_snapshot() -> void:
 	var cap := VBoxContainer.new(); cap.anchor_left = 0; cap.anchor_right = 1; cap.anchor_top = 1; cap.anchor_bottom = 1
 	cap.offset_top = -130; cap.offset_bottom = -30; cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var c1 := UIKit.outlined("“And I saw in my dream…”", 40, Color("fff1c8"), G.font_title); c1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var c2 := UIKit.outlined("%s  ·  %s" % [G.pname.to_upper(), "THE CITY OF DESTRUCTION" if world.map_id == "city" else "EDEN ISLE"], 18, Color.WHITE); c2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var c2 := UIKit.outlined("%s  ·  %s" % [G.pname.to_upper(), str(world.info("name")).to_upper()], 18, Color.WHITE); c2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	cap.add_child(c1); cap.add_child(c2); snapshot_ui.add_child(cap)
 	var bar := HBoxContainer.new(); bar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP); bar.position = Vector2(-300, 20); bar.add_theme_constant_override("separation", 10)
 	bar.add_child(UIKit.button("Close", exit_snapshot, 140))
@@ -807,7 +978,7 @@ class Minimap extends Control:
 		var w = hud.world
 		if w == null: return
 		var r := Rect2(Vector2(8, 8), size - Vector2(16, 16))
-		var sb := StyleBoxFlat.new(); sb.bg_color = Color("8cc062") if w.map_id == "eden" else Color("9c9484"); sb.set_corner_radius_all(26)
+		var sb := StyleBoxFlat.new(); sb.bg_color = w.info("mini"); sb.set_corner_radius_all(26)
 		draw_style_box(sb, r)
 		var b: Rect2 = w.bounds
 		var to_map := func(p: Vector3) -> Vector2:
@@ -815,10 +986,16 @@ class Minimap extends Control:
 		if w.map_id == "eden":
 			draw_rect(Rect2(r.position + Vector2(0, 2), Vector2(r.size.x, 8)), Color("6aaee0"))
 		for e in w.ents:
-			if e.hidden: continue
-			draw_circle(to_map.call(e.pos), 5, Color("2f7ae0") if e.id in ["evangelist", "lamb"] else Color("e0a020"))
+			if e.hidden or e.get("kind", "") == "secret": continue
+			if e.get("kind", "") == "waymark":
+				draw_circle(to_map.call(e.pos), 3, Color("8fd0ff")); continue
+			draw_circle(to_map.call(e.pos), 5, Color("2f7ae0") if e.id in ["evangelist", "lamb", "watchful"] else Color("e0a020"))
+		for o in w.others:
+			if o.actor.visible: draw_circle(to_map.call(o.actor.position), 3, Color(1, 1, 1, 0.45 if o.ghost else 0.85))
+		for al in w.allies:
+			draw_circle(to_map.call(al.actor.position), 4, Color("5fe06a"))
 		for m in w.mobs:
-			if m.alive: draw_circle(to_map.call(m.actor.position), 4, Color("e83b3b"))
+			if m.alive: draw_circle(to_map.call(m.actor.position), 7 if m.get("boss", false) else 4, Color("e83b3b"))
 		var q = w.quest_target()
 		if q != null:
 			var qp: Vector2 = to_map.call(q.pos if q is Dictionary else q)
@@ -832,7 +1009,7 @@ class Minimap extends Control:
 		draw_colored_polygon(rt, Color.WHITE)
 		draw_polyline(PackedVector2Array([rt[0], rt[1], rt[2], rt[0]]), Color("1d2b52"), 2.0)
 		draw_texture_rect(G.tex("res://assets/ui/minimap_frame.png"), Rect2(Vector2.ZERO, size), false)
-		var nm := "Eden Isle" if w.map_id == "eden" else "City of Destruction"
+		var nm: String = w.info("name")
 		var tw := G.font_ui_bold.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		draw_string_outline(G.font_ui_bold, Vector2((size.x - tw) * 0.5, 30), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, 5, Color(0.05, 0.05, 0.1))
 		draw_string(G.font_ui_bold, Vector2((size.x - tw) * 0.5, 30), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)

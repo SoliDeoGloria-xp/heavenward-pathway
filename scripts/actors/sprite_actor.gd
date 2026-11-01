@@ -19,6 +19,15 @@ var speed_mul := 1.0
 var _flash := 0.0
 var _flash_col := Color.WHITE
 static var _sh: Shader
+static var _sh_ghost: Shader
+var ghost := false
+
+## Passing pilgrims on the Way: other players shown as faint figures (GDD v0.3).
+static func _ghost_shader() -> Shader:
+	if _sh_ghost == null:
+		_sh_ghost = Shader.new()
+		_sh_ghost.code = _shader().code.replace("render_mode unshaded, cull_disabled;", "render_mode unshaded, cull_disabled, depth_draw_never;").replace("ALPHA = a;\n\tALPHA_SCISSOR_THRESHOLD = 0.5;", "if (a < 0.5) { discard; }\n\tALBEDO = mix(ALBEDO, vec3(0.86, 0.93, 1.0), 0.35);\n\tALPHA = 0.42 * tint.a;")
+	return _sh_ghost
 
 static func _shader() -> Shader:
 	if _sh == null:
@@ -96,7 +105,8 @@ func setup(c: Dictionary, display_name: String = "", name_color: Color = Color.W
 	sprite.position.y = fh * sprite.pixel_size * 0.5
 	# lit-sprite shader: map key-light tint, top-to-bottom shading, hit flash, target outline
 	mat = ShaderMaterial.new()
-	mat.shader = _shader()
+	ghost = c.get("ghost", false)
+	mat.shader = _ghost_shader() if ghost else _shader()
 	mat.set_shader_parameter("tex", c.tex)
 	mat.set_shader_parameter("half_h", fh * sprite.pixel_size * 0.5)
 	mat.set_shader_parameter("tint", G.sprite_tint)

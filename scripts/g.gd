@@ -11,6 +11,7 @@ const SYS := Color(0.71, 0.97, 0.64)
 const INFO := Color(1.0, 0.89, 0.48)
 const NPC := Color(0.62, 0.85, 1.0)
 const WARN := Color(1.0, 0.62, 0.62)
+const CHAT := Color(0.86, 0.86, 1.0)
 
 const ROBES := [Color("4f79b8"), Color("7a5aa6"), Color("4e8f55"), Color("b8642e"), Color("a8423a"), Color("5e6b78")]
 const HAIRS := [Color("6a4428"), Color("2a2a32"), Color("d0a85e"), Color("a8423a"), Color("8a909c"), Color("e2dccd")]
@@ -40,6 +41,13 @@ var start_ms := 0
 var log_lines: Array = []
 var settings := {"auto_loot": true, "reduce_motion": false, "left_handed": false, "dmg_numbers": true, "hud_opacity": 1.0, "reduce_flashing": false, "fx_high": true, "haptics": true}
 var minor := false
+## World model (GDD v0.3): the Way is solo, Houses and Wilds are shared, Musters are queued.
+var marks := 0                 # Fellowship Marks (company rewards, never a penalty for solitude)
+var secrets := {}              # map_id -> Array of found secret ids
+var muster_party: Array = []   # [{name, role, ai, look:[hair_style, hair_col, robe_col]}]
+var house_rested := false
+var my_waymarks: Array = []    # [{map, pos, phrase}]
+var _sheet_cache := {}
 
 var font_ui: FontVariation
 var font_ui_bold: FontVariation
@@ -67,6 +75,7 @@ func reset() -> void:
 	lvl = 1; job = 1; xp = 0; jxp = 0; hp_max = 120; hp = 120; zeal_max = 40; zeal = 40
 	manna = 0.0; bag = {}; weary = false; burden = false; kos = 0; snaps = 0
 	start_ms = Time.get_ticks_msec(); log_lines = []
+	marks = 0; secrets = {}; muster_party = []; house_rested = false; my_waymarks = []
 
 func tex(path: String) -> Texture2D:
 	if not _tex_cache.has(path):
@@ -132,14 +141,28 @@ func goto(screen: String, data: Dictionary = {}) -> void:
 
 ## Composite the layered paper-doll sheet (body + tinted robe + tinted hair + staff) into one texture.
 func build_player_sheet() -> ImageTexture:
+	player_sheet = build_sheet(hair_style, hair_col, robe_col, true)
+	return player_sheet
+
+## Any pilgrim's sheet (other players, party members, passing pilgrims). Cached per look.
+func build_sheet(hs: int, hc: int, rc: int, staff: bool = true) -> ImageTexture:
+	var key := "%d_%d_%d_%s" % [hs, hc, rc, staff]
+	if _sheet_cache.has(key):
+		return _sheet_cache[key]
 	var body := (load("res://assets/sprites/pilgrim_body.png") as Texture2D).get_image()
 	var out := Image.create(body.get_width(), body.get_height(), false, Image.FORMAT_RGBA8)
-	out.blend_rect(_converted(body), Rect2i(Vector2i.ZERO, body.get_size()), Vector2i.ZERO)
-	out.blend_rect(_tinted("res://assets/sprites/pilgrim_robe.png", ROBES[robe_col]), Rect2i(Vector2i.ZERO, body.get_size()), Vector2i.ZERO)
-	out.blend_rect(_tinted("res://assets/sprites/pilgrim_hair_%d.png" % hair_style, HAIRS[hair_col]), Rect2i(Vector2i.ZERO, body.get_size()), Vector2i.ZERO)
-	out.blend_rect(_converted((load("res://assets/sprites/pilgrim_staff.png") as Texture2D).get_image()), Rect2i(Vector2i.ZERO, body.get_size()), Vector2i.ZERO)
-	player_sheet = ImageTexture.create_from_image(out)
-	return player_sheet
+	var r := Rect2i(Vector2i.ZERO, body.get_size())
+	out.blend_rect(_converted(body), r, Vector2i.ZERO)
+	out.blend_rect(_tinted("res://assets/sprites/pilgrim_robe.png", ROBES[rc % ROBES.size()]), r, Vector2i.ZERO)
+	out.blend_rect(_tinted("res://assets/sprites/pilgrim_hair_%d.png" % (hs % 3), HAIRS[hc % HAIRS.size()]), r, Vector2i.ZERO)
+	if staff:
+		out.blend_rect(_converted((load("res://assets/sprites/pilgrim_staff.png") as Texture2D).get_image()), r, Vector2i.ZERO)
+	var t := ImageTexture.create_from_image(out)
+	_sheet_cache[key] = t
+	return t
+
+func secret_found(map_id: String, id: String) -> bool:
+	return id in secrets.get(map_id, [])
 
 func _converted(img: Image) -> Image:
 	var c := img.duplicate() as Image

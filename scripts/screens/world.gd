@@ -1,12 +1,29 @@
 extends Node3D
 ## The 3D world: classic RO presentation (2D sprites on a lit 3D map, fixed three-quarter camera)
 ## with RO M / Origin phone controls (joystick, attack + skill arc, auto, context Act button).
-## Maps: "eden" (Eden Isle prologue, no combat) and "city" (City of Destruction, first fights).
+## Maps (GDD v0.3 world model): "eden" and "city" are the Way (solo, with traces of other pilgrims);
+## "palace" is the first House (shared hub, simulated in this offline demo); "lions" is a party Muster.
 
 const SPEED := 4.6
 const PICK_PX := 70.0
 
 var map_id := "eden"
+const MAPS := {
+	"eden": {"name": "Eden Isle", "sub": "Prologue · The Garden", "code": "eden_isle", "combat": false, "layer": "The Way", "mini": Color("8cc062"), "start": Vector3(-14, 0, 6),
+		"bg": Color("2e4a2a"), "amb": Color("e8eef8"), "amb_e": 0.42, "tint": Color(1.03, 1.0, 0.93), "sun_e": 0.78, "sun_c": Color("fff3dc"), "post": [1.06, 1.05, Vector3(1.04, 1.01, 0.94)]},
+	"city": {"name": "City of Destruction", "sub": "Chapter 1 · Flee from the wrath to come", "code": "destruction", "combat": true, "layer": "The Way", "mini": Color("9c9484"), "start": Vector3(-12, 0, 3),
+		"bg": Color("2a2832"), "amb": Color("a8a4c0"), "amb_e": 0.38, "tint": Color(0.86, 0.87, 0.98), "sun_e": 0.55, "sun_c": Color("c8c4d8"), "post": [0.72, 1.08, Vector3(0.93, 0.95, 1.05)]},
+	"palace": {"name": "Palace Beautiful", "sub": "House · where pilgrims meet (online preview)", "code": "palace_beautiful", "combat": false, "layer": "House", "mini": Color("a8c48a"), "start": Vector3(0, 0, 11),
+		"bg": Color("3a4a30"), "amb": Color("f2eaf8"), "amb_e": 0.46, "tint": Color(1.04, 1.0, 0.94), "sun_e": 0.82, "sun_c": Color("ffeacc"), "post": [1.1, 1.05, Vector3(1.06, 1.0, 0.92)]},
+	"lions": {"name": "The Lions' Gate", "sub": "Muster · Party · Normal", "code": "lions_gate", "combat": true, "layer": "Muster", "mini": Color("b0a080"), "start": Vector3(0, 0, 10),
+		"bg": Color("342c24"), "amb": Color("dcc4ac"), "amb_e": 0.40, "tint": Color(1.0, 0.93, 0.87), "sun_e": 0.62, "sun_c": Color("ffc890"), "post": [0.92, 1.1, Vector3(1.06, 0.96, 0.88)]}}
+var others: Array = []           # other pilgrims: {actor, path, i, speed, ghost, fade, chat_t, kind}
+var allies: Array = []           # Muster party: {actor, name, role, ai, next, slot}
+var boss = null                  # Muster boss mob dict
+var boss_atk_t := 0.0
+var boss_count := 0
+var boss_enraged := false
+var secret_ids: Array = []
 var hud: Node
 var cam_rig: Node3D
 var cam: Camera3D
@@ -58,26 +75,48 @@ var _lamb_actor: SpriteActor
 
 func _ready() -> void:
 	map_id = get_meta("data").get("map", "eden")
+	if not MAPS.has(map_id):
+		map_id = "eden"
 	_build_env()
 	_build_player()
+	if map_id == "lions":
+		cam_dist = 20.0
 	_build_camera()
-	if map_id == "eden":
-		_build_eden()
-	else:
-		_build_city()
+	match map_id:
+		"eden": _build_eden()
+		"city": _build_city()
+		"palace": _build_palace()
+		"lions": _build_lions()
 	hud = load("res://scripts/ui/hud.gd").new()
 	hud.world = self
 	add_child(hud)
 	G.level_up.connect(_on_level_up)
 	_update_quest()
-	hud.banner("Eden Isle" if map_id == "eden" else "City of Destruction", "Prologue · The Garden" if map_id == "eden" else "Chapter 1 · Flee from the wrath to come")
-	if map_id == "eden":
-		G.say("Welcome to Eden Isle. Drag on the left to walk, or tap the ground.", G.INFO)
-	else:
-		G.burden = true
-		G.say("A great burden weighs upon your back.", G.WARN)
-		get_tree().create_timer(1.5).timeout.connect(func(): G.say("Slothlings stir in the street. Tap Attack or tap a monster.", G.WARN))
+	hud.banner(info("name"), info("sub"))
+	if G.weary:
+		get_tree().create_timer(15.0).timeout.connect(_weary_end)
+	match map_id:
+		"eden":
+			G.say("Welcome to Eden Isle. Drag on the left to walk, or tap the ground.", G.INFO)
+		"city":
+			G.burden = true
+			G.say("A great burden weighs upon your back.", G.WARN)
+			get_tree().create_timer(1.5).timeout.connect(func(): G.say("Slothlings stir in the street. Tap Attack or tap a monster.", G.WARN))
+		"palace":
+			G.burden = false
+			G.say("The House Beautiful. Pilgrims who walked the Way alone meet here.", G.INFO)
+			G.say("Online preview: the other pilgrims here are simulated in this offline demo.", G.SYS)
+		"lions":
+			G.burden = false
+			G.say("Your company is mustered. Giant Grim backs the lions; drive him from the way.", G.WARN)
+			get_tree().create_timer(1.6).timeout.connect(func(): G.say("Step out of red circles. The big slam fills a wide ring around the Giant.", G.SYS))
 	hud.refresh()
+
+func info(k: String) -> Variant:
+	return MAPS[map_id][k]
+
+func is_combat() -> bool:
+	return MAPS[map_id].combat
 
 # ------------------------------------------------------------------ environment
 func _build_env() -> void:
@@ -88,12 +127,8 @@ func _build_env() -> void:
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.fog_enabled = false
 	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
-	if map_id == "eden":
-		env.background_color = Color("2e4a2a")
-		env.ambient_light_color = Color("e8eef8"); env.ambient_light_energy = 0.42
-	else:
-		env.background_color = Color("2a2832")
-		env.ambient_light_color = Color("a8a4c0"); env.ambient_light_energy = 0.38
+	env.background_color = info("bg")
+	env.ambient_light_color = info("amb"); env.ambient_light_energy = info("amb_e")
 	env.glow_enabled = false  # Compatibility renderer glow is unreliable; bloom is faked with additive halo cards
 	env.glow_intensity = 0.9
 	env.glow_strength = 1.0
@@ -102,12 +137,12 @@ func _build_env() -> void:
 	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	self.env = env
 	var we := WorldEnvironment.new(); we.environment = env; add_child(we)
-	G.sprite_tint = Color(1.03, 1.0, 0.93) if map_id == "eden" else Color(0.86, 0.87, 0.98)
+	G.sprite_tint = info("tint")
 	_build_post()
 	sun = DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-52, -38, 0)
-	sun.light_energy = 0.78 if map_id == "eden" else 0.55
-	sun.light_color = Color("fff3dc") if map_id == "eden" else Color("c8c4d8")
+	sun.light_energy = info("sun_e")
+	sun.light_color = info("sun_c")
 	sun.shadow_enabled = true
 	add_child(sun)
 
@@ -216,7 +251,7 @@ func _build_player() -> void:
 	pact.setup({"tex": sheet, "hframes": 10, "vframes": 5, "pixel": 0.042, "rows": true,
 		"anims": {"idle": [0], "walk": [1, 2, 3, 4], "attack": [5, 6], "sit": [7], "rest": [8], "cast": [9]},
 		"fps": {"walk": 9.0, "attack": 6.0}}, G.pname, Color.WHITE)
-	player.position = Vector3(-14, 0, 6) if map_id == "eden" else Vector3(-12, 0, 3)
+	player.position = info("start")
 
 func _build_camera() -> void:
 	cam_rig = Node3D.new(); add_child(cam_rig)
@@ -227,7 +262,7 @@ func _build_camera() -> void:
 func _place_camera(snap: bool = false) -> void:
 	var pitch := deg_to_rad(52.0)
 	cam_rig.position = cam_rig.position.lerp(player.position, 1.0 if snap else 0.15)
-	var d := cam_dist * (0.94 if (map_id == "city" and in_combat()) else 1.0)
+	var d := cam_dist * (0.94 if (is_combat() and in_combat()) else 1.0)
 	_cur_dist = lerpf(_cur_dist if _cur_dist > 0.0 else d, d, 0.05)
 	cam.position = Vector3(0, sin(pitch) * _cur_dist, cos(pitch) * _cur_dist)
 	cam_rig.rotation.y = cam_yaw
@@ -298,10 +333,8 @@ void fragment() {
 	COLOR = vec4(c, 1.0);
 }"""
 	post = ShaderMaterial.new(); post.shader = sh
-	if map_id == "eden":
-		post.set_shader_parameter("saturation", 1.06); post.set_shader_parameter("contrast", 1.05); post.set_shader_parameter("tint", Vector3(1.04, 1.01, 0.94))
-	else:
-		post.set_shader_parameter("saturation", 0.72); post.set_shader_parameter("contrast", 1.08); post.set_shader_parameter("tint", Vector3(0.93, 0.95, 1.05))
+	var pp: Array = info("post")
+	post.set_shader_parameter("saturation", pp[0]); post.set_shader_parameter("contrast", pp[1]); post.set_shader_parameter("tint", pp[2])
 	post.set_shader_parameter("vignette", 0.32)
 	post.set_shader_parameter("tilt", 1.0 if G.settings.fx_high else 0.0)
 	r.material = post
@@ -437,6 +470,12 @@ func _build_eden() -> void:
 		Fx.shaft(self, sp, 10.0, 2.4, 0.18)
 	_weather_petals()
 	_edge_fade(Color("2e4a2a"))
+	# Way traces and secrets (GDD v0.3): solo world, but never quite alone
+	_add_secret("dreamer_note", Vector3(24.0, 0, 2.5), "The Dreamer's Note", "Written in a careful hand: \"Mark well the garden, for you will not walk here again.\"", {"xp": 20})
+	_add_secret("lily", Vector3(-23.0, 0, -12.0), "A Lily Among Thorns", "A white lily grows alone by the water. [BSB: Song of Songs 2:2]  You take a cutting: Lily Hairpin (cosmetic headgear).", {"item": "Lily Hairpin"})
+	_add_waymark(Vector3(-9.5, 0, 9.0), "Look up: the vine needs tending", "Wren", 18)
+	_add_waymark(Vector3(-12.0, 0, -2.0), "Read slowly [BSB: Psalm 119:105]", "Psalter", 57)
+	_add_passerby([Vector3(-24, 0, 4), Vector3(-6, 0, 8), Vector3(10, 0, 7), Vector3(24, 0, 5)], "Marigold", "walking in the garden", [1, 2, 2], true)
 	objectives = [
 		{"id": "walk", "text": "Walk to the shining place", "zone": Vector3(-8, 0, 7)},
 		{"id": "tend", "text": "Tend the Young Vine", "ent": "vine"},
@@ -501,6 +540,12 @@ func _build_city() -> void:
 	for i in 6:
 		_spawn_mob(Vector3(-4.0 + i * 3.8, 0, randf_range(-5, 6)))
 	_edge_fade(Color("2a2832"))
+	_add_secret("almanac", Vector3(-9.6, 0, 11.7), "An Old Almanac", "Pages of fortunes and festivals for the coming year. Not one word about the wrath to come.", {"xp": 15})
+	_add_secret("drawing", Vector3(15.6, 0, 7.4), "A Child's Drawing", "A shining gate, drawn in charcoal by someone in this city who once hoped. You keep it: Charcoal Gate (Snapshot frame).", {"item": "Charcoal Gate frame"})
+	_add_waymark(Vector3(-9.0, 0, 1.6), "Beware: Slothlings ahead. Step out of the red circle!", "Rook", 41)
+	_add_waymark(Vector3(17.5, 0, 2.2), "Keep the light in your eye", "Tabitha", 112)
+	_add_passerby([Vector3(-23, 0, -1), Vector3(-10, 0, -0.5), Vector3(6, 0, 0.8), Vector3(20, 0, 0)], "Ebenezer", "toward the Wicket Gate", [0, 4, 3], true)
+	_add_passerby([Vector3(-23, 0, 2), Vector3(-4, 0, 1.5), Vector3(12, 0, -0.5), Vector3(20, 0, 0.5)], "Lumen", "toward the Wicket Gate", [2, 2, 1], true, 9.0)
 	_weather_drizzle()
 	Fx.particles(warp, warp.global_position + Vector3(0, 0.2, 0), {"amount": 24, "life": 2.2, "one_shot": false, "explode": 0.0, "sphere": 1.2, "vmin": 0.8, "vmax": 1.6, "spread": 8.0, "gravity": Vector3.ZERO, "color": Color("fff0c0"), "size": 0.14, "local": true})
 	var ws2 := Sprite3D.new(); ws2.texture = G.tex("res://assets/fx/warp.png"); ws2.pixel_size = 0.011; ws2.rotation_degrees.x = -90; ws2.position.y = 0.08
@@ -536,6 +581,8 @@ func _spawn_mob(pos: Vector3) -> void:
 func _mob_tick(delta: float) -> void:
 	var p := player.position
 	for m in mobs:
+		if m.get("boss", false):
+			continue
 		var a: SpriteActor = m.actor
 		if not m.alive:
 			m.respawn -= delta
@@ -628,9 +675,12 @@ func hit_mob(m: Dictionary, dmg: int, crit: bool = false, miss: bool = false) ->
 		hitstop(0.1); shake(0.25)
 	else:
 		hitstop(0.05)
-	var tw := create_tween(); tw.tween_property(a, "position", a.position + dirv * (0.4 if crit else 0.25), 0.08)
-	m.bg.visible = true
+	var tw := create_tween(); tw.tween_property(a, "position", a.position + dirv * ((0.4 if crit else 0.25) * (0.15 if m.get("boss", false) else 1.0)), 0.08)
+	m.bg.visible = not m.get("boss", false)
 	m.fg.scale.x = maxf(0.001, m.hp / m.max); m.fg.position.x = -0.43 * (1.0 - m.hp / m.max)
+	if m.hp <= 0.0 and m.get("boss", false):
+		_boss_down(m)
+		return
 	if m.hp <= 0.0:
 		m.alive = false; m.respawn = 14.0; m.bg.visible = false
 		a.play_once("die", 0.7)
@@ -791,7 +841,7 @@ func auto_path_quest() -> void:
 		G.say("Auto-path: %s" % q.name, G.SYS)
 	elif q is Vector3:
 		move_target = q; pending = null
-	elif cur_obj() == "fight":
+	elif cur_obj() in ["fight", "boss"]:
 		_attack_pressed()
 
 func _approach_point(p: Vector3) -> Vector3:
@@ -971,7 +1021,7 @@ func _ko() -> void:
 func rise() -> void:
 	dead = false
 	G.hp = G.hp_max; G.zeal = G.zeal_max; G.weary = true
-	player.position = Vector3(-12, 0, 3)
+	player.position = info("start")
 	pact.play("idle")
 	for m in mobs:
 		m.aggro = false
@@ -995,7 +1045,9 @@ func _finish() -> void:
 	if ending:
 		return
 	ending = true
-	G.goto("end")
+	match map_id:
+		"city": G.goto("story", {"id": "onward"})
+		_: G.goto("end")
 
 # ------------------------------------------------------------------ main loop
 func _physics_process(delta: float) -> void:
@@ -1061,22 +1113,27 @@ func _physics_process(delta: float) -> void:
 	if obj_idx < objectives.size() and objectives[obj_idx].has("zone"):
 		var z: Vector3 = objectives[obj_idx].zone
 		if Vector2(player.position.x - z.x, player.position.z - z.z).length() < 1.6:
-			if cur_obj() == "light":
+			if cur_obj() in ["light", "return"]:
 				_finish()
 			else:
 				complete()
 				if cur_obj() == "tend":
 					G.say("Well walked! Tap things in the world, or use the Act button when near.", G.SYS)
 	# auto battle (within the Tier 1 auto scope: auto-attack and the auto-skill slots)
-	if auto_on and map_id == "city":
+	if auto_on and is_combat():
 		if target == null or not target.alive:
 			target = _nearest_mob(14.0)
 		if target != null and cd.steps <= 0.0 and G.zeal >= 10 and target.actor.position.distance_to(player.position) < 2.2 and gcd <= 0.0:
 			skill("steps")
 		if G.hp < G.hp_max * 0.45 and cd.refuge <= 0.0 and G.zeal >= 15:
 			skill("refuge")
-	if map_id == "city":
+	if is_combat():
 		_mob_tick(delta)
+	if boss != null:
+		_boss_tick(delta)
+	_allies_tick(delta)
+	_others_tick(delta)
+	_glint_tick()
 	_drop_tick()
 	# regeneration (faster while sitting)
 	regen_t += delta
@@ -1084,7 +1141,7 @@ func _physics_process(delta: float) -> void:
 		regen_t = 0.0
 		var mult := 3.0 if sitting else 1.0
 		G.zeal = minf(G.zeal_max, G.zeal + 1.0 * mult)
-		if not (map_id == "city" and _any_aggro()):
+		if not (is_combat() and _any_aggro()):
 			G.hp = minf(G.hp_max, G.hp + 1.0 * mult)
 		G.stats_changed.emit()
 	if queued_skill != "" and gcd <= 0.0:
@@ -1211,7 +1268,9 @@ func _ambient_tick(delta: float) -> void:
 			m.trail_v = lerpf(m.trail_v, v, delta * 3.0) if m.trail_v > v else v
 			m.trail.scale.x = maxf(0.001, m.trail_v); m.trail.position.x = -0.43 * (1.0 - m.trail_v)
 	# status visuals on the body
-	if map_id == "city" and burden_fx == null:
+	if burden_fx != null and not G.burden:
+		burden_fx.queue_free(); burden_fx = null
+	if G.burden and burden_fx == null:
 		burden_fx = Fx.particles(player, player.global_position + Vector3(0.25, 1.1, 0), {"amount": 6, "life": 1.4, "one_shot": false, "explode": 0.0, "sphere": 0.25,
 			"vmin": 0.05, "vmax": 0.2, "gravity": Vector3(0, -0.4, 0), "color": Color(0.2, 0.16, 0.12, 0.45), "size": 0.3, "tex": "res://assets/fx/puff.png", "add": false, "local": false})
 	if burden_fx:
@@ -1279,3 +1338,520 @@ func _process(_d: float) -> void:
 	for f in _followers:
 		if is_instance_valid(f[0]):
 			f[0].global_position = player.global_position + f[1]
+
+# ======================================================================
+# World model (GDD v0.3): Way traces, the House, the Muster
+# ======================================================================
+
+# ------------------------------------------------------------------ secrets on the Way
+func _add_secret(id: String, pos: Vector3, title: String, text: String, reward: Dictionary) -> void:
+	secret_ids.append(id)
+	if G.secret_found(map_id, id):
+		return
+	var n := Node3D.new(); n.position = pos; add_child(n)
+	var g := Sprite3D.new(); g.texture = G.tex("res://assets/fx/star.png"); g.pixel_size = 0.004; g.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	g.shaded = false; g.transparent = true; g.modulate = Color(1, 0.97, 0.8, 0.0); g.position.y = 0.55; n.add_child(g)
+	n.set_meta("glint", g)
+	var e := _add_ent("secret_" + id, "Something glints", pos, n, "Search", "eye", _find_secret.bind(id, title, text, reward))
+	e["kind"] = "secret"
+
+func _find_secret(id: String, title: String, text: String, reward: Dictionary) -> void:
+	var e := ent("secret_" + id)
+	if e.is_empty() or e.hidden:
+		return
+	show_ent("secret_" + id, false)
+	var found: Array = G.secrets.get(map_id, [])
+	found.append(id); G.secrets[map_id] = found
+	_sparkle(e.pos + Vector3(0, 0.6, 0), Color("fff2b0"))
+	Fx.ring(self, e.pos, Color(1, 0.95, 0.7), 2.0, 0.5)
+	if reward.has("item"):
+		G.bag_add(reward.item, 1); _item_pop("scroll")
+	if reward.has("xp"):
+		G.add_xp(int(reward.xp), -1, map_id)
+	G.say("Secret found (%d/%d): %s" % [found.size(), secret_ids.size(), title], G.INFO)
+	hud.secret_card(title, text, found.size(), secret_ids.size())
+	G.haptic(30)
+
+func secrets_text() -> String:
+	if secret_ids.is_empty():
+		return ""
+	return "✦ %d/%d" % [G.secrets.get(map_id, []).size(), secret_ids.size()]
+
+# ------------------------------------------------------------------ Waymarks (after the pillar at the By-path stile)
+var waymark_phrases := ["Beware: danger ahead", "Rest here", "Look closely here", "Keep to the narrow way", "Well done, pilgrim!",
+	"Remember [BSB: Psalm 46:1]", "Read slowly [BSB: Psalm 119:105]"]
+
+func _add_waymark(pos: Vector3, phrase: String, author: String, thanks: int) -> Dictionary:
+	var n := Node3D.new(); n.position = pos; add_child(n)
+	var wood := _mat("res://assets/tiles/bark.png", Vector2(1, 1), true, Color(0.85, 0.75, 0.6))
+	var post_m := MeshInstance3D.new(); var pb := BoxMesh.new(); pb.size = Vector3(0.12, 1.2, 0.12); post_m.mesh = pb; post_m.material_override = wood; post_m.position.y = 0.6; n.add_child(post_m)
+	var plank := MeshInstance3D.new(); var pk := BoxMesh.new(); pk.size = Vector3(0.7, 0.32, 0.06); plank.mesh = pk; plank.material_override = wood; plank.position.y = 1.08; n.add_child(plank)
+	var stone := StandardMaterial3D.new(); stone.albedo_color = Color("9ad0ff"); stone.emission_enabled = true; stone.emission = Color("6ab8ff"); stone.emission_energy_multiplier = 1.2
+	var gem := MeshInstance3D.new(); var sm := SphereMesh.new(); sm.radius = 0.07; sm.height = 0.14; gem.mesh = sm; gem.material_override = stone; gem.position = Vector3(0, 1.32, 0); n.add_child(gem)
+	var wm := {"phrase": phrase, "author": author, "thanks": thanks, "thanked": false, "mine": author == G.pname}
+	var e := _add_ent("waymark_%d" % ents.size(), "Waymark", pos, n, "Read", "scroll", func(): hud.waymark_read(wm))
+	e["kind"] = "waymark"
+	return wm
+
+func place_waymark(phrase: String) -> void:
+	var p := player.position + pact.facing.normalized() * 1.3
+	p.y = 0.0
+	_add_waymark(p, phrase, G.pname, 0)
+	G.my_waymarks.append({"map": map_id, "pos": p, "phrase": phrase})
+	_sparkle(p + Vector3(0, 1.2, 0), Color("bfe4ff"))
+	G.say("You raised a Waymark: \"%s\". Pilgrims who pass this way will see it." % phrase, G.INFO)
+
+# ------------------------------------------------------------------ other pilgrims (passing ghosts on the Way, real players in Houses)
+func _pilgrim_actor(look: Array, nm: String, col: Color, ghost: bool) -> SpriteActor:
+	var a := SpriteActor.new(); add_child(a)
+	a.setup({"tex": G.build_sheet(int(look[0]), int(look[1]), int(look[2])), "hframes": 10, "vframes": 5, "pixel": 0.042, "rows": true, "ghost": ghost,
+		"anims": {"idle": [0], "walk": [1, 2, 3, 4], "attack": [5, 6], "sit": [7], "rest": [8], "cast": [9]}, "fps": {"walk": 9.0, "attack": 6.0}}, nm, col)
+	return a
+
+func _add_passerby(path: Array, nm: String, dest: String, look: Array, ghost: bool, delay: float = 0.0) -> void:
+	var a := _pilgrim_actor(look, "%s · %s" % [nm, dest], Color(0.85, 0.92, 1.0, 0.75), ghost)
+	a.position = path[0]
+	if a.name_lbl:
+		a.name_lbl.font_size = 26
+	a.visible = delay <= 0.0
+	others.append({"actor": a, "path": path, "i": 1, "speed": 2.3, "ghost": ghost, "wait": delay, "kind": "passer"})
+
+func _others_tick(delta: float) -> void:
+	for o in others:
+		var a: SpriteActor = o.actor
+		if o.wait > 0.0:
+			o.wait -= delta
+			if o.wait <= 0.0:
+				a.visible = true; a.position = o.path[0]; o.i = 1
+				if o.kind == "passer":
+					_fade_actor(a, 0.0, 1.0)
+			else:
+				if o.kind == "house" and a.anim == "walk":
+					a.play("sit" if o.get("sitter", false) else "idle")
+				_house_chat_tick(o, delta)
+				continue
+		var goal: Vector3 = o.path[o.i]
+		var to := goal - a.position; to.y = 0
+		if to.length() > 0.2:
+			a.position += to.normalized() * o.speed * delta
+			a.facing = to.normalized(); a.play("walk")
+		else:
+			if o.kind == "passer":
+				o.i += 1
+				if o.i >= o.path.size():
+					_fade_actor(a, 1.0, 0.0)
+					o.wait = randf_range(8.0, 14.0)
+			else:
+				o.path = [a.position, _house_spot()]
+				o.i = 1
+				o.wait = randf_range(3.0, 9.0)
+		_house_chat_tick(o, delta)
+
+func _fade_actor(a: SpriteActor, from: float, to: float) -> void:
+	var tw := create_tween()
+	tw.tween_method(_actor_alpha.bind(a), from, to, 0.8)
+	if to <= 0.0:
+		tw.tween_callback(_hide_node.bind(a))
+
+func _actor_alpha(v: float, a: SpriteActor) -> void:
+	if not is_instance_valid(a):
+		return
+	var c: Color = G.sprite_tint; c.a = v; a.set_tint(c)
+	if a.name_lbl:
+		a.name_lbl.modulate.a = v * 0.75; a.name_lbl.outline_modulate.a = v * 0.75
+
+func _hide_node(n: Node3D) -> void:
+	if is_instance_valid(n):
+		n.visible = false
+
+# ------------------------------------------------------------------ the House: Palace Beautiful
+const HOUSE_FOLK := [
+	["Lumen", [2, 2, 1]], ["Rook", [0, 1, 5]], ["Tabitha", [1, 3, 2]], ["Ebenezer", [0, 4, 3]], ["Wren", [1, 0, 0]],
+	["Psalter", [2, 5, 4]], ["Marigold", [1, 2, 2]], ["Honestly", [0, 0, 1]], ["Faithwalker", [2, 1, 0]]]
+const HOUSE_CHAT := ["Grace and peace!", "LF 2 for the Lions' Gate (Normal)", "Anyone reading Psalm 23 in the reading room?",
+	"Thanks for the Help in the Slough earlier!", "First time at the House. Where is the armory?", "Armory is the west door.",
+	"Muster was quick: a Steward filled our last place.", "Waymark at the Hill: rest at the Arbour, but don't sleep there!",
+	"Heading out to the Valley meadows later, anyone?", "Welcome, new pilgrim!"]
+
+func _house_spot() -> Vector3:
+	return Vector3(randf_range(-11, 11), 0, randf_range(-6, 6))
+
+func _house_chat_tick(o: Dictionary, delta: float) -> void:
+	if o.kind != "house":
+		return
+	o.chat_t -= delta
+	if o.chat_t <= 0.0:
+		o.chat_t = randf_range(9.0, 20.0)
+		var line: String = HOUSE_CHAT[randi() % HOUSE_CHAT.size()]
+		G.say("[Local] %s: %s" % [o.name, line], G.CHAT)
+		_bubble(o.actor, line)
+
+func _bubble(a: SpriteActor, text: String) -> void:
+	var l := _label3d(text, a.position + Vector3(0, 2.45, 0), Color("1d2b52"), 24)
+	l.outline_modulate = Color(1, 1, 1, 0.95); l.outline_size = 16; l.width = 360; l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.reparent(a); l.position = Vector3(0, 2.45, 0)
+	var tw := create_tween(); tw.tween_interval(3.2); tw.tween_method(_label_alpha.bind(l), 1.0, 0.0, 0.4); tw.tween_callback(l.queue_free)
+
+func _build_palace() -> void:
+	bounds = Rect2(-20, -12, 40, 26)
+	_plane(Vector2(120, 100), _mat("res://assets/tiles/grass.png", Vector2(60, 50), false, Color(0.9, 0.95, 0.8)), Vector3.ZERO)
+	_plane(Vector2(26, 15), _mat("res://assets/tiles/cobble.png", Vector2(13, 7.5), false, Color(1.0, 0.96, 0.88)), Vector3(0, 0.01, -1.5))
+	_plane(Vector2(3.4, 14), _mat("res://assets/tiles/dirt.png", Vector2(1.7, 7), false, Color(0.92, 0.86, 0.74)), Vector3(0, 0.012, 9))
+	var stonem := _mat("res://assets/tiles/wall.png", Vector2(0.5, 0.5), true, Color(1.0, 0.97, 0.9))
+	var roofm := _mat("res://assets/tiles/roof.png", Vector2(0.6, 0.6), true, Color(0.62, 0.72, 1.0))
+	# the palace itself, "a very stately palace … by the highway side"
+	_box(Vector3(26, 6.5, 5), stonem, Vector3(0, 3.25, -12.5))
+	var pr := MeshInstance3D.new(); var pm := PrismMesh.new(); pm.size = Vector3(27, 3.0, 5.8); pr.mesh = pm; pr.material_override = roofm; pr.position = Vector3(0, 8.0, -12.5); add_child(pr)
+	for tx in [-14.0, 14.0]:
+		_box(Vector3(4.2, 10, 4.2), stonem, Vector3(tx, 5, -12.0))
+		var cone := MeshInstance3D.new(); var cm := CylinderMesh.new(); cm.top_radius = 0.0; cm.bottom_radius = 3.0; cm.height = 4.0; cone.mesh = cm; cone.material_override = roofm
+		cone.position = Vector3(tx, 12.0, -12.0); add_child(cone)
+	var win := StandardMaterial3D.new(); win.albedo_color = Color("ffd98a"); win.emission_enabled = true; win.emission = Color("ffc860"); win.emission_energy_multiplier = 1.1
+	for wx in [-9.0, -6.0, 6.0, 9.0]:
+		for wy in [2.4, 4.8]:
+			_box(Vector3(1.0, 1.3, 0.06), win, Vector3(wx, wy, -9.97), false)
+	_box(Vector3(3.0, 3.6, 0.1), _mat("res://assets/tiles/bark.png", Vector2(1, 1), true, Color(0.6, 0.45, 0.32)), Vector3(0, 1.8, -9.95), false)
+	var door_l := OmniLight3D.new(); door_l.light_color = Color("ffe9b0"); door_l.light_energy = 2.2; door_l.omni_range = 7.0; door_l.position = Vector3(0, 3.2, -8.6); add_child(door_l)
+	holy_lights.append(door_l)
+	var dh := Sprite3D.new(); dh.texture = G.tex("res://assets/fx/glow.png"); dh.pixel_size = 0.07; dh.billboard = BaseMaterial3D.BILLBOARD_ENABLED; dh.shaded = false
+	dh.modulate = Color(1, 0.95, 0.75, 0.5); dh.position = Vector3(0, 2.4, -9.6); add_child(dh); holy_lights.append(dh)
+	# the hearth (rest is required once before Act III)
+	var hearth := Node3D.new(); hearth.position = Vector3(-8, 0, -3); add_child(hearth)
+	var rockm := _mat("res://assets/tiles/wall.png", Vector2(1, 1), true, Color(0.7, 0.68, 0.66))
+	for k in 8:
+		var ang := k * TAU / 8.0
+		var r := MeshInstance3D.new(); var rs := SphereMesh.new(); rs.radius = 0.24; rs.height = 0.36; r.mesh = rs; r.material_override = rockm
+		r.position = Vector3(cos(ang) * 0.8, 0.14, sin(ang) * 0.8); hearth.add_child(r)
+	_solid_cyl(0.9, hearth.position)
+	Fx.particles(hearth, hearth.global_position + Vector3(0, 0.2, 0), {"amount": 22, "life": 0.9, "one_shot": false, "explode": 0.0, "sphere": 0.35, "dir": Vector3.UP, "spread": 12.0,
+		"vmin": 1.0, "vmax": 1.8, "gravity": Vector3(0, 0.6, 0), "color": Color("ffb048"), "size": 0.32, "local": true})
+	var fire := OmniLight3D.new(); fire.light_color = Color("ff9a40"); fire.light_energy = 1.8; fire.omni_range = 6.0; fire.position = Vector3(0, 1.0, 0); hearth.add_child(fire)
+	lamps.append(fire)
+	var benchm := _mat("res://assets/tiles/bark.png", Vector2(1, 1), true, Color(0.75, 0.6, 0.45))
+	_box(Vector3(0.6, 0.42, 1.8), benchm, Vector3(-10.4, 0.21, -3))
+	_box(Vector3(0.6, 0.42, 1.8), benchm, Vector3(-5.6, 0.21, -3))
+	_box(Vector3(2.4, 0.42, 0.6), benchm, Vector3(-8, 0.21, -5.4))
+	_add_ent("hearth", "The Hearth", hearth.position, hearth, "Rest", "sit", _act_hearth)
+	# the Muster Board
+	var board := Node3D.new(); board.position = Vector3(8, 0, -3); add_child(board)
+	for x in [-1.1, 1.1]:
+		var bpst := MeshInstance3D.new(); var bb := BoxMesh.new(); bb.size = Vector3(0.16, 2.4, 0.16); bpst.mesh = bb; bpst.material_override = benchm; bpst.position = Vector3(x, 1.2, 0); board.add_child(bpst)
+	var panel := MeshInstance3D.new(); var pbm := BoxMesh.new(); pbm.size = Vector3(2.4, 1.4, 0.1); panel.mesh = pbm; panel.material_override = benchm; panel.position = Vector3(0, 1.6, 0); board.add_child(panel)
+	var parch := StandardMaterial3D.new(); parch.albedo_color = Color("f4e8c8")
+	for k in 3:
+		var sh := MeshInstance3D.new(); var qb := BoxMesh.new(); qb.size = Vector3(0.6, 0.8, 0.02); sh.mesh = qb; sh.material_override = parch
+		sh.position = Vector3(-0.72 + k * 0.72, 1.6, 0.07); sh.rotation.z = (k - 1) * 0.06; board.add_child(sh)
+	_solid_box(Vector3(2.6, 2, 0.4), board.position + Vector3(0, 1, 0))
+	_add_ent("board", "Muster Board", board.position, board, "Muster", "friends", func(): hud.muster_board())
+	# doors: armory and reading room
+	_add_ent("armory", "The Armory", Vector3(-6, 0, -9.2), null, "Enter", "equip", func(): G.say("The armory: here every pilgrim is given the whole armour of God, the same for all (Act II, full game). [BSB: Ephesians 6:13]", G.NPC))
+	_add_ent("reading", "Reading Room", Vector3(6, 0, -9.2), null, "Enter", "library", func(): G.say("Reading Together rooms: friends read one passage side by side. On the Lord's Day they are quiet and reward-free.", G.NPC))
+	# the porter
+	var watchful := _sprite_npc("res://assets/sprites/npc_evangelist.png", 2, 5, true, Vector3(2.6, 0, 6.5), "Watchful the Porter", Color("ffe9a0"))
+	watchful.set_tint(Color(1.05, 0.95, 0.8))
+	_add_ent("watchful", "Watchful", watchful.position, watchful, "Talk", "talk", _act_watchful)
+	# lamps, trees, a fountain
+	for lp in [Vector3(-3, 0, 4.5), Vector3(3, 0, 4.5), Vector3(-12, 0, 2), Vector3(12, 0, 2)]:
+		_box(Vector3(0.15, 3, 0.15), _mat("res://assets/tiles/bark.png", Vector2(1, 1), true, Color(0.3, 0.3, 0.32)), lp + Vector3(0, 1.5, 0))
+		var lamp := OmniLight3D.new(); lamp.light_color = Color("ffd080"); lamp.light_energy = 1.4; lamp.omni_range = 5.0; lamp.position = lp + Vector3(0, 3.0, 0); add_child(lamp); lamps.append(lamp)
+		var halo := Sprite3D.new(); halo.texture = G.tex("res://assets/fx/glow.png"); halo.pixel_size = 0.03; halo.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		halo.shaded = false; halo.modulate = Color(1, 0.85, 0.5, 0.7); halo.position = lp + Vector3(0, 3.05, 0); add_child(halo)
+	var basin := MeshInstance3D.new(); var bc := CylinderMesh.new(); bc.top_radius = 1.4; bc.bottom_radius = 1.5; bc.height = 0.6; basin.mesh = bc; basin.material_override = stonem
+	basin.position = Vector3(0, 0.3, -2); add_child(basin); _solid_cyl(1.5, Vector3(0, 0, -2))
+	_water(Vector2(2.4, 2.4), Vector3(0, 0.62, -2))
+	Fx.particles(self, Vector3(0, 0.9, -2), {"amount": 18, "life": 1.0, "one_shot": false, "explode": 0.0, "sphere": 0.1, "dir": Vector3.UP, "spread": 18.0,
+		"vmin": 2.2, "vmax": 2.8, "gravity": Vector3(0, -5, 0), "color": Color(0.85, 0.93, 1.0, 0.7), "size": 0.12, "tex": "res://assets/fx/drop.png", "add": false, "local": false})
+	var rng := RandomNumberGenerator.new(); rng.seed = 7
+	for i in 18:
+		var side := i % 3
+		var p := Vector3.ZERO
+		match side:
+			0: p = Vector3(rng.randf_range(-20, 20), 0, 14.5)
+			1: p = Vector3(-20.5, 0, rng.randf_range(-8, 14))
+			2: p = Vector3(20.5, 0, rng.randf_range(-8, 14))
+		if side == 0 and absf(p.x) < 3.5:
+			continue
+		_tree(p, rng.randf_range(0.9, 1.25), Color(rng.randf_range(0.9, 1.1), 1.05, rng.randf_range(0.85, 1.0)))
+	_walls()
+	for sp in [Vector3(-6, 0, 2), Vector3(6, 0, -1)]:
+		Fx.shaft(self, sp, 10.0, 2.4, 0.16)
+	_add_waymark(Vector3(-2.4, 0, 9.5), "Rest at the hearth before you go on", "Ebenezer", 230)
+	# pilgrims in the House (simulated in the offline demo; real players online)
+	for i in HOUSE_FOLK.size():
+		var f: Array = HOUSE_FOLK[i]
+		var a := _pilgrim_actor(f[1], f[0], Color("dfe9ff"), false)
+		var sitter := i in [3, 6]
+		a.position = (Vector3(-8, 0, -3) + Vector3(cos(i) * 1.8, 0, sin(i) * 1.8 + 0.4)) if sitter else _house_spot()
+		others.append({"actor": a, "path": [a.position, _house_spot()], "i": 1, "speed": 2.0, "ghost": false, "wait": randf_range(0.5, 6.0) if not sitter else 999.0,
+			"kind": "house", "name": f[0], "chat_t": randf_range(2.0, 12.0) + i * 1.5, "sitter": sitter})
+		if sitter:
+			a.play("sit")
+	_edge_fade(Color("3a4a30"))
+	_weather_petals()
+	objectives = [
+		{"id": "porter", "text": "Speak with Watchful the Porter", "ent": "watchful"},
+		{"id": "rest", "text": "Rest at the hearth (needed once before Act III)", "ent": "hearth"},
+		{"id": "muster", "text": "Answer the Muster Board", "ent": "board"}]
+
+func _act_watchful() -> void:
+	var src := "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+	hud.run_dialog([
+		{"who": "Watchful", "text": "Fear not the lions, for they are chained, and are placed there for trial of faith where it is, and for discovery of those that have none.", "src": src},
+		{"who": "Watchful", "text": "This house was built by the Lord of the hill, and he built it for the relief and security of pilgrims.", "src": src},
+		{"who": "Watchful", "text": "Here pilgrims who walked the way alone find one another. Rest at the hearth. Then see the Muster Board: Giant Grim has come to back the lions, and a company is wanted to drive him off.", "src": "Part II tells how Great-heart's company met Giant Grim at the lions."}],
+		_watchful_done)
+
+func _watchful_done() -> void:
+	if cur_obj() == "porter":
+		G.add_xp(30, 20); complete()
+
+func _act_hearth() -> void:
+	if not sitting:
+		toggle_sit()
+	if cur_obj() == "rest":
+		G.house_rested = true
+		_sparkle(player.position + Vector3(0, 1.2, 0), Color("ffd8a0"))
+		G.hp = G.hp_max; G.zeal = G.zeal_max; G.weary = false
+		G.say("You rest in the House, among the pilgrims. HP and Zeal restored.", G.INFO)
+		G.add_xp(20, 15); complete()
+	else:
+		G.say("You sit by the fire.", G.SYS)
+
+func enter_muster(party: Array) -> void:
+	G.muster_party = party
+	if cur_obj() == "muster":
+		complete()
+	ending = true
+	G.goto("world", {"map": "lions"})
+
+# ------------------------------------------------------------------ the Muster: Giant Grim at the Lions' Gate
+func _build_lions() -> void:
+	bounds = Rect2(-9, -12, 18, 24)
+	_plane(Vector2(120, 100), _mat("res://assets/tiles/grass.png", Vector2(60, 50), false, Color(0.78, 0.76, 0.62)), Vector3.ZERO)
+	_plane(Vector2(8, 40), _mat("res://assets/tiles/dirt.png", Vector2(4, 20), false, Color(0.9, 0.82, 0.68)), Vector3(0, 0.01, 0))
+	var wallm := _mat("res://assets/tiles/wall.png", Vector2(0.5, 0.5), true, Color(0.82, 0.78, 0.72))
+	for x in [-10.0, 10.0]:
+		_box(Vector3(1.2, 2.2, 30), wallm, Vector3(x, 1.1, 0))
+	# the chained lions
+	var lionm := _mat("res://assets/tiles/wall.png", Vector2(1, 1), true, Color(0.62, 0.55, 0.45))
+	var mane := _mat("res://assets/tiles/wall.png", Vector2(1, 1), true, Color(0.5, 0.4, 0.3))
+	var chainm := StandardMaterial3D.new(); chainm.albedo_color = Color(0.3, 0.3, 0.34); chainm.metallic = 0.6
+	for sx in [-1.0, 1.0]:
+		var lp := Vector3(sx * 6.4, 0, -5.0)
+		_box(Vector3(2.2, 1.1, 1.0), lionm, lp + Vector3(0, 0.75, 0))
+		_sphere(0.75, mane, lp + Vector3(-sx * 1.1, 1.45, 0))
+		_sphere(0.45, lionm, lp + Vector3(-sx * 1.5, 1.4, 0))
+		_box(Vector3(2.4, 0.08, 0.08), chainm, lp + Vector3(sx * 1.9, 1.2, 0), false)
+	# the palace gate beyond
+	_box(Vector3(9, 5, 1.2), _mat("res://assets/tiles/wall.png", Vector2(0.5, 0.5), true, Color(1.0, 0.97, 0.9)), Vector3(0, 2.5, -13.5))
+	var gl := OmniLight3D.new(); gl.light_color = Color("ffe9b0"); gl.light_energy = 2.4; gl.omni_range = 8.0; gl.position = Vector3(0, 3, -12); add_child(gl); holy_lights.append(gl)
+	_walls()
+	_edge_fade(Color("342c24"))
+	# the company
+	var party: Array = G.muster_party
+	if party.is_empty():
+		party = [{"name": "Lumen", "role": "support", "ai": false, "look": [2, 2, 1]}, {"name": "Rook", "role": "defender", "ai": false, "look": [0, 1, 5]},
+			{"name": "Steward of the House", "role": "damage", "ai": true, "look": [0, 4, 5]}]
+	var k := 0
+	for m in party:
+		var md: Dictionary = m
+		var label: String = md.name + (" (AI)" if md.ai else "")
+		var a := _pilgrim_actor(md.look, label, Color("9ff5a0") if not md.ai else Color("cfe8cf"), false)
+		a.position = info("start") + Vector3(-2.0 + k * 2.0, 0, 1.2)
+		allies.append({"actor": a, "name": md.name, "role": md.role, "ai": md.ai, "next": 1.0 + k * 0.4, "slot": k, "heal_t": 4.0})
+		k += 1
+	# Giant Grim (placeholder art: a scaled Slothling sheet until the boss sprite lands)
+	var g := SpriteActor.new(); add_child(g); g.position = Vector3(0, 0, -2.5)
+	g.setup({"tex": G.tex("res://assets/sprites/mob_slothling.png"), "hframes": 7, "vframes": 1, "pixel": 0.088, "rows": false, "shadow": 2.2,
+		"anims": {"idle": [0, 1], "walk": [2, 3], "hurt": [4], "die": [5, 6]}, "fps": {"idle": 1.4, "walk": 2.6, "die": 2.0}}, "Giant Grim", Color("ff9a8a"))
+	g.set_tint(Color(0.78, 0.6, 0.58))
+	if g.name_lbl:
+		g.name_lbl.font_size = 44; g.name_lbl.position.y = -0.3
+	var bg := MeshInstance3D.new(); var fg := MeshInstance3D.new(); var tr := MeshInstance3D.new()
+	bg.visible = false; g.add_child(bg); bg.add_child(fg); bg.add_child(tr)
+	boss = {"actor": g, "hp": 1100.0, "max": 1100.0, "alive": true, "next": 0.0, "home": g.position, "wander": g.position, "wander_t": 99.0, "bg": bg, "fg": fg,
+		"aggro": true, "respawn": 0.0, "tele": false, "tele_pos": Vector3.ZERO, "trail": tr, "trail_v": 1.0, "was_aggro": true, "boss": true, "goal": Vector3.ZERO}
+	mobs.append(boss)
+	boss_atk_t = 3.0
+	objectives = [
+		{"id": "boss", "text": "Drive off Giant Grim with your company"},
+		{"id": "return", "text": "Return to the House", "ent": "warp", "zone": Vector3(0, 0, -10.5)}]
+	var warp := Node3D.new(); warp.position = Vector3(0, 0, -10.5); add_child(warp)
+	var ws := Sprite3D.new(); ws.texture = G.tex("res://assets/fx/warp.png"); ws.pixel_size = 0.014; ws.rotation_degrees.x = -90; ws.position.y = 0.06
+	ws.shaded = false; ws.transparent = true; warp.add_child(ws); warp.set_meta("spin", ws)
+	_add_ent("warp", "Return to the House", warp.position, warp, "Enter", "warp", _finish, true)
+
+func _boss_targets() -> Array:
+	## Weighted: the defender draws the Giant most; the player is never ignored.
+	var t: Array = [{"pos": player.position, "who": "player", "w": 1.6}]
+	for al in allies:
+		t.append({"pos": al.actor.position, "who": al, "w": 3.0 if al.role == "defender" else 1.0})
+	return t
+
+func _pick_target() -> Dictionary:
+	var ts := _boss_targets()
+	var total := 0.0
+	for x in ts: total += float(x.w)
+	var r := randf() * total
+	for x in ts:
+		r -= float(x.w)
+		if r <= 0.0:
+			return x
+	return ts[0]
+
+func _boss_tick(delta: float) -> void:
+	if not boss.alive or ending:
+		return
+	var a: SpriteActor = boss.actor
+	hud.boss_bar("Giant Grim", boss.hp / boss.max)
+	if not boss_enraged and boss.hp < boss.max * 0.5:
+		boss_enraged = true
+		G.say("Giant Grim roars and lays about him faster!", G.WARN)
+		_pop_mark(a, "!!", Color("ff6a3a")); shake(0.4); a.flash(Color("ff6a3a"), 0.7)
+	boss_atk_t -= delta * (1.35 if boss_enraged else 1.0)
+	var goal: Vector3 = boss.goal if boss.goal != Vector3.ZERO else player.position
+	var to := goal - a.position; to.y = 0
+	if to.length() > 2.6 and boss_atk_t > 1.2:
+		a.position += to.normalized() * 1.25 * delta
+		a.facing = to.normalized(); a.play("walk")
+	else:
+		a.play("idle")
+	a.position.x = clampf(a.position.x, bounds.position.x + 1, bounds.end.x - 1)
+	a.position.z = clampf(a.position.z, bounds.position.y + 1, bounds.end.y - 1)
+	if boss_atk_t <= 0.0:
+		boss_count += 1
+		boss_atk_t = 3.4
+		if boss_count % 4 == 0:
+			# wide slam around the Giant: everyone must step out
+			var c := a.position
+			Fx.telegraph(self, c, 3.3, 1.5)
+			G.say("Giant Grim raises his club high!", G.WARN)
+			get_tree().create_timer(1.5).timeout.connect(_boss_resolve.bind(c, 3.3, 20, true))
+			for al in allies:
+				var away: Vector3 = al.actor.position - c; away.y = 0
+				al["dodge"] = c + (away.normalized() if away.length() > 0.1 else Vector3(1, 0, 0)) * 4.4
+		else:
+			var tg := _pick_target()
+			boss.goal = tg.pos
+			var pos: Vector3 = tg.pos
+			Fx.telegraph(self, pos, 1.8, 1.1)
+			get_tree().create_timer(1.1).timeout.connect(_boss_resolve.bind(pos, 1.8, 14, false))
+			if tg.who is Dictionary and randf() < 0.75:
+				var al2: Dictionary = tg.who
+				var side := Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized()
+				al2["dodge"] = pos + side * 2.6
+
+func _boss_resolve(c: Vector3, r: float, dmg: int, slam: bool) -> void:
+	if boss == null or not boss.alive or ending:
+		return
+	var a: SpriteActor = boss.actor
+	a.play_once("walk", 0.3); a.squash(0.16 if slam else 0.1)
+	Fx.dust(self, c, Color(0.75, 0.68, 0.55, 0.7), 14 if slam else 6)
+	Fx.ring(self, c, Color(1, 0.8, 0.6), r * 0.9, 0.35)
+	shake(0.45 if slam else 0.22)
+	if not dead and Vector2(player.position.x - c.x, player.position.z - c.z).length() < r + 0.1:
+		_hurt_player(dmg + randi() % 4)
+	for al in allies:
+		var ap: Vector3 = al.actor.position
+		if Vector2(ap.x - c.x, ap.z - c.z).length() < r + 0.1:
+			al.actor.flash(Color("ff5050"), 0.7); al.actor.squash(0.06)
+			_float_text(ap + Vector3(0, 2.2, 0), str(dmg + randi() % 4), Color("ffb0b0"))
+
+func _allies_tick(delta: float) -> void:
+	if allies.is_empty():
+		return
+	var fighting: bool = boss != null and boss.alive and not ending
+	for al in allies:
+		var a: SpriteActor = al.actor
+		var goal: Vector3
+		if al.has("dodge"):
+			goal = al.dodge
+		elif fighting:
+			var ang: float = PI * 0.5 + (al.slot - 1) * 0.9 + (PI if al.role == "support" else 0.0)
+			var dist := 4.4 if al.role == "support" else 2.5
+			goal = boss.actor.position + Vector3(cos(ang), 0, sin(ang)) * dist
+		else:
+			goal = player.position + Vector3(-1.6 + al.slot * 1.6, 0, 1.4)
+		var to := goal - a.position; to.y = 0
+		if to.length() > 0.3:
+			a.position += to.normalized() * (4.0 if al.has("dodge") else 3.0) * delta
+			a.facing = to.normalized(); a.play("walk")
+		else:
+			if al.has("dodge"):
+				al.erase("dodge")
+			a.play("idle")
+			if fighting:
+				var tb: Vector3 = boss.actor.position - a.position; tb.y = 0
+				a.facing = tb.normalized()
+		if not fighting:
+			continue
+		al.next -= delta
+		if al.next <= 0.0 and not al.has("dodge"):
+			al.next = randf_range(1.2, 1.6)
+			if al.role == "support":
+				a.play_once("cast", 0.4)
+				_ally_hit(al, 6 + randi() % 4)
+			elif a.position.distance_to(boss.actor.position) < 3.0:
+				a.play_once("attack", 0.32)
+				_ally_hit(al, (9 if al.role == "damage" else 7) + randi() % 5)
+		if al.role == "support":
+			al.heal_t -= delta
+			if al.heal_t <= 0.0 and G.hp < G.hp_max * 0.7 and not dead:
+				al.heal_t = 6.0
+				var h := minf(G.hp_max - G.hp, 22.0)
+				G.hp += h; G.stats_changed.emit()
+				a.play_once("cast", 0.5)
+				_float_text(player.position + Vector3(0, 2.2, 0), "+%d" % int(h), Color("7cff7c"))
+				Fx.ring(self, player.position, Color(0.6, 1.0, 0.6), 1.6, 0.4)
+				G.say("%s: Hold on, I've got you." % al.name, G.CHAT)
+
+func _ally_hit(al: Dictionary, dmg: int) -> void:
+	var b: SpriteActor = boss.actor
+	boss.hp = maxf(0.0, boss.hp - dmg)
+	_float_text(b.position + Vector3(0, 2.6, 0), str(dmg), Color("bfe4ff"))
+	b.flash(Color.WHITE, 0.45)
+	var dirv: Vector3 = b.position - al.actor.position; dirv.y = 0
+	Fx.sparks(self, b.position + Vector3(0, 1.4, 0), dirv.normalized(), Color(0.85, 0.9, 1.0))
+	if boss.hp <= 0.0:
+		_boss_down(boss)
+
+func _boss_down(m: Dictionary) -> void:
+	if not m.alive:
+		return
+	m.alive = false
+	var a: SpriteActor = m.actor
+	a.play_once("die", 1.2)
+	hud.boss_bar("", -1.0)
+	shake(0.6); hitstop(0.18)
+	get_tree().create_timer(0.6).timeout.connect(_boss_fade_fx.bind(a.position))
+	get_tree().create_timer(1.2).timeout.connect(_hide_node.bind(a))
+	if target == m:
+		target = null
+	var humans := 0
+	for al in allies:
+		if not al.ai: humans += 1
+	G.marks += humans
+	G.add_xp(120, 80)
+	G.bag_add("Grim's Broken Chain", 1)
+	G.say("Muster cleared! Giant Grim is driven from the way.", G.INFO)
+	G.say("Rewards: Grim's Broken Chain · Fellowship Marks +%d (one per pilgrim in your company)." % humans, G.INFO)
+	hud.muster_cleared(humans)
+	for al in allies:
+		al.actor.play_once("cast", 0.8)
+	get_tree().create_timer(1.6).timeout.connect(func(): G.say("Lumen: Well fought, all! See you at the hearth.", G.CHAT))
+	show_ent("warp", true)
+	complete()
+
+func _boss_fade_fx(p: Vector3) -> void:
+	Fx.motes_up(self, p + Vector3(0, 1.0, 0), Color("fff6d8"), 40, 1.8)
+	Fx.ring(self, p, Color(1, 0.95, 0.75), 5.0, 0.7)
+
+func _glint_tick() -> void:
+	for e in ents:
+		if e.get("kind", "") != "secret" or e.hidden or e.node == null:
+			continue
+		var g: Sprite3D = e.node.get_meta("glint")
+		var d := Vector2(player.position.x - e.pos.x, player.position.z - e.pos.z).length()
+		var near := clampf(1.0 - (d - 2.0) / 6.0, 0.0, 1.0)
+		g.modulate.a = near * (0.55 + 0.45 * sin(t * 4.0 + e.pos.x))
+		g.rotation.z = t * 0.8

@@ -33,6 +33,7 @@ func show_screen(name: String, data: Dictionary) -> void:
 
 func _swap(name: String, data: Dictionary) -> void:
 	if current:
+		current.name = "Leaving"   # free the name so world -> world swaps keep "World"
 		current.queue_free()
 	var s: Node = load(SCREENS[name]).new()
 	s.set_meta("data", data)

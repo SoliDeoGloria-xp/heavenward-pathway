@@ -18,7 +18,7 @@ A playable demo of the opening of *Pilgrim's Progress Online*, a Reformed, alleg
 
 ## What the demo covers
 
-1. Title, then an age gate (13+), then server select.
+1. Title, then an age gate (13+), then the one-world screen (no server choice).
 2. Make Character: an 8-direction turntable, hair style and colour, robe colour, and the six-attribute hexagon. Divine names are blocked.
 3. The Bunyan dream opening.
 4. **Eden Isle** (the Dreamer's vision, no combat). Walk to the light, tend the vine, gather figs, name the lamb, then do the Word Study at the stone tablet (BSB placeholder, Manna +5). Base Level is capped at 5.
@@ -27,6 +27,19 @@ A playable demo of the opening of *Pilgrim's Progress Online*, a Reformed, alleg
    - Attack, First Steps, Take Refuge, Auto and quick items.
    - Drops, Base and Job level-ups, and the KO/rest flow: Weariness, 5% Manna spoilage, no XP loss.
 7. **Evangelist**: Bunyan's public-domain lines with a portrait cut-in, then the parchment roll. Snapshot mode unlocks, and you follow the shining light to the warp.
+8. **Onward**: story cards skip ahead to the end of Act II (Slough, Wicket Gate, Interpreter, the Cross, Hill Difficulty).
+9. **Palace Beautiful, the first House**: a shared hub with other pilgrims (simulated offline) who wander, sit and chat. Speak with Watchful, rest at the hearth (required once before Act III), raise a Waymark, then answer the Muster Board.
+10. **Muster: Giant Grim at the Lions' Gate**: the queue fills with two pilgrims and an AI Steward, then a party boss fight with telegraphed strikes, a wide slam, enrage at 50%, a defender, a healer and Fellowship Marks.
+
+## World model (GDD v0.3, "Solo Journey, Shared House")
+
+- **The Way is solo** (with story companions or invited friends). It holds the story, secrets and side paths.
+  - **Secrets:** 2 per map, glinting only when you are close, counted by the ✦ next to the minimap and hidden from the minimap.
+  - **Waymarks:** set phrases or BSB references that other pilgrims leave (Menu → Waymark), with Thanks.
+  - **Passing pilgrims:** faint figures of other players walking the same road.
+- **Houses are shared hubs**: Palace Beautiful in this demo; Mansoul and Beulah later. **Wilds are shared fields** (not in this demo).
+- **Musters** are queued party and alliance fights, launched from the Muster Board. Empty places fill with AI Stewards after 60 s (6 s in the demo).
+- Design doc: https://claude.ai/artifact/KUodVXBBgkqdsSDX59gLfR
 
 ## Feel and effects (polish pass 1)
 
