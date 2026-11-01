@@ -14,6 +14,69 @@ var one_shot := ""
 var one_shot_t := 0.0
 var pick_height := 0.9
 var pick_radius := 0.8
+var mat: ShaderMaterial
+var speed_mul := 1.0
+var _flash := 0.0
+var _flash_col := Color.WHITE
+static var _sh: Shader
+
+static func _shader() -> Shader:
+	if _sh == null:
+		_sh = Shader.new()
+		_sh.code = """shader_type spatial;
+render_mode unshaded, cull_disabled;
+uniform sampler2D tex : source_color, filter_nearest;
+uniform vec4 tint : source_color = vec4(1.0);
+uniform vec4 flash_color : source_color = vec4(1.0);
+uniform float flash = 0.0;
+uniform vec4 outline_color : source_color = vec4(1.0, 0.83, 0.25, 1.0);
+uniform float outline = 0.0;
+uniform float half_h = 1.0;
+uniform float shade_top = 1.07;
+uniform float shade_bottom = 0.84;
+varying float vy;
+void vertex() {
+	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(INV_VIEW_MATRIX[0], MODEL_MATRIX[1], vec4(normalize(cross(INV_VIEW_MATRIX[0].xyz, MODEL_MATRIX[1].xyz)), 0.0), MODEL_MATRIX[3]);
+	MODELVIEW_NORMAL_MATRIX = mat3(MODELVIEW_MATRIX);
+	vy = clamp(VERTEX.y / (2.0 * half_h) + 0.5, 0.0, 1.0);
+}
+void fragment() {
+	vec4 c = texture(tex, UV);
+	float a = c.a;
+	if (outline > 0.0 && a < 0.5) {
+		vec2 px = 1.0 / vec2(textureSize(tex, 0));
+		float n = texture(tex, UV + vec2(px.x, 0.0)).a + texture(tex, UV - vec2(px.x, 0.0)).a + texture(tex, UV + vec2(0.0, px.y)).a + texture(tex, UV - vec2(0.0, px.y)).a;
+		if (n > 0.5) { c = outline_color; a = outline; }
+	}
+	float g = mix(shade_bottom, shade_top, vy);
+	vec3 col = c.rgb * tint.rgb * g;
+	col = mix(col, flash_color.rgb, flash);
+	ALBEDO = col;
+	ALPHA = a;
+	ALPHA_SCISSOR_THRESHOLD = 0.5;
+}
+"""
+	return _sh
+
+func flash(col: Color = Color.WHITE, strength: float = 0.85) -> void:
+	if G.settings.get("reduce_flashing", false):
+		strength *= 0.35
+	_flash = strength; _flash_col = col
+	mat.set_shader_parameter("flash_color", col)
+
+func squash(amount: float = 0.08) -> void:
+	if G.settings.reduce_motion:
+		return
+	var tw := create_tween()
+	tw.tween_property(sprite, "scale", Vector3(1.0 + amount, 1.0 - amount, 1.0), 0.05)
+	tw.tween_property(sprite, "scale", Vector3(1.0 - amount * 0.5, 1.0 + amount * 0.5, 1.0), 0.07)
+	tw.tween_property(sprite, "scale", Vector3.ONE, 0.08)
+
+func set_outline(on: bool) -> void:
+	mat.set_shader_parameter("outline", 1.0 if on else 0.0)
+
+func set_tint(c: Color) -> void:
+	mat.set_shader_parameter("tint", c)
 
 ## cfg keys: tex, hframes, vframes, pixel, rows(bool: 5 direction rows), anims {name: [frames], fps}
 func setup(c: Dictionary, display_name: String = "", name_color: Color = Color.WHITE) -> void:
@@ -31,6 +94,13 @@ func setup(c: Dictionary, display_name: String = "", name_color: Color = Color.W
 	sprite.centered = true
 	var fh: float = float(c.tex.get_height()) / float(sprite.vframes)
 	sprite.position.y = fh * sprite.pixel_size * 0.5
+	# lit-sprite shader: map key-light tint, top-to-bottom shading, hit flash, target outline
+	mat = ShaderMaterial.new()
+	mat.shader = _shader()
+	mat.set_shader_parameter("tex", c.tex)
+	mat.set_shader_parameter("half_h", fh * sprite.pixel_size * 0.5)
+	mat.set_shader_parameter("tint", G.sprite_tint)
+	sprite.material_override = mat
 	add_child(sprite)
 	pick_height = fh * sprite.pixel_size * 0.5
 	shadow = MeshInstance3D.new()
@@ -71,7 +141,10 @@ func play_once(a: String, dur: float) -> void:
 	one_shot = a; one_shot_t = dur; anim_t = 0.0
 
 func _process(delta: float) -> void:
-	anim_t += delta
+	anim_t += delta * speed_mul
+	if _flash > 0.0:
+		_flash = maxf(0.0, _flash - delta * 7.0)
+		mat.set_shader_parameter("flash", _flash)
 	var a := anim
 	if one_shot != "":
 		one_shot_t -= delta

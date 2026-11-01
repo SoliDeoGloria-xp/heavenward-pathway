@@ -580,3 +580,65 @@ if __name__ == '__main__':
     build_tiles(); build_ui(); build_icons()
     build_characters(); npc_evangelist(); mob_slothling(); lamb(); portrait_evangelist()
     print('assets generated')
+
+# ---------------------------------------------------------------- extra FX textures (polish pass)
+def build_fx_extra():
+    S = 128
+    # star burst for crits
+    big = Image.new('RGBA', (S*4, S*4), (0, 0, 0, 0)); g = ImageDraw.Draw(big)
+    c = S*2
+    pts = []
+    for i in range(16):
+        r = (S*1.9 if i % 2 == 0 else S*0.7)
+        a = math.radians(i * 22.5 - 90)
+        pts.append((c + math.cos(a)*r, c + math.sin(a)*r))
+    g.polygon(pts, fill=(255, 240, 160, 255))
+    g.ellipse((c-S*0.6, c-S*0.6, c+S*0.6, c+S*0.6), fill=(255, 255, 240, 255))
+    big.filter(ImageFilter.GaussianBlur(6)).resize((S, S), Image.LANCZOS).save(out('fx', 'star.png'))
+    # spark streak
+    im = Image.new('RGBA', (64, 16), (0, 0, 0, 0)); g = ImageDraw.Draw(im)
+    for x in range(64):
+        a = int(255 * (1 - abs(x - 40) / 40.0) ** 1.5) if x < 64 else 0
+        g.line((x, 5, x, 10), fill=(255, 255, 255, max(0, a)))
+    im.filter(ImageFilter.GaussianBlur(1.2)).save(out('fx', 'spark.png'))
+    # light shaft (vertical soft gradient)
+    im = Image.new('RGBA', (64, 256), (0, 0, 0, 0)); px = im.load()
+    for y in range(256):
+        for x in range(64):
+            fx = 1 - abs(x - 31.5) / 32.0
+            fy = min(1.0, y / 40.0) * (1 - y / 256.0)
+            px[x, y] = (255, 246, 210, int(160 * (fx ** 2) * fy))
+    im.save(out('fx', 'shaft.png'))
+    # petal
+    im = Image.new('RGBA', (32, 32), (0, 0, 0, 0)); g = ImageDraw.Draw(im)
+    g.ellipse((6, 10, 26, 22), fill=(255, 210, 225, 255)); g.ellipse((10, 12, 20, 18), fill=(255, 235, 242, 255))
+    im.filter(ImageFilter.GaussianBlur(0.6)).save(out('fx', 'petal.png'))
+    # rain streak
+    im = Image.new('RGBA', (8, 64), (0, 0, 0, 0)); g = ImageDraw.Draw(im)
+    g.line((4, 0, 4, 63), fill=(200, 210, 230, 160), width=2)
+    im.save(out('fx', 'rain.png'))
+    # sweat drop
+    im = Image.new('RGBA', (32, 32), (0, 0, 0, 0)); g = ImageDraw.Draw(im)
+    g.polygon([(16, 2), (24, 18), (8, 18)], fill=(150, 210, 255, 255)); g.ellipse((8, 10, 24, 28), fill=(150, 210, 255, 255))
+    g.ellipse((12, 14, 16, 18), fill=(240, 250, 255, 255))
+    im.save(out('fx', 'drop.png'))
+    # telegraph disc (red, soft fill, bright rim)
+    S2 = 256; big = Image.new('RGBA', (S2, S2), (0, 0, 0, 0)); g = ImageDraw.Draw(big)
+    g.ellipse((8, 8, S2-8, S2-8), fill=(230, 40, 40, 70), outline=(255, 70, 60, 230), width=10)
+    for r in range(0, 110, 22):
+        g.ellipse((S2/2-r, S2/2-r, S2/2+r, S2/2+r), outline=(255, 90, 80, 60), width=3)
+    big.save(out('fx', 'telegraph.png'))
+    # soft puff
+    im = Image.new('RGBA', (64, 64), (0, 0, 0, 0)); g = ImageDraw.Draw(im)
+    for r in range(28, 0, -2):
+        g.ellipse((32-r, 32-r, 32+r, 32+r), fill=(255, 255, 255, int(200 * (1 - r/28.0) ** 1.2)))
+    im.save(out('fx', 'puff.png'))
+    # dome gradient (for Take Refuge), vertical
+    im = Image.new('RGBA', (16, 128), (0, 0, 0, 0)); g = ImageDraw.Draw(im)
+    for y in range(128):
+        a = int(150 * (y / 127.0) ** 2)
+        g.line((0, y, 16, y), fill=(255, 236, 170, a))
+    im.save(out('fx', 'dome.png'))
+
+if __name__ == '__main__':
+    build_fx_extra()

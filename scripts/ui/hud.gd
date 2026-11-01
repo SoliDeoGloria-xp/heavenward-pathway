@@ -8,6 +8,10 @@ var root: Control
 var joy: FloatingJoystick
 var plate_hp: TextureProgressBar
 var plate_ze: TextureProgressBar
+var hp_trail: TextureProgressBar
+var trail_delay := 0.0
+var last_quest := ""
+var level_lbl: VBoxContainer
 var hp_txt: Label
 var ze_txt: Label
 var lv_txt: Label
@@ -84,6 +88,9 @@ func _corner(c: Control, left: bool, top: bool, x: float, y: float) -> void:
 	c.anchor_left = 0.0 if left else 1.0; c.anchor_right = c.anchor_left
 	c.anchor_top = 0.0 if top else 1.0; c.anchor_bottom = c.anchor_top
 	var sz := c.custom_minimum_size if c.size == Vector2.ZERO else c.size
+	var ins := UIKit.safe_insets(get_viewport())
+	x += ins.x if left else ins.z
+	y += ins.y if top else ins.w
 	c.offset_left = x if left else -x - sz.x
 	c.offset_top = y if top else -y - sz.y
 	c.offset_right = c.offset_left + sz.x
@@ -107,9 +114,13 @@ func _build_plate(L: bool) -> void:
 	top.add_child(nm)
 	lv_txt = UIKit.label("", 19, UIKit.SUB, true); top.add_child(lv_txt)
 	v.add_child(top)
-	plate_hp = UIKit.gauge("hp", 260, 20)
-	hp_txt = UIKit.outlined("", 15); hp_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; UIKit.full_rect(hp_txt); plate_hp.add_child(hp_txt)
-	v.add_child(plate_hp)
+	var hp_box := Control.new(); hp_box.custom_minimum_size = Vector2(260, 20)
+	hp_trail = UIKit.gauge("hp", 260, 20); hp_trail.texture_progress = G.tex("res://assets/ui/gauge_trail.png"); UIKit.full_rect(hp_trail)
+	hp_box.add_child(hp_trail)
+	plate_hp = UIKit.gauge("hp", 260, 20); plate_hp.texture_under = null; UIKit.full_rect(plate_hp)
+	hp_box.add_child(plate_hp)
+	hp_txt = UIKit.outlined("", 15); hp_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; UIKit.full_rect(hp_txt); hp_box.add_child(hp_txt)
+	v.add_child(hp_box)
 	plate_ze = UIKit.gauge("zeal", 260, 16)
 	ze_txt = UIKit.outlined("", 13); ze_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; UIKit.full_rect(ze_txt); plate_ze.add_child(ze_txt)
 	v.add_child(plate_ze)
@@ -269,6 +280,10 @@ func refresh() -> void:
 		item_btn.queue_redraw()
 	if snap_btn:
 		snap_btn.visible = world != null and world.snapshot_unlocked and snapshot_ui == null
+	if more_btn:
+		var pts := (G.lvl - 1) * 2 + (G.job - 1) * 2
+		more_btn.badge = "+%d" % pts if pts > 0 else ""
+		more_btn.queue_redraw()
 	var city: bool = world != null and world.map_id == "city"
 	for n in combat_nodes:
 		n.visible = city and snapshot_ui == null
@@ -283,6 +298,13 @@ func _chip(t: String, c: Color) -> Control:
 func _process(_d: float) -> void:
 	if world == null or not is_instance_valid(world):
 		return
+	# HP damage trail: the white chunk waits 0.35 s, then drains
+	if hp_trail.value > plate_hp.value:
+		trail_delay -= _d
+		if trail_delay <= 0.0:
+			hp_trail.value = maxf(plate_hp.value, hp_trail.value - _d * 900.0)
+	else:
+		hp_trail.value = plate_hp.value; trail_delay = 0.35
 	# cooldowns
 	for i in 4:
 		var s: Dictionary = SKILLS[page][i]
@@ -294,6 +316,7 @@ func _process(_d: float) -> void:
 			b.cd_text = str(int(ceil(world.cd[s.id]))) if f > 0.0 else ""
 			if was > 0.0 and f <= 0.0:
 				b.flash()
+			b.disabled = G.zeal < ({"steps": 10, "refuge": 15}).get(s.id, 0)
 			b.queue_redraw()
 	# context Act button
 	var n = world.nearest_ent()
@@ -337,12 +360,30 @@ func quest_toast(text: String) -> void:
 
 func set_quest(text: String) -> void:
 	if quest_lbl:
+		if last_quest != "" and text != last_quest:
+			_stamp()
+		last_quest = text
 		quest_lbl.text = text if text != "" else "Quest complete."
 
+func _stamp() -> void:
+	## Wax-seal "step complete" stamp on the tracker plus a pulse.
+	var st := UIKit.outlined("✓ Step complete", 24, Color("ffd36a"))
+	st.position = quest_box.position + Vector2(quest_box.size.x - 230, -14)
+	st.pivot_offset = Vector2(110, 16); st.scale = Vector2(1.8, 1.8); st.rotation = -0.12; st.modulate.a = 0.0
+	root.add_child(st)
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(st, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK)
+	tw.tween_property(st, "modulate:a", 1.0, 0.1)
+	tw.chain().tween_interval(1.2)
+	tw.chain().tween_property(st, "modulate:a", 0.0, 0.4)
+	tw.chain().tween_callback(st.queue_free)
+	quest_box.pivot_offset = quest_box.size * 0.5
+	var p := create_tween(); p.tween_property(quest_box, "scale", Vector2(1.04, 1.04), 0.1); p.tween_property(quest_box, "scale", Vector2.ONE, 0.15)
+
 func hit_flash() -> void:
-	if G.settings.reduce_motion:
+	if G.settings.reduce_motion or G.settings.reduce_flashing:
 		return
-	flash_rect.color.a = 0.18
+	flash_rect.color.a = 0.12
 	create_tween().tween_property(flash_rect, "color:a", 0.0, 0.3)
 
 func ground_marker(_p: Vector2) -> void:
@@ -379,6 +420,7 @@ func overlay_open() -> bool:
 func _center(c: Control) -> void:
 	var cc := CenterContainer.new(); UIKit.full_rect(cc); cc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cc.add_child(c); overlay.add_child(cc)
+	UIKit.pop_in(c)
 
 func open_more() -> void:
 	_dim()
@@ -454,10 +496,13 @@ func open_sheet(tab: String) -> void:
 		"status": _sheet_status(body)
 		"way": _sheet_way(body)
 		"settings": _sheet_settings(body)
-	sheet.position.x += 60
 	sheet.modulate.a = 0.0
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(sheet, "modulate:a", 1.0, 0.18)
+	if not G.settings.reduce_motion:
+		sheet.offset_left += 60; sheet.offset_right += 60
+		tw.tween_property(sheet, "offset_left", sheet.offset_left - 60, 0.22).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+		tw.tween_property(sheet, "offset_right", sheet.offset_right - 60, 0.22).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
 func _sheet_bag(b: VBoxContainer) -> void:
 	b.add_child(UIKit.label("Satchel", 26, UIKit.BLUE_INK, true))
@@ -538,11 +583,11 @@ func _sheet_way(b: VBoxContainer) -> void:
 
 func _sheet_settings(b: VBoxContainer) -> void:
 	b.add_child(UIKit.label("Settings", 26, UIKit.BLUE_INK, true))
-	for s in [["auto_loot", "Auto-loot nearby drops"], ["dmg_numbers", "Show damage numbers"], ["reduce_motion", "Reduce motion (no bounce, shake or flash)"], ["left_handed", "Left-handed layout (mirror the HUD)"]]:
+	for s in [["auto_loot", "Auto-loot nearby drops"], ["dmg_numbers", "Show damage numbers"], ["reduce_motion", "Reduce motion (no bounce, shake or hit pause)"], ["reduce_flashing", "Reduce flashing"], ["fx_high", "High-quality effects (glow, blur, rain)"], ["haptics", "Vibration"], ["left_handed", "Left-handed layout (mirror the HUD)"]]:
 		var key: String = s[0]
 		var cb := CheckButton.new(); cb.text = s[1]; cb.button_pressed = bool(G.settings[key]); cb.focus_mode = Control.FOCUS_NONE
 		cb.add_theme_font_size_override("font_size", 21); cb.add_theme_color_override("font_color", UIKit.INK); cb.add_theme_color_override("font_pressed_color", UIKit.INK)
-		cb.toggled.connect(func(on): G.settings[key] = on; if key == "left_handed": _rebuild())
+		cb.toggled.connect(func(on): G.settings[key] = on; _setting_changed(key))
 		b.add_child(cb)
 	var row := HBoxContainer.new(); row.add_child(UIKit.label("HUD opacity", 20)); var sl := HSlider.new(); sl.min_value = 0.4; sl.max_value = 1.0; sl.step = 0.05; sl.value = G.settings.hud_opacity
 	sl.custom_minimum_size = Vector2(300, 40); sl.value_changed.connect(func(v): G.settings.hud_opacity = v); row.add_child(sl); b.add_child(row)
@@ -791,3 +836,51 @@ class Minimap extends Control:
 		var tw := G.font_ui_bold.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		draw_string_outline(G.font_ui_bold, Vector2((size.x - tw) * 0.5, 30), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, 5, Color(0.05, 0.05, 0.1))
 		draw_string(G.font_ui_bold, Vector2((size.x - tw) * 0.5, 30), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+
+# ------------------------------------------------------------------ progression moments
+func level_banner(kind: String) -> void:
+	var base := kind.begins_with("Base")
+	var box := VBoxContainer.new(); box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	box.position = Vector2(-360, 70 if base else 150); box.size = Vector2(720, 100); box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	var t := UIKit.outlined(kind.to_upper(), 58, Color("ffe27a") if base else Color("b8e0ff"), G.font_title)
+	t.add_theme_color_override("font_outline_color", Color("5a3600") if base else Color("12305a"))
+	t.add_theme_constant_override("outline_size", 12)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var sub := UIKit.outlined("+2 attribute points  ·  tap More to view" if base else "+2 skill points", 22, Color.WHITE)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(t); box.add_child(sub)
+	root.add_child(box)
+	box.modulate.a = 0.0; box.position.y -= 40
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(box, "modulate:a", 1.0, 0.25)
+	tw.tween_property(box, "position:y", box.position.y + 40, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_interval(1.6)
+	tw.chain().tween_property(box, "modulate:a", 0.0, 0.5)
+	tw.chain().tween_callback(box.queue_free)
+	exp_bar.modulate = Color(2.2, 2.0, 1.4)
+	create_tween().tween_property(exp_bar, "modulate", Color.WHITE, 0.8)
+	more_btn.flash()
+
+func motes_to_plate(from: Vector2) -> void:
+	## Word Study reward: Manna motes fly from the tablet into the portrait plate.
+	var dest := Vector2(70, 60) + Vector2(UIKit.safe_insets(get_viewport()).x, UIKit.safe_insets(get_viewport()).y)
+	for i in 10:
+		var m := TextureRect.new(); m.texture = G.tex("res://assets/fx/mote.png"); m.size = Vector2(22, 22)
+		m.position = from + Vector2(randf_range(-40, 40), randf_range(-30, 30)); m.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		m.modulate = Color(1.4, 1.35, 1.0)
+		root.add_child(m)
+		var tw := create_tween()
+		tw.tween_interval(i * 0.05)
+		tw.tween_property(m, "position", dest + Vector2(randf_range(-10, 10), randf_range(-10, 10)), 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.tween_callback(m.queue_free)
+	var p := create_tween(); p.tween_interval(0.8); p.tween_callback(func(): if is_instance_valid(plate_hp): plate_hp.get_parent().get_parent().get_parent().modulate = Color(1.5, 1.45, 1.1))
+	p.tween_interval(0.05)
+	p.tween_callback(func(): if is_instance_valid(plate_hp): plate_hp.get_parent().get_parent().get_parent().create_tween().tween_property(plate_hp.get_parent().get_parent().get_parent(), "modulate", Color.WHITE, 0.6))
+
+func _setting_changed(key: String) -> void:
+	if key == "left_handed":
+		_rebuild()
+	elif key == "fx_high" and world:
+		Fx.quality_high = G.settings.fx_high
+		world.post.set_shader_parameter("tilt", 1.0 if G.settings.fx_high else 0.0)

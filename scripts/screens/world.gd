@@ -40,6 +40,20 @@ var t := 0.0
 var regen_t := 0.0
 var ending := false
 var _vine_leaves: Array = []
+var post: ShaderMaterial
+var trauma := 0.0
+var lamps: Array = []
+var sways: Array = []
+var holy_lights: Array = []
+var queued_skill := ""
+var step_t := 0.0
+var target_ring: Sprite3D
+var last_target = null
+var low_hp_pulse := 0.0
+var sun: DirectionalLight3D
+var env: Environment
+var burden_fx: CPUParticles3D
+var weary_fx: CPUParticles3D
 var _lamb_actor: SpriteActor
 
 func _ready() -> void:
@@ -68,6 +82,7 @@ func _ready() -> void:
 # ------------------------------------------------------------------ environment
 func _build_env() -> void:
 	var env := Environment.new()
+	Fx.quality_high = G.settings.fx_high
 	env.background_mode = Environment.BG_COLOR
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
@@ -79,8 +94,17 @@ func _build_env() -> void:
 	else:
 		env.background_color = Color("2a2832")
 		env.ambient_light_color = Color("a8a4c0"); env.ambient_light_energy = 0.38
+	env.glow_enabled = false  # Compatibility renderer glow is unreliable; bloom is faked with additive halo cards
+	env.glow_intensity = 0.9
+	env.glow_strength = 1.0
+	env.glow_bloom = 0.12
+	env.glow_hdr_threshold = 0.9
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+	self.env = env
 	var we := WorldEnvironment.new(); we.environment = env; add_child(we)
-	var sun := DirectionalLight3D.new()
+	G.sprite_tint = Color(1.03, 1.0, 0.93) if map_id == "eden" else Color(0.86, 0.87, 0.98)
+	_build_post()
+	sun = DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-52, -38, 0)
 	sun.light_energy = 0.78 if map_id == "eden" else 0.55
 	sun.light_color = Color("fff3dc") if map_id == "eden" else Color("c8c4d8")
@@ -150,6 +174,7 @@ func _tree(pos: Vector3, s: float = 1.0, leaf_tint: Color = Color.WHITE, fruit: 
 			root.add_child(f)
 	if solid:
 		_solid_cyl(0.45 * s, pos)
+	sways.append([root, randf() * TAU])
 	return root
 
 func _walls() -> void:
@@ -169,7 +194,10 @@ void fragment(){
 	vec2 uv = UV * scale;
 	vec3 a = texture(tex, uv + vec2(TIME * 0.05, TIME * 0.02)).rgb;
 	vec3 b = texture(tex, uv * 1.3 - vec2(TIME * 0.03, 0.0)).rgb;
-	ALBEDO = mix(a, b, 0.5) * vec3(0.95, 1.0, 1.05);
+	vec2 cell = floor(uv * 7.0);
+	float rnd = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
+	float glint = step(0.93, fract(rnd + TIME * 0.35)) * step(0.6, fract(uv.x * 7.0)) * 0.35;
+	ALBEDO = mix(a, b, 0.5) * vec3(0.95, 1.0, 1.05) + vec3(glint);
 }"""
 	var m := ShaderMaterial.new(); m.shader = sh
 	m.set_shader_parameter("tex", G.tex("res://assets/tiles/water.png"))
@@ -199,9 +227,85 @@ func _build_camera() -> void:
 func _place_camera(snap: bool = false) -> void:
 	var pitch := deg_to_rad(52.0)
 	cam_rig.position = cam_rig.position.lerp(player.position, 1.0 if snap else 0.15)
-	cam.position = Vector3(0, sin(pitch) * cam_dist, cos(pitch) * cam_dist)
+	var d := cam_dist * (0.94 if (map_id == "city" and in_combat()) else 1.0)
+	_cur_dist = lerpf(_cur_dist if _cur_dist > 0.0 else d, d, 0.05)
+	cam.position = Vector3(0, sin(pitch) * _cur_dist, cos(pitch) * _cur_dist)
 	cam_rig.rotation.y = cam_yaw
 	cam.look_at(cam_rig.global_position + Vector3(0, 0.9, 0), Vector3.UP)
+	# trauma-based shake (strength = trauma^2), off with Reduce Motion
+	if trauma > 0.0 and not G.settings.reduce_motion:
+		var k := trauma * trauma
+		var tt := Time.get_ticks_msec() * 0.001
+		cam.h_offset = k * 0.35 * sin(tt * 47.0) * cos(tt * 13.0)
+		cam.v_offset = k * 0.28 * sin(tt * 53.0 + 1.7)
+	else:
+		cam.h_offset = 0.0; cam.v_offset = 0.0
+
+var _cur_dist := 0.0
+
+func shake(amount: float) -> void:
+	trauma = minf(1.0, trauma + amount)
+
+## Hit-stop: freeze attacker and target together for a few frames (real-time timer).
+func hitstop(dur: float) -> void:
+	if G.settings.reduce_motion:
+		dur *= 0.5
+	Engine.time_scale = 0.03
+	await get_tree().create_timer(dur, true, false, true).timeout
+	Engine.time_scale = 1.0
+
+func _build_post() -> void:
+	var layer := CanvasLayer.new(); layer.layer = 5; add_child(layer)
+	var r := ColorRect.new(); r.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sh := Shader.new()
+	sh.code = """shader_type canvas_item;
+uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
+uniform float saturation = 1.0;
+uniform float contrast = 1.0;
+uniform vec3 tint = vec3(1.0);
+uniform float vignette = 0.3;
+uniform float tilt = 0.0;
+uniform float danger = 0.0;
+uniform vec3 danger_col = vec3(0.85, 0.08, 0.06);
+void fragment() {
+	vec2 uv = SCREEN_UV;
+	vec3 c = texture(screen_tex, uv).rgb;
+	if (tilt > 0.0) {
+		float m = smoothstep(0.24, 0.0, uv.y) + smoothstep(0.80, 1.0, uv.y);
+		if (m > 0.02) {
+			vec2 px = SCREEN_PIXEL_SIZE * (1.0 + 3.0 * m) * tilt;
+			vec3 b = c * 0.2;
+			b += texture(screen_tex, uv + vec2(px.x, 0.0)).rgb * 0.1;
+			b += texture(screen_tex, uv - vec2(px.x, 0.0)).rgb * 0.1;
+			b += texture(screen_tex, uv + vec2(0.0, px.y)).rgb * 0.1;
+			b += texture(screen_tex, uv - vec2(0.0, px.y)).rgb * 0.1;
+			b += texture(screen_tex, uv + px * 1.5).rgb * 0.1;
+			b += texture(screen_tex, uv - px * 1.5).rgb * 0.1;
+			b += texture(screen_tex, uv + vec2(px.x, -px.y) * 1.5).rgb * 0.1;
+			b += texture(screen_tex, uv + vec2(-px.x, px.y) * 1.5).rgb * 0.1;
+			c = mix(c, b, clamp(m, 0.0, 1.0));
+		}
+	}
+	float l = dot(c, vec3(0.299, 0.587, 0.114));
+	c = mix(vec3(l), c, saturation);
+	c = (c - 0.5) * contrast + 0.5;
+	c *= tint;
+	vec2 d = uv - 0.5;
+	float v = smoothstep(0.85, 0.25, length(d * vec2(1.25, 1.0)));
+	c *= mix(1.0 - vignette, 1.0, v);
+	float edge = 1.0 - smoothstep(0.32, 0.75, length(d * vec2(1.0, 1.3)));
+	c = mix(c, danger_col, danger * (1.0 - edge) * 0.55);
+	COLOR = vec4(c, 1.0);
+}"""
+	post = ShaderMaterial.new(); post.shader = sh
+	if map_id == "eden":
+		post.set_shader_parameter("saturation", 1.06); post.set_shader_parameter("contrast", 1.05); post.set_shader_parameter("tint", Vector3(1.04, 1.01, 0.94))
+	else:
+		post.set_shader_parameter("saturation", 0.72); post.set_shader_parameter("contrast", 1.08); post.set_shader_parameter("tint", Vector3(0.93, 0.95, 1.05))
+	post.set_shader_parameter("vignette", 0.32)
+	post.set_shader_parameter("tilt", 1.0 if G.settings.fx_high else 0.0)
+	r.material = post
+	layer.add_child(r)
 
 func rotate_cam(steps: int) -> void:
 	cam_yaw_target += steps * PI / 4.0
@@ -257,8 +361,8 @@ func _sprite_npc(tex_path: String, hframes: int, vframes: int, rows: bool, pos: 
 func _build_eden() -> void:
 	bounds = Rect2(-26, -16, 52, 34)
 	_plane(Vector2(120, 100), _mat("res://assets/tiles/grass.png", Vector2(60, 50), false, Color(0.86, 0.9, 0.78)), Vector3(0, 0, 0))
-	_plane(Vector2(52, 3.2), _mat("res://assets/tiles/dirt.png", Vector2(26, 1.6)), Vector3(0, 0.01, 7), 0.0)
-	_plane(Vector2(3.2, 20), _mat("res://assets/tiles/dirt.png", Vector2(1.6, 10)), Vector3(4, 0.012, -1))
+	_plane(Vector2(52, 3.2), _mat("res://assets/tiles/dirt.png", Vector2(26, 1.6), false, Color(0.86, 0.8, 0.7)), Vector3(0, 0.01, 7), 0.0)
+	_plane(Vector2(3.2, 20), _mat("res://assets/tiles/dirt.png", Vector2(1.6, 10), false, Color(0.86, 0.8, 0.7)), Vector3(4, 0.012, -1))
 	_water(Vector2(80, 6), Vector3(0, 0.03, -19))
 	_box(Vector3(80, 0.6, 1.0), _mat("res://assets/tiles/dirt.png", Vector2(40, 1), true, Color("e8dcb0")), Vector3(0, 0.0, -15.6), false)
 	# raised plateaus with cliffs (real height)
@@ -322,9 +426,17 @@ func _build_eden() -> void:
 	var life := _tree(Vector3(14.6, 0, 0), 1.35, Color(2.2, 1.9, 0.9), Color(0, 0, 0, 0), false)
 	life.reparent(trees)
 	var glow := OmniLight3D.new(); glow.light_color = Color("ffe9a0"); glow.light_energy = 2.0; glow.omni_range = 6.0; glow.position = Vector3(-1.4, 3, 0); trees.add_child(glow)
+	holy_lights.append(glow)
+	var lhalo := Sprite3D.new(); lhalo.texture = G.tex("res://assets/fx/glow.png"); lhalo.pixel_size = 0.12; lhalo.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	lhalo.shaded = false; lhalo.modulate = Color(1, 0.95, 0.7, 0.55); lhalo.position = Vector3(-1.4, 3.0, 0); trees.add_child(lhalo)
+	holy_lights.append(lhalo)
 	var know := _tree(Vector3(18, 0, 0.4), 1.3, Color(0.8, 0.95, 0.75), Color("d8342a"), false)
 	know.reparent(trees)
 	_add_ent("trees", "The Two Trees", Vector3(16, 0, 1.6), trees, "Behold", "eye", _act_trees, true)
+	for sp in [Vector3(-12, 0, -6), Vector3(-2, 0, 0), Vector3(8, 0, -6), Vector3(3, 0, 9)]:
+		Fx.shaft(self, sp, 10.0, 2.4, 0.18)
+	_weather_petals()
+	_edge_fade(Color("2e4a2a"))
 	objectives = [
 		{"id": "walk", "text": "Walk to the shining place", "zone": Vector3(-8, 0, 7)},
 		{"id": "tend", "text": "Tend the Young Vine", "ent": "vine"},
@@ -362,7 +474,10 @@ func _build_city() -> void:
 		_smoke(hp + Vector3(w * 0.3, 5.6, 0))
 	for lp in [Vector3(-12, 0, -3), Vector3(0, 0, 3.2), Vector3(12, 0, -3)]:
 		_box(Vector3(0.15, 3, 0.15), _mat("res://assets/tiles/bark.png", Vector2(1, 1), true, Color(0.3, 0.3, 0.32)), lp + Vector3(0, 1.5, 0))
-		var lamp := OmniLight3D.new(); lamp.light_color = Color("ffb060"); lamp.light_energy = 1.6; lamp.omni_range = 5.0; lamp.position = lp + Vector3(0, 3.0, 0); add_child(lamp)
+		var lamp := OmniLight3D.new(); lamp.light_color = Color("ffb060"); lamp.light_energy = 1.6; lamp.omni_range = 5.5; lamp.position = lp + Vector3(0, 3.0, 0); add_child(lamp)
+		lamps.append(lamp)
+		var halo := Sprite3D.new(); halo.texture = G.tex("res://assets/fx/glow.png"); halo.pixel_size = 0.03; halo.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		halo.shaded = false; halo.modulate = Color(1, 0.75, 0.4, 0.7); halo.position = lp + Vector3(0, 3.05, 0); add_child(halo)
 		var lm := StandardMaterial3D.new(); lm.albedo_color = Color("ffd38a"); lm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		_sphere(0.2, lm, lp + Vector3(0, 3.05, 0))
 	for bp in [Vector3(-14, 0, 5), Vector3(-13.2, 0, 5.4), Vector3(10, 0, -6), Vector3(14, 0, 6)]:
@@ -385,6 +500,12 @@ func _build_city() -> void:
 		{"id": "light", "text": "Follow the light toward the Wicket Gate", "ent": "warp", "zone": Vector3(21, 0, 0)}]
 	for i in 6:
 		_spawn_mob(Vector3(-4.0 + i * 3.8, 0, randf_range(-5, 6)))
+	_edge_fade(Color("2a2832"))
+	_weather_drizzle()
+	Fx.particles(warp, warp.global_position + Vector3(0, 0.2, 0), {"amount": 24, "life": 2.2, "one_shot": false, "explode": 0.0, "sphere": 1.2, "vmin": 0.8, "vmax": 1.6, "spread": 8.0, "gravity": Vector3.ZERO, "color": Color("fff0c0"), "size": 0.14, "local": true})
+	var ws2 := Sprite3D.new(); ws2.texture = G.tex("res://assets/fx/warp.png"); ws2.pixel_size = 0.011; ws2.rotation_degrees.x = -90; ws2.position.y = 0.08
+	ws2.shaded = false; ws2.transparent = true; ws2.modulate = Color(1, 0.95, 0.7, 0.8); warp.add_child(ws2); warp.set_meta("spin2", ws2)
+	holy_lights.append(wl)
 
 func _smoke(pos: Vector3) -> void:
 	var p := CPUParticles3D.new()
@@ -406,7 +527,11 @@ func _spawn_mob(pos: Vector3) -> void:
 	var fg := MeshInstance3D.new(); var q2 := QuadMesh.new(); q2.size = Vector2(0.86, 0.06); fg.mesh = q2
 	var fgm := StandardMaterial3D.new(); fgm.albedo_color = Color("e83b3b"); fgm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; fgm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED; fgm.no_depth_test = true; fgm.render_priority = 5
 	fg.material_override = fgm; bg.add_child(fg)
-	mobs.append({"actor": a, "hp": 60.0, "max": 60.0, "alive": true, "next": 0.0, "home": pos, "wander": pos, "wander_t": randf_range(1, 4), "bg": bg, "fg": fg, "aggro": false, "respawn": 0.0})
+	var tr := MeshInstance3D.new(); var q3 := QuadMesh.new(); q3.size = Vector2(0.86, 0.06); tr.mesh = q3
+	var trm := StandardMaterial3D.new(); trm.albedo_color = Color(1, 1, 1, 0.9); trm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; trm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED; trm.no_depth_test = true; trm.render_priority = 4
+	tr.material_override = trm; tr.position.z = -0.001; bg.add_child(tr)
+	a.set_meta("trail", tr)
+	mobs.append({"actor": a, "hp": 60.0, "max": 60.0, "alive": true, "next": 0.0, "home": pos, "wander": pos, "wander_t": randf_range(1, 4), "bg": bg, "fg": fg, "aggro": false, "respawn": 0.0, "tele": false, "tele_pos": Vector3.ZERO, "trail": tr, "trail_v": 1.0, "was_aggro": false})
 
 func _mob_tick(delta: float) -> void:
 	var p := player.position
@@ -423,6 +548,14 @@ func _mob_tick(delta: float) -> void:
 			m.aggro = false
 		elif d < 6.0 or m.aggro:
 			m.aggro = true
+		if m.aggro and not m.was_aggro:
+			_pop_mark(a, "!", Color("ffd400"))
+			var hop := create_tween(); hop.tween_property(a.sprite, "position:y", a.sprite.position.y + 0.35, 0.1); hop.tween_property(a.sprite, "position:y", a.sprite.position.y, 0.12)
+		elif not m.aggro and m.was_aggro and not dead:
+			_pop_mark(a, "?", Color("dff2ff"))
+		m.was_aggro = m.aggro
+		if d > 14.0 and m.aggro and not dead:
+			m.aggro = false
 		var goal: Vector3
 		if m.aggro and not dead:
 			goal = p
@@ -440,13 +573,20 @@ func _mob_tick(delta: float) -> void:
 			a.play("walk")
 		else:
 			a.play("idle")
-			if m.aggro and not dead and t > m.next:
+			if m.aggro and not dead:
 				if m.next == 0.0:
-					m.next = t + 1.0
-				else:
-					m.next = t + 1.8
-					a.play_once("walk", 0.3)
-					if randf() < 0.2:
+					m.next = t + 1.2
+				# telegraph 0.6 s before the lunge: step out of the red circle to avoid it
+				if not m.tele and t > m.next - 0.6:
+					m.tele = true
+					m.tele_pos = p
+					Fx.telegraph(self, p, 1.1, 0.6)
+				if t > m.next:
+					m.next = t + 2.0; m.tele = false
+					a.play_once("walk", 0.3); a.squash(0.12)
+					var tp: Vector3 = m.get("tele_pos", p)
+					var still_in: bool = Vector2(p.x - tp.x, p.z - tp.z).length() < 1.25
+					if not still_in or randf() < 0.12:
 						_float_text(p + Vector3(0, 2.2, 0), "Miss", Color("dff2ff"))
 					else:
 						var dmg := 7 + randi() % 4
@@ -458,8 +598,10 @@ func _hurt_player(dmg: int) -> void:
 	if sitting:
 		_stand()
 	G.hp = maxf(0.0, G.hp - dmg)
-	_float_text(player.position + Vector3(0, 2.2, 0), str(dmg), Color("ff6a6a"))
-	pact.play_once("attack", 0.0)
+	_float_text(player.position + Vector3(0, 2.2, 0), str(dmg), Color("ff6a6a"), false, dmg)
+	pact.flash(Color("ff5050"), 0.8); pact.squash(0.06)
+	shake(0.18)
+	G.haptic(25)
 	hud.hit_flash()
 	if G.hp <= 0.0:
 		_ko()
@@ -471,15 +613,28 @@ func hit_mob(m: Dictionary, dmg: int, crit: bool = false, miss: bool = false) ->
 		_float_text(a.position + Vector3(0, 1.6, 0), "Miss", Color("dff2ff")); return
 	m.hp = maxf(0.0, m.hp - dmg)
 	m.aggro = true
-	_float_text(a.position + Vector3(0, 1.6, 0), str(dmg), Color("ffe25a") if crit else Color.WHITE, crit)
+	var kill: bool = m.hp <= 0.0
+	_float_text(a.position + Vector3(0, 1.6, 0), str(dmg), Color("ffe25a") if crit else Color.WHITE, crit or kill, dmg)
 	G.zeal = minf(G.zeal_max, G.zeal + 3.0)
 	a.play_once("hurt", 0.18)
-	var tw := create_tween(); tw.tween_property(a, "position", a.position + (a.position - player.position).normalized() * 0.25, 0.08)
+	a.flash(Color.WHITE, 0.9); a.squash(0.14 if crit else 0.09); pact.squash(0.05)
+	var dirv := (a.position - player.position); dirv.y = 0; dirv = dirv.normalized()
+	Fx.sparks(self, a.position + Vector3(0, 0.7, 0), dirv, Color(0.85, 0.85, 0.8))   # Sloth family: grey dust
+	Fx.dust(self, a.position, Color(0.7, 0.72, 0.66, 0.5), 3)
+	if crit:
+		Fx.star(self, a.position + Vector3(0, 0.9, 0)); shake(0.35); G.haptic(30)
+		hitstop(0.1)
+	elif kill:
+		hitstop(0.1); shake(0.25)
+	else:
+		hitstop(0.05)
+	var tw := create_tween(); tw.tween_property(a, "position", a.position + dirv * (0.4 if crit else 0.25), 0.08)
 	m.bg.visible = true
 	m.fg.scale.x = maxf(0.001, m.hp / m.max); m.fg.position.x = -0.43 * (1.0 - m.hp / m.max)
 	if m.hp <= 0.0:
 		m.alive = false; m.respawn = 14.0; m.bg.visible = false
 		a.play_once("die", 0.7)
+		get_tree().create_timer(0.35).timeout.connect(func(): Fx.motes_up(self, a.position + Vector3(0, 0.4, 0), Color("fff6d8"), 16, 1.2); Fx.ring(self, a.position, Color(1, 0.95, 0.75), 2.2, 0.5))
 		get_tree().create_timer(0.7).timeout.connect(func(): if not m.alive: a.visible = false)
 		if target == m:
 			target = null
@@ -514,10 +669,15 @@ func _drop_tick() -> void:
 func _item_pop(icon: String) -> void:
 	hud.item_pop(icon, cam.unproject_position(player.position + Vector3(0, 1.5, 0)))
 
-func _float_text(pos: Vector3, text: String, color: Color, big: bool = false) -> void:
+var _num_stagger := 0
+
+func _float_text(pos: Vector3, text: String, color: Color, big: bool = false, amount: int = 0) -> void:
 	if not G.settings.dmg_numbers and text != "Miss":
 		return
-	var l := Label3D.new(); l.text = text; l.font = G.font_ui_bold; l.font_size = 64 if big else 50
+	_num_stagger = (_num_stagger + 1) % 3
+	pos += Vector3((_num_stagger - 1) * 0.25, _num_stagger * 0.12, 0)
+	var l := Label3D.new(); l.text = text; l.font = G.font_ui_bold
+	l.font_size = int((66 if big else 46) + clampf(amount, 0, 40) * 0.5)
 	l.outline_size = 14; l.modulate = color; l.outline_modulate = Color(0.05, 0.03, 0.08); l.pixel_size = 0.01
 	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED; l.no_depth_test = true; l.render_priority = 10
 	add_child(l); l.position = pos
@@ -531,8 +691,13 @@ func _float_text(pos: Vector3, text: String, color: Color, big: bool = false) ->
 		tw.tween_property(l, "position:x", pos.x + side, 0.8)
 		tw.tween_property(l, "position:y", pos.y + 0.9, 0.3).set_ease(Tween.EASE_OUT)
 		tw.chain().tween_property(l, "position:y", pos.y + 0.2, 0.5).set_ease(Tween.EASE_IN)
-	tw.tween_property(l, "modulate:a", 0.0, 0.3).set_delay(0.7)
+	tw.tween_method(_label_alpha.bind(l), 1.0, 0.0, 0.3).set_delay(0.7)
 	tw.chain().tween_callback(l.queue_free)
+
+## Fade a Label3D's fill and outline together (fading only the fill leaves a dark outline glyph).
+func _label_alpha(a: float, l: Label3D) -> void:
+	if is_instance_valid(l):
+		l.modulate.a = a; l.outline_modulate.a = a
 
 func _sparkle(pos: Vector3, color: Color = Color("fff2b0")) -> void:
 	var p := CPUParticles3D.new(); p.one_shot = true; p.emitting = true; p.amount = 24; p.lifetime = 1.0; p.explosiveness = 0.9
@@ -554,10 +719,6 @@ func _motes(pos: Vector3) -> void:
 	get_tree().create_timer(2.5).timeout.connect(p.queue_free)
 
 func _on_level_up(kind: String) -> void:
-	var l := _label3d(kind, player.position + Vector3(0, 2.8 if kind.begins_with("Base") else 3.5, 0), Color("ffe27a") if kind.begins_with("Base") else Color("a8dcff"), 56)
-	l.outline_modulate = Color("7a4a00")
-	var tw := create_tween(); tw.tween_property(l, "position:y", l.position.y + 1.0, 1.6); tw.parallel().tween_property(l, "modulate:a", 0.0, 0.6).set_delay(1.0)
-	tw.tween_callback(l.queue_free)
 	var ring := Sprite3D.new(); ring.texture = G.tex("res://assets/fx/ring.png"); ring.rotation_degrees.x = -90; ring.pixel_size = 0.01; ring.shaded = false
 	add_child(ring); ring.position = player.position + Vector3(0, 0.08, 0)
 	var tw2 := create_tween(); tw2.tween_property(ring, "scale", Vector3(3, 3, 3), 1.0); tw2.parallel().tween_property(ring, "modulate:a", 0.0, 1.0); tw2.tween_callback(ring.queue_free)
@@ -566,6 +727,9 @@ func _on_level_up(kind: String) -> void:
 	add_child(col); col.position = player.position + Vector3(0, 1.5, 0)
 	var tw3 := create_tween(); tw3.tween_property(col, "modulate:a", 0.0, 1.2); tw3.tween_callback(col.queue_free)
 	_sparkle(player.position + Vector3(0, 1, 0), Color("ffe9a0"))
+	Fx.spiral(self, player.position + Vector3(0, 0.2, 0), Color("ffe9a0") if kind.begins_with("Base") else Color("b8e0ff"))
+	hud.level_banner(kind)
+	G.haptic(40)
 
 # ------------------------------------------------------------------ objectives
 func cur_obj() -> String:
@@ -575,6 +739,11 @@ func complete() -> void:
 	obj_idx += 1
 	if cur_obj() == "trees":
 		show_ent("trees", true)
+		var tw := create_tween().set_parallel(true)
+		tw.tween_property(sun, "light_color", Color("ffcf9a"), 4.0)
+		tw.tween_property(sun, "light_energy", 0.62, 4.0)
+		tw.tween_property(env, "ambient_light_energy", 0.34, 4.0)
+		post.set_shader_parameter("tint", Vector3(1.06, 0.98, 0.88))
 	_update_quest()
 	if obj_idx < objectives.size():
 		G.say("Quest: " + objectives[obj_idx].text, G.INFO)
@@ -722,6 +891,9 @@ func _nearest_mob(r: float) -> Variant:
 func skill(id: String) -> void:
 	if dead:
 		return
+	if gcd > 0.0 and gcd < 0.3 and cd.get(id, 0.0) <= 0.0:
+		queued_skill = id  # buffer the press; fires when the global cooldown ends
+		return
 	match id:
 		"steps":
 			if cd.steps > 0.0:
@@ -735,8 +907,16 @@ func skill(id: String) -> void:
 			if m.actor.position.distance_to(player.position) > 2.2:
 				G.say("Too far. Moving closer…", G.WARN); return
 			G.zeal -= 10; cd.steps = CD_LEN.steps; gcd = 1.0
-			pact.facing = (m.actor.position - player.position).normalized()
+			var to_m: Vector3 = (m.actor.position - player.position); to_m.y = 0
+			pact.facing = to_m.normalized()
 			pact.play_once("attack", 0.35)
+			var from := player.position
+			var dest := player.position + to_m.normalized() * maxf(0.0, to_m.length() - 1.1)
+			Fx.afterimages(self, pact, from, dest, 3)
+			Fx.dust(self, from, Color(0.8, 0.76, 0.66, 0.6), 6)
+			var lunge := create_tween(); lunge.tween_property(player, "position", dest, 0.09).set_ease(Tween.EASE_OUT)
+			Fx.burst(self, m.actor.position + Vector3(0, 0.8, 0), Color("fff2b0"), 22)
+			Fx.ring(self, m.actor.position, Color(1, 0.95, 0.7), 1.8, 0.4)
 			hit_mob(m, 20 + randi() % 5, true)
 			G.say("First Steps!", G.SYS)
 		"refuge":
@@ -748,8 +928,9 @@ func skill(id: String) -> void:
 			var h := minf(G.hp_max - G.hp, 30.0)
 			G.hp += h
 			pact.play_once("cast", 0.5)
+			pact.flash(Color("fff0b0"), 0.6)
 			_float_text(player.position + Vector3(0, 2.2, 0), "+%d" % int(h), Color("7cff7c"))
-			_sparkle(player.position + Vector3(0, 1, 0), Color("c8e8ff"))
+			Fx.dome(self, player.position)
 			G.say("Take Refuge. [BSB: Psalm 9:9 · pulled at build time]", G.SYS)
 	G.stats_changed.emit()
 
@@ -855,9 +1036,15 @@ func _physics_process(delta: float) -> void:
 			move_target = null
 	if v.length() > 0.0:
 		var spd := SPEED * (0.8 if G.weary else 1.0)
-		player.velocity = v.normalized() * spd * minf(1.0, maxf(v.length(), 0.35))
+		var frac := minf(1.0, maxf(v.length(), 0.35))
+		player.velocity = v.normalized() * spd * frac
 		pact.facing = v.normalized()
 		pact.play("walk")
+		pact.speed_mul = frac * (0.8 if G.weary else 1.0)   # no foot sliding
+		step_t += delta * frac
+		if step_t > 0.34:
+			step_t = 0.0
+			Fx.dust(self, player.position, Color(0.85, 0.82, 0.72, 0.45) if map_id == "eden" else Color(0.7, 0.68, 0.66, 0.45), 2)
 	else:
 		player.velocity = Vector3.ZERO
 		if not sitting and pact.anim == "walk":
@@ -900,8 +1087,13 @@ func _physics_process(delta: float) -> void:
 		if not (map_id == "city" and _any_aggro()):
 			G.hp = minf(G.hp_max, G.hp + 1.0 * mult)
 		G.stats_changed.emit()
+	if queued_skill != "" and gcd <= 0.0:
+		var qs := queued_skill; queued_skill = ""
+		skill(qs)
+	_ambient_tick(delta)
 	# camera
 	cam_yaw = lerp_angle(cam_yaw, cam_yaw_target, 0.12)
+	trauma = maxf(0.0, trauma - delta * 1.6)
 	_place_camera()
 	# warp spin
 	var w := ent("warp")
@@ -954,6 +1146,7 @@ func _act_stone() -> void:
 	hud.word_study(_stone_read)
 
 func _stone_read() -> void:
+	hud.motes_to_plate(cam.unproject_position(ent("stone").pos + Vector3(0, 1.2, 0)))
 	G.manna += 5
 	G.say("Word Study complete. Manna +5.", G.INFO)
 	_motes(player.position)
@@ -977,3 +1170,112 @@ func _weary_end() -> void:
 	G.weary = false
 	G.say("Your weariness has passed.", G.SYS)
 	G.stats_changed.emit()
+
+# ------------------------------------------------------------------ ambience and feedback ticks
+func _ambient_tick(delta: float) -> void:
+	for sw in sways:
+		if is_instance_valid(sw[0]):
+			sw[0].rotation.z = sin(t * 1.1 + sw[1]) * 0.025
+			sw[0].rotation.x = cos(t * 0.8 + sw[1]) * 0.015
+	for l in lamps:
+		l.light_energy = 1.5 + sin(t * 9.0 + l.position.x) * 0.12 + randf() * 0.1
+	for h in holy_lights:
+		if h is OmniLight3D:
+			h.light_energy = 2.0 + sin(t * 1.6) * 0.5
+		elif h is Sprite3D:
+			h.modulate.a = 0.45 + sin(t * 1.6) * 0.15
+	var w := ent("warp")
+	if not w.is_empty() and w.node.has_meta("spin2"):
+		w.node.get_meta("spin2").rotation.y -= delta * 2.4
+	# target ring + outline on the current target
+	var tgt = target if (target != null and target.alive) else null
+	if tgt != last_target:
+		if last_target != null and is_instance_valid(last_target.actor):
+			last_target.actor.set_outline(false)
+		if tgt != null:
+			tgt.actor.set_outline(true)
+		last_target = tgt
+	if tgt != null:
+		if target_ring == null:
+			target_ring = Sprite3D.new(); target_ring.texture = G.tex("res://assets/fx/ring.png"); target_ring.pixel_size = 0.011
+			target_ring.rotation_degrees.x = -90; target_ring.shaded = false; target_ring.modulate = Color(1, 0.85, 0.3, 0.9); add_child(target_ring)
+		target_ring.visible = true
+		target_ring.position = tgt.actor.position + Vector3(0, 0.05, 0)
+		target_ring.rotation.y += delta * 2.0
+	elif target_ring:
+		target_ring.visible = false
+	# mob HP trail
+	for m in mobs:
+		if m.bg.visible:
+			var v: float = m.hp / m.max
+			m.trail_v = lerpf(m.trail_v, v, delta * 3.0) if m.trail_v > v else v
+			m.trail.scale.x = maxf(0.001, m.trail_v); m.trail.position.x = -0.43 * (1.0 - m.trail_v)
+	# status visuals on the body
+	if map_id == "city" and burden_fx == null:
+		burden_fx = Fx.particles(player, player.global_position + Vector3(0.25, 1.1, 0), {"amount": 6, "life": 1.4, "one_shot": false, "explode": 0.0, "sphere": 0.25,
+			"vmin": 0.05, "vmax": 0.2, "gravity": Vector3(0, -0.4, 0), "color": Color(0.2, 0.16, 0.12, 0.45), "size": 0.3, "tex": "res://assets/fx/puff.png", "add": false, "local": false})
+	if burden_fx:
+		burden_fx.global_position = player.global_position + Vector3(0.25, 1.1, 0)
+	if G.weary and weary_fx == null:
+		weary_fx = Fx.particles(player, player.global_position + Vector3(0, 2.0, 0), {"amount": 3, "life": 0.9, "one_shot": false, "explode": 0.0,
+			"dir": Vector3(0.3, 1, 0), "spread": 30.0, "vmin": 0.6, "vmax": 0.9, "gravity": Vector3(0, -3, 0), "color": Color(0.7, 0.85, 1.0, 0.9), "size": 0.18, "tex": "res://assets/fx/drop.png", "add": false, "local": false})
+	elif not G.weary and weary_fx != null:
+		weary_fx.queue_free(); weary_fx = null
+	if weary_fx:
+		weary_fx.global_position = player.global_position + Vector3(0, 2.0, 0)
+	# low-health warning
+	var frac := G.hp / G.hp_max
+	var target_d := 0.0
+	if frac < 0.25 and not dead:
+		low_hp_pulse += delta * (6.0 if frac < 0.1 else 3.5)
+		target_d = 0.45 + 0.35 * sin(low_hp_pulse)
+	post.set_shader_parameter("danger", target_d)
+
+func _pop_mark(a: SpriteActor, mark: String, col: Color) -> void:
+	var l := _label3d(mark, a.position + Vector3(0, 1.9, 0), col, 80)
+	l.scale = Vector3.ONE * 0.3
+	var tw := create_tween()
+	tw.tween_property(l, "scale", Vector3.ONE * 1.15, 0.12).set_trans(Tween.TRANS_BACK)
+	tw.tween_property(l, "scale", Vector3.ONE, 0.08)
+	tw.tween_interval(0.6)
+	tw.tween_method(_label_alpha.bind(l), 1.0, 0.0, 0.25)
+	tw.tween_callback(l.queue_free)
+
+func _edge_fade(col: Color) -> void:
+	## Soft darkening band at every map border so no hard edge or void is visible.
+	var gt := GradientTexture2D.new()
+	var gr := Gradient.new(); gr.set_color(0, Color(col.r, col.g, col.b, 0.0)); gr.set_color(1, Color(col.r, col.g, col.b, 0.92))
+	gt.gradient = gr; gt.fill_from = Vector2(0, 0); gt.fill_to = Vector2(0, 1); gt.width = 4; gt.height = 64
+	var m := StandardMaterial3D.new(); m.albedo_texture = gt; m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA; m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	var b := bounds; var w := 7.0
+	var specs := [
+		[Vector2(b.size.x + 2 * w, w), Vector3(b.get_center().x, 0.08, b.position.y - w * 0.5 + 1.5), PI],
+		[Vector2(b.size.x + 2 * w, w), Vector3(b.get_center().x, 0.08, b.end.y + w * 0.5 - 1.5), 0.0],
+		[Vector2(b.size.y + 2 * w, w), Vector3(b.position.x - w * 0.5 + 1.5, 0.08, b.get_center().y), -PI * 0.5],
+		[Vector2(b.size.y + 2 * w, w), Vector3(b.end.x + w * 0.5 - 1.5, 0.08, b.get_center().y), PI * 0.5]]
+	for sp in specs:
+		var mi := MeshInstance3D.new(); var pm := PlaneMesh.new(); pm.size = sp[0]; mi.mesh = pm; mi.material_override = m
+		mi.position = sp[1]; mi.rotation.y = sp[2]; mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mi)
+
+func _weather_petals() -> void:
+	var p := Fx.particles(cam_rig, cam_rig.global_position + Vector3(0, 7, 0), {"amount": 26, "life": 6.0, "one_shot": false, "explode": 0.0, "sphere": 9.0,
+		"dir": Vector3(0.4, -1, 0.2), "spread": 25.0, "vmin": 0.6, "vmax": 1.1, "gravity": Vector3(0.3, -0.25, 0.1), "color": Color(1, 1, 1, 0.95),
+		"size": 0.16, "tex": "res://assets/fx/petal.png", "add": false, "local": false})
+	p.set_meta("follow", true)
+	_followers.append([p, Vector3(0, 7, 0)])
+
+func _weather_drizzle() -> void:
+	if not G.settings.fx_high:
+		return
+	var p := Fx.particles(cam_rig, cam_rig.global_position + Vector3(0, 9, 0), {"amount": 60, "life": 1.0, "one_shot": false, "explode": 0.0, "sphere": 10.0,
+		"dir": Vector3(0.15, -1, 0), "spread": 4.0, "vmin": 11.0, "vmax": 13.0, "gravity": Vector3.ZERO, "color": Color(0.8, 0.85, 0.95, 0.45),
+		"size": 0.5, "stretch": 0.15, "tex": "res://assets/fx/rain.png", "add": false, "local": false})
+	_followers.append([p, Vector3(0, 9, 0)])
+
+var _followers: Array = []
+
+func _process(_d: float) -> void:
+	for f in _followers:
+		if is_instance_valid(f[0]):
+			f[0].global_position = player.global_position + f[1]

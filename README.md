@@ -28,6 +28,30 @@ A playable demo of the opening of *Pilgrim's Progress Online*, a Reformed, alleg
    - Drops, Base and Job level-ups, and the KO/rest flow: Weariness, 5% Manna spoilage, no XP loss.
 7. **Evangelist**: Bunyan's public-domain lines with a portrait cut-in, then the parchment roll. Snapshot mode unlocks, and you follow the shining light to the warp.
 
+## Feel and effects (polish pass 1)
+
+Built from the code-side items in the 100-improvement review.
+
+- **Hit feel:** hit-stop (50 ms normal, 100 ms crit or kill), hit flash and squash and stretch on attacker and target, trauma camera shake (crits, kills and damage taken only), directional hit sparks, weight knockback, damage numbers sized by damage and staggered, crit star burst, "overcome" dissolve into light motes, input buffering, haptics.
+- **Readability:**
+  - Monsters pop a "!" when they notice you and a "?" when they lose you.
+  - Strong attacks show a red telegraph circle; step out of it to make them miss.
+  - The current target gets a gold outline and a ground ring.
+  - Enemy and player health bars have a white damage trail.
+  - A red edge pulse warns at low health.
+- **Skills:** First Steps lunges with afterimages, dust and an impact burst; Take Refuge raises a dome of warm light with rising motes.
+- **Progression:** staged Base and Job level-up (light column, spiral motes, ring, banner, EXP bar flash, badge on More), quest-step wax stamp, Manna motes flying to the portrait after Word Study.
+- **Look:**
+  - Lit-sprite shader (map key-light tint and top-to-bottom shading).
+  - Per-map colour grading and vignette, plus a subtle tilt-shift blur at the top and bottom edges.
+  - Fake bloom halos on lamps, the Tree of Life and the warp. Engine glow is unreliable on the Compatibility renderer, so halo cards stand in for it.
+  - Light shafts and drifting petals in Eden; drizzle and flickering lamps in the City.
+  - Swaying trees, water glints and soft edge fog at map borders.
+  - Eden's light warms and dims as the two trees appear.
+- **Status visuals:** a dark burden haze in the City and sweat drops while weary.
+- **UI motion:** windows pop in, side sheets slide, and buttons dip on press. Skills grey out when Zeal is short. The HUD respects safe areas.
+- **Settings:** Reduce motion, Reduce flashing, High-quality effects (blur and rain) and Vibration.
+
 ## Controls (phone)
 
 - **Left thumb:** drag anywhere in the lower-left to walk. Tap the ground to walk there.

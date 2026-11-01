@@ -38,7 +38,7 @@ var kos := 0
 var snaps := 0
 var start_ms := 0
 var log_lines: Array = []
-var settings := {"auto_loot": true, "reduce_motion": false, "left_handed": false, "dmg_numbers": true, "hud_opacity": 1.0}
+var settings := {"auto_loot": true, "reduce_motion": false, "left_handed": false, "dmg_numbers": true, "hud_opacity": 1.0, "reduce_flashing": false, "fx_high": true, "haptics": true}
 var minor := false
 
 var font_ui: FontVariation
@@ -47,6 +47,7 @@ var font_title: FontVariation
 var theme: Theme
 var _tex_cache := {}
 var player_sheet: ImageTexture
+var sprite_tint := Color.WHITE
 
 func _ready() -> void:
 	var base := load("res://assets/fonts/Nunito.ttf") as FontFile
@@ -155,3 +156,7 @@ func _tinted(path: String, col: Color) -> Image:
 			if p.a > 0.0:
 				img.set_pixel(x, y, Color(p.r * col.r, p.g * col.g, p.b * col.b, p.a))
 	return img
+
+func haptic(ms: int = 20) -> void:
+	if settings.get("haptics", true) and OS.has_feature("mobile"):
+		Input.vibrate_handheld(ms)

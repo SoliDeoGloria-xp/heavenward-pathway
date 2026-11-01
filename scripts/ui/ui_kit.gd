@@ -101,7 +101,41 @@ static func button(text: String, cb: Callable, min_w: float = 0.0, gold: bool = 
 		var g := sb("res://assets/ui/btn_gold.png", 10, 14)
 		b.add_theme_stylebox_override("normal", g); b.add_theme_stylebox_override("hover", g)
 	b.pressed.connect(cb)
+	press_feel(b)
 	return b
+
+## Button press feel: dip to 94% on press, spring back on release.
+static func press_feel(b: Control) -> void:
+	b.resized.connect(func(): b.pivot_offset = b.size * 0.5)
+	if b is BaseButton:
+		b.button_down.connect(func():
+			b.pivot_offset = b.size * 0.5
+			b.create_tween().tween_property(b, "scale", Vector2(0.94, 0.94), 0.06))
+		b.button_up.connect(func():
+			var tw := b.create_tween(); tw.tween_property(b, "scale", Vector2(1.03, 1.03), 0.07); tw.tween_property(b, "scale", Vector2.ONE, 0.08))
+
+## Shared pop-in motion for windows (0.92 -> 1.03 -> 1.0 over ~220 ms); fades only with Reduce Motion.
+static func pop_in(c: Control) -> void:
+	c.modulate.a = 0.0
+	if G.settings.reduce_motion:
+		c.create_tween().tween_property(c, "modulate:a", 1.0, 0.15); return
+	c.pivot_offset = c.size * 0.5
+	c.resized.connect(func(): c.pivot_offset = c.size * 0.5)
+	c.scale = Vector2(0.92, 0.92)
+	var tw := c.create_tween().set_parallel(true)
+	tw.tween_property(c, "modulate:a", 1.0, 0.14)
+	tw.tween_property(c, "scale", Vector2(1.03, 1.03), 0.14).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_property(c, "scale", Vector2.ONE, 0.08)
+
+## Safe-area insets (notches, rounded corners, home bar) in viewport units: left, top, right, bottom.
+static func safe_insets(vp: Viewport) -> Vector4:
+	var scr := DisplayServer.screen_get_size()
+	var safe := DisplayServer.get_display_safe_area()
+	if scr.x <= 0 or safe.size.x <= 0:
+		return Vector4.ZERO
+	var vs := vp.get_visible_rect().size
+	var kx := vs.x / float(scr.x); var ky := vs.y / float(scr.y)
+	return Vector4(safe.position.x * kx, safe.position.y * ky, (scr.x - safe.end.x) * kx, (scr.y - safe.end.y) * ky)
 
 static func icon_rect(name: String, size: float) -> TextureRect:
 	var t := TextureRect.new()
