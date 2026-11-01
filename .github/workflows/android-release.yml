@@ -32,26 +32,50 @@ jobs:
           mkdir -v -p ~/.local/share/godot/export_templates/ ~/.config/
           mv /root/.config/godot ~/.config/godot
           mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
-      - name: Write keystore
-        run: echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > /tmp/upload.keystore
+      - name: Install Android platform 36 (Play requires target API 36 for new apps from 2026-08-31)
+        run: |
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/lib/android-sdk}}"
+          SM=$(ls "$SDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
+          echo "SDK=$SDK sdkmanager=$SM"
+          yes | "$SM" --sdk_root="$SDK" --licenses > /dev/null || true
+          "$SM" --sdk_root="$SDK" "platforms;android-36" "build-tools;36.0.0"
+      - name: Write keystore (or a throwaway one to test the pipeline)
+        id: ks
+        env:
+          KS_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > /tmp/upload.keystore
+            echo "pass=$KS_PASS" >> "$GITHUB_OUTPUT"; echo "alias=$KS_ALIAS" >> "$GITHUB_OUTPUT"; echo "real=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No RELEASE_KEYSTORE_BASE64 secret: signing with a THROWAWAY key. This AAB is for pipeline testing only; do not upload it to Play."
+            keytool -genkeypair -v -keystore /tmp/upload.keystore -storepass throwaway -keypass throwaway -alias throwaway -keyalg RSA -keysize 2048 -validity 365 -dname "CN=PPO Test"
+            echo "pass=throwaway" >> "$GITHUB_OUTPUT"; echo "alias=throwaway" >> "$GITHUB_OUTPUT"; echo "real=no" >> "$GITHUB_OUTPUT"
+          fi
       - name: Switch preset to a Gradle AAB build
         run: |
           sed -i 's/^gradle_build\/use_gradle_build=false/gradle_build\/use_gradle_build=true/' export_presets.cfg
           sed -i 's/^gradle_build\/export_format=0/gradle_build\/export_format=1/' export_presets.cfg
+          sed -i 's/^gradle_build\/min_sdk=.*/gradle_build\/min_sdk="24"/' export_presets.cfg
+          sed -i 's/^gradle_build\/target_sdk=.*/gradle_build\/target_sdk="36"/' export_presets.cfg
           sed -i 's/^version\/code=.*/version\/code=${{ github.event.inputs.version_code }}/' export_presets.cfg
           sed -i 's/^version\/name=.*/version\/name="${{ github.event.inputs.version_name }}"/' export_presets.cfg
       - name: Import, install Android build template, export AAB
         env:
           GODOT_ANDROID_KEYSTORE_RELEASE_PATH: /tmp/upload.keystore
-          GODOT_ANDROID_KEYSTORE_RELEASE_USER: ${{ secrets.RELEASE_KEY_ALIAS }}
-          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: ${{ steps.ks.outputs.alias }}
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ steps.ks.outputs.pass }}
         run: |
           godot --headless --import || true
           godot --headless --install-android-build-template --quit || true
           mkdir -v -p build/android
           godot --headless --export-release "Android" build/android/ppo-release.aab
           ls -la build/android
+          unzip -p build/android/ppo-release.aab base/manifest/AndroidManifest.xml > /tmp/manifest.pb || true
+          echo "Signed with real upload key: ${{ steps.ks.outputs.real }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: ppo-android-release-aab
+          name: ppo-android-release-aab${{ steps.ks.outputs.real == 'no' && '-THROWAWAY-KEY' || '' }}
           path: build/android/ppo-release.aab
