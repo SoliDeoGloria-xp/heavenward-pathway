@@ -78,6 +78,8 @@ jobs:
           godot --headless --export-release "Android" build/android/ppo-release.aab
           ls -la build/android
           unzip -p build/android/ppo-release.aab base/manifest/AndroidManifest.xml > /tmp/manifest.pb || true
+          echo "--- manifest SDK levels (must show targetSdkVersion 36) ---"
+          strings -n 2 /tmp/manifest.pb | grep -A1 -E "^(minSdkVersion|targetSdkVersion|package|versionCode|versionName)$" || true
           echo "Signed with real upload key: ${{ steps.ks.outputs.real }}"
       - uses: actions/upload-artifact@v4
         with:
