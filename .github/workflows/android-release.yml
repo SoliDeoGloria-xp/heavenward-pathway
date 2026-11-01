@@ -1,0 +1,57 @@
+name: Android release (Play Console AAB)
+
+# Manual only. Needs four repository secrets (Settings > Secrets and variables > Actions):
+#   RELEASE_KEYSTORE_BASE64   base64 of your upload keystore (.jks / .keystore)
+#   RELEASE_KEYSTORE_PASSWORD keystore password
+#   RELEASE_KEY_ALIAS         key alias inside the keystore
+#   VERSION_CODE              (optional input below overrides) integer, must increase every upload
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: "Android versionCode (integer, must increase each upload)"
+        required: true
+        default: "1"
+      version_name:
+        description: "Version name shown to players"
+        required: true
+        default: "0.1.0"
+
+env:
+  GODOT_VERSION: "4.3"
+
+jobs:
+  aab:
+    runs-on: ubuntu-22.04
+    container:
+      image: barichello/godot-ci:4.3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install export templates and Android settings
+        run: |
+          mkdir -v -p ~/.local/share/godot/export_templates/ ~/.config/
+          mv /root/.config/godot ~/.config/godot
+          mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+      - name: Write keystore
+        run: echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > /tmp/upload.keystore
+      - name: Switch preset to a Gradle AAB build
+        run: |
+          sed -i 's/^gradle_build\/use_gradle_build=false/gradle_build\/use_gradle_build=true/' export_presets.cfg
+          sed -i 's/^gradle_build\/export_format=0/gradle_build\/export_format=1/' export_presets.cfg
+          sed -i 's/^version\/code=.*/version\/code=${{ github.event.inputs.version_code }}/' export_presets.cfg
+          sed -i 's/^version\/name=.*/version\/name="${{ github.event.inputs.version_name }}"/' export_presets.cfg
+      - name: Import, install Android build template, export AAB
+        env:
+          GODOT_ANDROID_KEYSTORE_RELEASE_PATH: /tmp/upload.keystore
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: ${{ secrets.RELEASE_KEY_ALIAS }}
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+        run: |
+          godot --headless --import || true
+          godot --headless --install-android-build-template --quit || true
+          mkdir -v -p build/android
+          godot --headless --export-release "Android" build/android/ppo-release.aab
+          ls -la build/android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ppo-android-release-aab
+          path: build/android/ppo-release.aab
