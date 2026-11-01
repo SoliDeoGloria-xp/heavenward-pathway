@@ -69,7 +69,11 @@ jobs:
           GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ steps.ks.outputs.pass }}
         run: |
           godot --headless --import || true
-          godot --headless --install-android-build-template --quit || true
+          # install the Gradle build template by hand (the CLI flag is unreliable headless in 4.3)
+          rm -rf android/build && mkdir -p android/build
+          unzip -q ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/android_source.zip -d android/build
+          echo "${GODOT_VERSION}.stable" > android/.build_version
+          touch android/build/.gdignore
           mkdir -v -p build/android
           godot --headless --export-release "Android" build/android/ppo-release.aab
           ls -la build/android
