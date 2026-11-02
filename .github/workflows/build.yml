@@ -44,6 +44,9 @@ jobs:
     name: Publish to GitHub Pages
     needs: web
     runs-on: ubuntu-22.04
+    # Pages must be enabled in repo Settings -> Pages (Source: GitHub Actions). Until then this
+    # step fails; it must not mark the whole build red, because the APK still built fine.
+    continue-on-error: true
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
