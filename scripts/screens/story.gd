@@ -4,101 +4,165 @@ extends Control
 ## God is never depicted or voiced.
 
 const PD := "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+const DREAMER := "The Dreamer"
+## Story scenes are conversations: the Dreamer speaks to you over a painted scene, and you answer.
+## Line keys: who, text, src?, art, choices? [{t}]
 var cards: Array = []
 var idx := 0
 var next_screen := ""
 var next_data := {}
-var holder: Control
-var art: Panel
+var art: Control
+var portrait: TextureRect
+var box: PanelContainer
+var name_lbl: Label
+var text_lbl: Label
+var src_lbl: Label
+var hint_lbl: Label
+var choice_col: VBoxContainer
+var tw: Tween
 var done := false
+var t := 0.0
 
 func _ready() -> void:
 	UIKit.full_rect(self); theme = G.theme
-	var bg := ColorRect.new(); bg.color = Color("0b0b12"); UIKit.full_rect(bg); bg.mouse_filter = Control.MOUSE_FILTER_IGNORE; add_child(bg)
 	var id: String = get_meta("data").get("id", "dream")
 	match id:
 		"dream":
 			cards = [
-				{"quote": "“As I walked through the wilderness of this world, I lighted on a certain place where was a Den; and I laid me down in that place to sleep: and, as I slept, I dreamed a dream.”", "src": PD, "art": "den"},
-				{"who": "The Dreamer", "text": "In the dream you walk as my witness. Behold first a garden, as it was in the beginning.", "art": "garden"}]
+				{"who": DREAMER, "art": "den", "text": "“As I walked through the wilderness of this world, I lighted on a certain place where was a Den; and I laid me down in that place to sleep: and, as I slept, I dreamed a dream.”", "src": PD},
+				{"who": DREAMER, "art": "den", "text": "Peace to you, %s. I am the Dreamer, and you have found me sleeping. In my dream I see a pilgrim, and I think the pilgrim is you." % G.pname,
+					"choices": [{"t": "Who are you?"}, {"t": "What will I see?", "skip": 1}]},
+				{"who": DREAMER, "art": "den", "text": "Only a tinker who dreamed. I tell you what I saw, so that you may walk it yourself. I will be beside you, and I will show you how this world works."},
+				{"who": DREAMER, "art": "garden", "text": "First, a garden, as it was in the beginning, before anything went wrong. Come. Walk with me.", "choices": [{"t": "I'll follow you."}]}]
 			next_screen = "world"; next_data = {"map": "eden"}
 		"fall":
 			cards = [
-				{"who": "The Dreamer", "text": "And I saw in my dream that the serpent spoke in the garden, and questioned the word that had been given.", "src": "[BSB: Genesis 3:1 · pulled at build time]", "art": "serpent"},
-				{"who": "The Dreamer", "text": "The fruit was taken and eaten. The man, the head of all his kind, broke the covenant, and all his children fell with him.", "src": "[BSB: Genesis 3:6 · Romans 5:12]", "art": "fruit"},
-				{"who": "The Dreamer", "text": "Their eyes were opened, and they knew shame. They hid themselves among the trees of the garden.", "src": "[BSB: Genesis 3:7–8]", "art": "hide"},
-				{"who": "The Dreamer", "text": "So the man was driven out, east of Eden. Cherubim and a flaming sword, turning every way, guarded the way back to the tree of life.", "src": "[BSB: Genesis 3:24]", "art": "cherubim"}]
-			next_screen = "story"; next_data = {"id": "wake"}
+				{"who": DREAMER, "art": "serpent", "text": "And I saw in my dream that the serpent spoke in the garden, and questioned the word that had been given.", "src": "[BSB: Genesis 3:1 · pulled at build time]"},
+				{"who": DREAMER, "art": "cherubim", "text": "So the man was driven out, east of Eden.", "src": "[BSB: Genesis 3:24]"}]
+			next_screen = "world"; next_data = {"map": "city", "wake": true}
 		"wake":
-			cards = [
-				{"quote": "“I saw a man clothed with rags, standing in a certain place, with his face from his own house, a book in his hand, and a great burden upon his back.”", "src": PD, "art": "burden"},
-				{"who": "The Dreamer", "text": "You wake in the City of Destruction, born in Adam, with a burden upon your back.", "art": "city"}]
-			next_screen = "world"; next_data = {"map": "city"}
+			cards = [{"who": DREAMER, "art": "city", "text": "Wake, pilgrim."}]
+			next_screen = "world"; next_data = {"map": "city", "wake": true}
 		"onward":
 			cards = [
-				{"who": "The Dreamer", "text": "So the pilgrim ran, and the way led on: through the Slough of Despond, where Help drew him out; to the Wicket Gate; to the House of the Interpreter.", "art": "way"},
-				{"who": "The Dreamer", "text": "At the Cross his burden loosed from off his shoulders and tumbled into the sepulchre, and he saw it no more. Then up the Hill Difficulty, alone, on hands and knees.", "src": "Paraphrasing " + PD, "art": "cross"},
-				{"quote": "“He lift up his eyes, and behold there was a very stately palace before him, the name of which was Beautiful; and it stood just by the highway side.”", "src": PD, "art": "palace"},
-				{"who": "Demo preview", "text": "Skipping ahead to the end of Act II. The Palace Beautiful is the first House, where pilgrims who walked the Way alone meet one another.", "art": "palace"}]
+				{"who": DREAMER, "art": "way", "text": "So you ran, and the way led on: through the Slough of Despond, where Help drew you out; to the Wicket Gate; to the House of the Interpreter."},
+				{"who": DREAMER, "art": "cross", "text": "At the Cross the burden loosed from off your shoulders and tumbled into the sepulchre, and you saw it no more. Then up the Hill Difficulty, on hands and knees.", "src": "Paraphrasing " + PD},
+				{"who": DREAMER, "art": "palace", "text": "“He lift up his eyes, and behold there was a very stately palace before him, the name of which was Beautiful.”", "src": PD},
+				{"who": "Demo preview", "art": "palace", "text": "This demo skips ahead to the end of Act II. The Palace Beautiful is the first House, where pilgrims who walked the Way alone meet one another.",
+					"choices": [{"t": "Enter the House"}]}]
 			next_screen = "world"; next_data = {"map": "palace"}
-	art = StoryArt.new(); art.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	art.position = Vector2(-220, 40); art.size = Vector2(440, 260); add_child(art)
-	holder = CenterContainer.new(); UIKit.full_rect(holder); holder.offset_top = 300; holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(holder)
+	art = StoryArt.new(); UIKit.full_rect(art); add_child(art)
+	var ins := UIKit.safe_insets(get_viewport())
+	portrait = TextureRect.new(); portrait.texture = G.tex("res://assets/portraits/dreamer.png")
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.anchor_top = 1; portrait.anchor_bottom = 1; portrait.offset_left = 24 + ins.x; portrait.offset_right = 254 + ins.x
+	portrait.offset_top = -530; portrait.offset_bottom = -232; portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(portrait)
+	var w := UIKit.window("", Vector2(0, 220))
+	box = w.root
+	box.anchor_left = 0; box.anchor_right = 1; box.anchor_top = 1; box.anchor_bottom = 1
+	box.offset_left = 24 + ins.x; box.offset_right = -24 - ins.z; box.offset_top = -250 - ins.w; box.offset_bottom = -22 - ins.w
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var top := HBoxContainer.new()
+	name_lbl = UIKit.label("", 24, Color("1d4fb8"), true); name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL; top.add_child(name_lbl)
+	hint_lbl = UIKit.label("Tap to continue ▼", 18, UIKit.SUB, true); top.add_child(hint_lbl)
+	w.body.add_child(top)
+	text_lbl = UIKit.label("", 27, UIKit.INK, false, true); text_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL; w.body.add_child(text_lbl)
+	src_lbl = UIKit.label("", 16, UIKit.SUB, false, true); w.body.add_child(src_lbl)
+	add_child(box)
+	choice_col = VBoxContainer.new(); choice_col.add_theme_constant_override("separation", 8)
+	choice_col.anchor_left = 1; choice_col.anchor_right = 1; choice_col.anchor_top = 1; choice_col.anchor_bottom = 1
+	choice_col.offset_right = -40 - ins.z; choice_col.offset_left = choice_col.offset_right - 440; choice_col.offset_bottom = -262; choice_col.offset_top = -420
+	choice_col.alignment = BoxContainer.ALIGNMENT_END
+	add_child(choice_col)
+	var skip := UIKit.button("Skip scene ▶▶", func(): _finish(), 200)
+	skip.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT); skip.position = Vector2(-224 - ins.z, 18 + ins.y)
+	add_child(skip)
 	_show()
 
+func _process(delta: float) -> void:
+	t += delta
+	hint_lbl.modulate.a = 0.5 + 0.5 * sin(t * 4.0)
+	art.set("t", t); art.queue_redraw()
+
 func _show() -> void:
-	for c in holder.get_children():
-		c.queue_free()
 	var c: Dictionary = cards[idx]
 	art.set("kind", c.get("art", ""))
-	art.queue_redraw()
-	var box := VBoxContainer.new(); box.add_theme_constant_override("separation", 10); box.custom_minimum_size = Vector2(900, 0)
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if c.has("quote"):
-		var q := UIKit.label(c.quote, 32, Color("f2ead8"), false, true)
-		q.add_theme_font_override("font", G.font_title)
-		q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		box.add_child(q)
-		var s := UIKit.label(c.src.to_upper(), 15, Color(1, 1, 1, 0.55)); s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		box.add_child(s)
-	else:
-		var w := UIKit.window("")
-		var b: VBoxContainer = w.body
-		b.add_child(UIKit.label("[%s]" % c.who, 22, Color("1d4fb8"), true))
-		b.add_child(UIKit.label(c.text, 24, UIKit.INK, false, true))
-		if c.has("src"):
-			b.add_child(UIKit.label(c.src, 16, UIKit.SUB))
-		w.root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		box.add_child(w.root)
-	var hint := UIKit.label("%d / %d  ·  Tap to continue" % [idx + 1, cards.size()], 16, Color(1, 1, 1, 0.5))
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(hint)
-	box.modulate.a = 0.0
-	holder.add_child(box)
-	create_tween().tween_property(box, "modulate:a", 1.0, 0.5)
+	name_lbl.text = c.who
+	portrait.visible = c.who == DREAMER
+	text_lbl.text = c.text
+	src_lbl.text = c.get("src", "")
+	src_lbl.visible = src_lbl.text != ""
+	for ch in choice_col.get_children():
+		ch.queue_free()
+	hint_lbl.visible = not c.has("choices")
+	if c.has("choices"):
+		for ch in c.choices:
+			var cc: Dictionary = ch
+			var b := UIKit.button("▸ " + cc.t, func():
+				G.haptic(12)
+				idx += int(cc.get("skip", 0))
+				advance(true), 440, true)
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.custom_minimum_size.y = 62
+			choice_col.add_child(b)
+	if tw: tw.kill()
+	if not G.settings.reduce_motion:
+		text_lbl.visible_ratio = 0.0
+		tw = create_tween(); tw.tween_property(text_lbl, "visible_ratio", 1.0, clampf(c.text.length() * 0.018, 0.3, 2.4))
+		box.modulate.a = 0.0; create_tween().tween_property(box, "modulate:a", 1.0, 0.25)
 
 func _gui_input(e: InputEvent) -> void:
-	if e is InputEventScreenTouch and e.pressed:
-		advance()
+	if e is InputEventScreenTouch and not e.pressed:
+		if text_lbl.visible_ratio < 1.0:
+			if tw: tw.kill()
+			text_lbl.visible_ratio = 1.0
+			return
+		if not cards[idx].has("choices"):
+			G.haptic(8)
+			advance()
 
-func advance() -> void:
+func advance(from_choice: bool = false) -> void:
 	if done:
+		return
+	if not from_choice and cards[idx].has("choices"):
 		return
 	idx += 1
 	if idx >= cards.size():
-		done = true
-		G.goto(next_screen, next_data)
-		return
+		_finish(); return
 	_show()
 
+func _finish() -> void:
+	if done:
+		return
+	done = true
+	G.goto(next_screen, next_data)
 
-class StoryArt extends Panel:
+
+class StoryArt extends Control:
 	var kind := ""
+	var t := 0.0
+	const SKY := {"den": [Color("0b0b1e"), Color("2a2448")], "garden": [Color("bfe3f2"), Color("f4ecc8")], "city": [Color("2a2836"), Color("5a5266")],
+		"burden": [Color("2a2836"), Color("5a5266")], "way": [Color("9cc8e8"), Color("f0e2b8")], "cross": [Color("f6e2b0"), Color("d8b880")],
+		"palace": [Color("a8d0f0"), Color("f4ecd0")], "serpent": [Color("3a4a2a"), Color("8a9a6a")], "fruit": [Color("2a1e22"), Color("5a3a3a")],
+		"hide": [Color("1a2418"), Color("3a4a32")], "cherubim": [Color("1a1420"), Color("4a2a20")]}
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	func _draw() -> void:
+		var sky: Array = SKY.get(kind, [Color("0b0b12"), Color("1b1b26")])
+		for i in 32:
+			var f := float(i) / 31.0
+			draw_rect(Rect2(0, size.y * f, size.x, size.y / 31.0 + 1), (sky[0] as Color).lerp(sky[1], f))
+		if kind == "den":
+			for i in 60:
+				var p := Vector2(fmod(i * 197.0, size.x), fmod(i * 83.0, size.y * 0.6))
+				draw_circle(p, 1.5 + (i % 3) * 0.5, Color(1, 1, 0.9, 0.4 + 0.4 * sin(t * 2.0 + i)))
+		# the scene itself, scaled up from its 440x260 design box and set above the dialogue box
+		var k := minf(size.x / 440.0, (size.y - 240.0) / 260.0) * 0.95
+		var off := Vector2(size.x * 0.5 - 220.0 * k + 60.0, 10.0)
+		draw_set_transform(off, 0.0, Vector2(k, k))
+		_scene(Vector2(440, 260))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	func _scene(size: Vector2) -> void:
 		var c := size * 0.5
 		match kind:
 			"den":

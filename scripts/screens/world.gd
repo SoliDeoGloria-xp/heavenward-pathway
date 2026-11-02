@@ -40,8 +40,15 @@ var auto_on := false
 var sitting := false
 var dead := false
 var next_atk := 0.0
-var cd := {"steps": 0.0, "refuge": 0.0}
-const CD_LEN := {"steps": 6.0, "refuge": 12.0}
+var cd := {"steps": 0.0, "refuge": 0.0, "tend": 0.0}
+var cam_focus = null             # Vector3 the camera looks at during story scenes (null = the player)
+var cinema := false              # story scene playing: input and the HUD step aside
+var dreamer: SpriteActor         # the guide who walks beside you in Eden
+var lilies: Array = []           # {actor, pos, bloomed}
+var lilies_done := 0
+var used_steps := false
+var _serpent: SpriteActor
+var _cherub_nodes: Array = []
 var gcd := 0.0
 var ents: Array = []             # interactables: {id, name, pos, node, act, icon, fn, hidden}
 var mobs: Array = []             # {node, actor, hp, max, alive, pos, next, aggro, home, bar, respawn}
@@ -97,11 +104,15 @@ func _ready() -> void:
 		get_tree().create_timer(15.0).timeout.connect(_weary_end)
 	match map_id:
 		"eden":
-			G.say("Welcome to Eden Isle. Drag on the left to walk, or tap the ground.", G.INFO)
+			G.say("Welcome to Eden Isle, the Dreamer's vision of the garden.", G.INFO)
+			get_tree().create_timer(1.6).timeout.connect(_eden_intro)
 		"city":
 			G.burden = true
 			G.say("A great burden weighs upon your back.", G.WARN)
-			get_tree().create_timer(1.5).timeout.connect(func(): G.say("Slothlings stir in the street. Tap Attack or tap a monster.", G.WARN))
+			if get_meta("data").get("wake", false):
+				_wake_scene()
+			else:
+				get_tree().create_timer(1.0).timeout.connect(_city_lessons)
 		"palace":
 			G.burden = false
 			G.say("The House Beautiful. Pilgrims who walked the Way alone meet here.", G.INFO)
@@ -261,7 +272,8 @@ func _build_camera() -> void:
 
 func _place_camera(snap: bool = false) -> void:
 	var pitch := deg_to_rad(52.0)
-	cam_rig.position = cam_rig.position.lerp(player.position, 1.0 if snap else 0.15)
+	var center: Vector3 = cam_focus if cam_focus != null else player.position
+	cam_rig.position = cam_rig.position.lerp(center, 1.0 if snap else (0.04 if cinema else 0.15))
 	var d := cam_dist * (0.94 if (is_combat() and in_combat()) else 1.0)
 	_cur_dist = lerpf(_cur_dist if _cur_dist > 0.0 else d, d, 0.05)
 	cam.position = Vector3(0, sin(pitch) * _cur_dist, cos(pitch) * _cur_dist)
@@ -476,12 +488,16 @@ func _build_eden() -> void:
 	_add_waymark(Vector3(-9.5, 0, 9.0), "Look up: the vine needs tending", "Wren", 18)
 	_add_waymark(Vector3(-12.0, 0, -2.0), "Read slowly [BSB: Psalm 119:105]", "Psalter", 57)
 	_add_passerby([Vector3(-24, 0, 4), Vector3(-6, 0, 8), Vector3(10, 0, 7), Vector3(24, 0, 5)], "Marigold", "walking in the garden", [1, 2, 2], true)
+	_build_eden_guides()
 	objectives = [
-		{"id": "walk", "text": "Walk to the shining place", "zone": Vector3(-8, 0, 7)},
-		{"id": "tend", "text": "Tend the Young Vine", "ent": "vine"},
-		{"id": "gather", "text": "Gather from the Fig Tree", "ent": "fig"},
+		{"id": "walk", "text": "Walk to the glowing circle by the Dreamer's lamp", "zone": Vector3(-8, 0, 7)},
+		{"id": "tend", "text": "Tend the Young Vine (tap Act when close)", "ent": "vine"},
+		{"id": "stats", "text": "Spend your attribute points (More → Status)"},
+		{"id": "gather", "text": "Gather figs from the Fig Tree", "ent": "fig"},
+		{"id": "learn", "text": "Learn Tend and Keep (More → Skills)"},
+		{"id": "lilies", "text": "Tend the drooping lilies with your skill (0/3)"},
 		{"id": "name", "text": "Give the Lamb a name", "ent": "lamb"},
-		{"id": "read", "text": "Read the Stone Tablet", "ent": "stone"},
+		{"id": "read", "text": "Read the Stone Tablet (Word Study)", "ent": "stone"},
 		{"id": "trees", "text": "Behold the two trees in the midst of the garden", "ent": "trees"}]
 
 # ------------------------------------------------------------------ City of Destruction
@@ -644,8 +660,11 @@ func _mob_tick(delta: float) -> void:
 func _hurt_player(dmg: int) -> void:
 	if sitting:
 		_stand()
+	dmg = maxi(1, dmg - int(G.d.guard))   # Steadfastness blocks a little of every blow
 	G.hp = maxf(0.0, G.hp - dmg)
 	_float_text(player.position + Vector3(0, 2.2, 0), str(dmg), Color("ff6a6a"), false, dmg)
+	if G.hp < G.hp_max * 0.5 and is_combat() and G.tip_once("low_hp"):
+		hud.coach.tip("Health is low! Tap Take Refuge if you have learned it, or tap your Bread to eat it.", func(): return hud.item_btn, 6.0)
 	pact.flash(Color("ff5050"), 0.8); pact.squash(0.06)
 	shake(0.18)
 	G.haptic(25)
@@ -779,7 +798,7 @@ func _on_level_up(kind: String) -> void:
 	_sparkle(player.position + Vector3(0, 1, 0), Color("ffe9a0"))
 	Fx.spiral(self, player.position + Vector3(0, 0.2, 0), Color("ffe9a0") if kind.begins_with("Base") else Color("b8e0ff"))
 	hud.level_banner(kind)
-	G.haptic(40)
+	_level_lesson(kind)
 
 # ------------------------------------------------------------------ objectives
 func cur_obj() -> String:
@@ -798,6 +817,8 @@ func complete() -> void:
 	if obj_idx < objectives.size():
 		G.say("Quest: " + objectives[obj_idx].text, G.INFO)
 		hud.quest_toast(objectives[obj_idx].text)
+	G.haptic(18)
+	_on_new_obj()
 
 func _update_quest() -> void:
 	if quest_mark:
@@ -911,7 +932,7 @@ func act_pressed() -> void:
 func nearest_ent() -> Variant:
 	var best = null; var bd := 2.6
 	for e in ents:
-		if e.hidden or e.fn == null:
+		if e.hidden or e.fn == null or e.get("kind", "") == "guide":
 			continue
 		var d := Vector2(player.position.x - e.pos.x, player.position.z - e.pos.z).length()
 		if d < bd:
@@ -939,24 +960,50 @@ func _nearest_mob(r: float) -> Variant:
 	return best
 
 func skill(id: String) -> void:
-	if dead:
+	if dead or cinema:
 		return
+	if not G.has_skill(id):
+		G.say("You have not learned %s yet (More → Skills)." % G.SKILL_INFO[id].name, G.WARN); return
 	if gcd > 0.0 and gcd < 0.3 and cd.get(id, 0.0) <= 0.0:
 		queued_skill = id  # buffer the press; fires when the global cooldown ends
 		return
+	var info: Dictionary = G.SKILL_INFO[id]
+	if cd.get(id, 0.0) > 0.0:
+		G.say("%s is recharging." % info.name, G.WARN); return
+	if G.zeal < int(info.zeal):
+		G.say("Not enough Zeal (the blue bar). It refills over time, faster while sitting.", G.WARN); return
 	match id:
+		"tend":
+			var best = null; var bd := 3.2
+			for l in lilies:
+				var dl := Vector2(player.position.x - l.pos.x, player.position.z - l.pos.z).length()
+				if not l.bloomed and dl < bd:
+					bd = dl; best = l
+			if best == null:
+				G.say("Stand next to a drooping lily, then use Tend and Keep.", G.WARN); return
+			G.zeal -= int(info.zeal); cd.tend = float(info.cd); gcd = 1.0
+			pact.play_once("cast", 0.5); pact.facing = (best.pos - player.position).normalized()
+			best.bloomed = true; best.actor.play("bloom")
+			best.actor.squash(0.2)
+			_sparkle(best.pos + Vector3(0, 0.6, 0), Color("dff7ff"))
+			Fx.ring(self, best.pos, Color(0.85, 1, 0.85), 1.6, 0.5)
+			lilies_done += 1
+			G.add_xp(15, 10, "eden")
+			G.say("The lily lifts its head and blooms.", G.SYS)
+			if cur_obj() == "lilies":
+				objectives[obj_idx].text = "Tend the drooping lilies with your skill (%d/3)" % lilies_done
+				_update_quest()
+				if lilies_done >= 3:
+					complete()
 		"steps":
-			if cd.steps > 0.0:
-				G.say("First Steps is not ready.", G.WARN); return
-			if G.zeal < 10:
-				G.say("Not enough Zeal.", G.WARN); return
 			var m = target if (target != null and target.alive) else _nearest_mob(10.0)
 			if m == null:
 				G.say("No target.", G.WARN); return
 			target = m
 			if m.actor.position.distance_to(player.position) > 2.2:
 				G.say("Too far. Moving closer…", G.WARN); return
-			G.zeal -= 10; cd.steps = CD_LEN.steps; gcd = 1.0
+			G.zeal -= int(info.zeal); cd.steps = float(info.cd); gcd = 1.0
+			used_steps = true
 			var to_m: Vector3 = (m.actor.position - player.position); to_m.y = 0
 			pact.facing = to_m.normalized()
 			pact.play_once("attack", 0.35)
@@ -967,15 +1014,11 @@ func skill(id: String) -> void:
 			var lunge := create_tween(); lunge.tween_property(player, "position", dest, 0.09).set_ease(Tween.EASE_OUT)
 			Fx.burst(self, m.actor.position + Vector3(0, 0.8, 0), Color("fff2b0"), 22)
 			Fx.ring(self, m.actor.position, Color(1, 0.95, 0.7), 1.8, 0.4)
-			hit_mob(m, 20 + randi() % 5, true)
+			hit_mob(m, int(G.skill_num("steps").dmg) + randi_range(-2, 2), true)
 			G.say("First Steps!", G.SYS)
 		"refuge":
-			if cd.refuge > 0.0:
-				G.say("Take Refuge is not ready.", G.WARN); return
-			if G.zeal < 15:
-				G.say("Not enough Zeal.", G.WARN); return
-			G.zeal -= 15; cd.refuge = CD_LEN.refuge; gcd = 1.0
-			var h := minf(G.hp_max - G.hp, 30.0)
+			G.zeal -= int(info.zeal); cd.refuge = float(info.cd); gcd = 1.0
+			var h := minf(G.hp_max - G.hp, float(G.skill_num("refuge").heal))
 			G.hp += h
 			pact.play_once("cast", 0.5)
 			pact.flash(Color("fff0b0"), 0.6)
@@ -1055,7 +1098,7 @@ func _physics_process(delta: float) -> void:
 	gcd = maxf(0.0, gcd - delta)
 	for k in cd.keys():
 		cd[k] = maxf(0.0, cd[k] - delta)
-	if dead or (hud and hud.overlay_open()):
+	if dead or cinema or (hud and (hud.overlay_open() or hud.coach.blocking())):
 		player.velocity = Vector3.ZERO
 		if not dead and pact.anim == "walk":
 			pact.play("idle")
@@ -1076,10 +1119,12 @@ func _physics_process(delta: float) -> void:
 		else:
 			pact.facing = to.normalized()
 			if t > next_atk and gcd <= 0.0:
-				next_atk = t + 1.1
+				# basic attack from attributes: Fortitude (damage), Diligence (speed), Sobriety (misses), Hope (crits)
+				next_atk = t + float(G.d.interval)
 				pact.play_once("attack", 0.32)
-				var crit := randf() < 0.12
-				hit_mob(target, (8 + randi() % 5) * (2 if crit else 1), crit, randf() < 0.08)
+				var crit := randf() < float(G.d.crit)
+				var dmg := int(G.d.atk) + randi_range(-2, 2)
+				hit_mob(target, dmg * (2 if crit else 1), crit, randf() < float(G.d.miss))
 	elif move_target != null:
 		var to2: Vector3 = move_target - player.position; to2.y = 0
 		if to2.length() > 0.25:
@@ -1117,15 +1162,13 @@ func _physics_process(delta: float) -> void:
 				_finish()
 			else:
 				complete()
-				if cur_obj() == "tend":
-					G.say("Well walked! Tap things in the world, or use the Act button when near.", G.SYS)
 	# auto battle (within the Tier 1 auto scope: auto-attack and the auto-skill slots)
 	if auto_on and is_combat():
 		if target == null or not target.alive:
 			target = _nearest_mob(14.0)
-		if target != null and cd.steps <= 0.0 and G.zeal >= 10 and target.actor.position.distance_to(player.position) < 2.2 and gcd <= 0.0:
+		if G.has_skill("steps") and target != null and cd.steps <= 0.0 and G.zeal >= 10 and target.actor.position.distance_to(player.position) < 2.2 and gcd <= 0.0:
 			skill("steps")
-		if G.hp < G.hp_max * 0.45 and cd.refuge <= 0.0 and G.zeal >= 15:
+		if G.has_skill("refuge") and G.hp < G.hp_max * 0.45 and cd.refuge <= 0.0 and G.zeal >= 15:
 			skill("refuge")
 	if is_combat():
 		_mob_tick(delta)
@@ -1134,13 +1177,17 @@ func _physics_process(delta: float) -> void:
 	_allies_tick(delta)
 	_others_tick(delta)
 	_glint_tick()
+	_dreamer_tick(delta)
+	if map_id == "eden":
+		_eden_obj_tick()
+	_city_tips_tick()
 	_drop_tick()
 	# regeneration (faster while sitting)
 	regen_t += delta
 	if regen_t >= 1.0:
 		regen_t = 0.0
 		var mult := 3.0 if sitting else 1.0
-		G.zeal = minf(G.zeal_max, G.zeal + 1.0 * mult)
+		G.zeal = minf(G.zeal_max, G.zeal + float(G.d.regen) * mult)
 		if not (is_combat() and _any_aggro()):
 			G.hp = minf(G.hp_max, G.hp + 1.0 * mult)
 		G.stats_changed.emit()
@@ -1167,7 +1214,7 @@ func in_combat() -> bool:
 	return target != null or _any_aggro()
 
 func cooldown_frac(id: String) -> float:
-	return cd[id] / CD_LEN[id]
+	return cd.get(id, 0.0) / float(G.SKILL_INFO[id].cd)
 
 # ------------------------------------------------------------------ interaction handlers
 func _act_vine() -> void:
@@ -1178,13 +1225,15 @@ func _act_vine() -> void:
 		lf.material_override = nm
 	_sparkle(ent("vine").pos + Vector3(0, 1.4, 0))
 	G.say("You tended the vine. It flourishes.", G.SYS)
-	G.add_xp(40, -1, "eden"); complete()
+	complete()
+	G.add_xp(40, 30, "eden")
 
 func _act_fig() -> void:
 	if cur_obj() != "gather":
 		G.say("The branches are heavy with fruit.", G.SYS); return
-	G.bag_add("Garden Fig", 3); G.say("You got Garden Fig ×3. (Satchel)", G.INFO); _item_pop("fig")
-	G.add_xp(30, -1, "eden"); complete()
+	G.bag_add("Garden Fig", 3); G.say("You got Garden Fig ×3. They are in your Satchel.", G.INFO); _item_pop("fig")
+	complete()
+	G.add_xp(30, 20, "eden")
 
 func _act_lamb() -> void:
 	if cur_obj() != "name":
@@ -1208,12 +1257,14 @@ func _stone_read() -> void:
 	G.say("Word Study complete. Manna +5.", G.INFO)
 	_motes(player.position)
 	G.add_xp(60, -1, "eden"); complete()
+	if G.tip_once("manna"):
+		get_tree().create_timer(1.4).timeout.connect(_lesson_manna)
 
 func _act_trees() -> void:
 	if ending:
 		return
 	ending = true
-	G.goto("story", {"id": "fall"})
+	_fall_scene()
 
 func _act_evangelist() -> void:
 	hud.evangelist_dialog()
@@ -1855,3 +1906,275 @@ func _glint_tick() -> void:
 		var near := clampf(1.0 - (d - 2.0) / 6.0, 0.0, 1.0)
 		g.modulate.a = near * (0.55 + 0.45 * sin(t * 4.0 + e.pos.x))
 		g.rotation.z = t * 0.8
+
+# ======================================================================
+# Onboarding: the Dreamer's guided Prologue (combat-free Eden), the Fall played out
+# in the garden, waking in the City, and first-fight lessons.
+# Pattern (from OSRS Tutorial Island, RO Training Grounds, Ragnarok Origin, Genshin):
+# one guide voice, one thing at a time, learn by doing, every lesson ends in a reward.
+# ======================================================================
+const DREAMER := "The Dreamer"
+const BSB := " · text pulled at build time]"
+
+func _build_eden_guides() -> void:
+	# the Dreamer walks beside you (a vision-guide; never a depiction of God)
+	dreamer = _pilgrim_actor([1, 5, 3], DREAMER, Color("ffe9a0"), false)
+	dreamer.position = info("start") + Vector3(1.6, 0, 1.0)
+	var de := _add_ent("dreamer", DREAMER, dreamer.position, dreamer, "Talk", "talk", _talk_dreamer)
+	de["kind"] = "guide"   # tap him to ask what's next; he never steals the Act button
+	# three drooping lilies for the first skill
+	for lp in [Vector3(0.2, 0, 5.2), Vector3(2.2, 0, 3.4), Vector3(-1.6, 0, 1.8)]:
+		var a := SpriteActor.new(); add_child(a); a.position = lp
+		a.setup({"tex": G.tex("res://assets/sprites/lily.png"), "hframes": 2, "vframes": 1, "pixel": 0.035, "rows": false, "shadow": 0.5,
+			"anims": {"idle": [0], "bloom": [1]}}, "", Color.WHITE)
+		lilies.append({"actor": a, "pos": lp, "bloomed": false})
+
+func _dreamer_tick(delta: float) -> void:
+	if dreamer == null or cinema:
+		return
+	var e := ent("dreamer")
+	var to := player.position - dreamer.position; to.y = 0
+	if to.length() > 3.2:
+		dreamer.position += to.normalized() * minf(SPEED * 0.95 * delta, to.length() - 2.4)
+		dreamer.facing = to.normalized(); dreamer.play("walk")
+	else:
+		dreamer.play("idle"); dreamer.facing = to.normalized() if to.length() > 0.1 else dreamer.facing
+	if not e.is_empty():
+		e.pos = dreamer.position
+
+func _talk_dreamer() -> void:
+	var o: Dictionary = objectives[obj_idx] if obj_idx < objectives.size() else {"text": "Behold the two trees"}
+	hud.run_dialog([{"who": DREAMER, "text": "Your next step: %s. Tap the quest box on the left and you will walk there by yourself. The Pilgrim's Guide in More answers every question." % o.text}], func(): pass)
+
+# ------------------------------------------------------------------ Eden lessons
+func _eden_intro() -> void:
+	if not is_inside_tree():
+		return
+	hud.run_dialog([
+		{"who": DREAMER, "text": "Here we are, inside my dream. This is Eden, the garden as it was in the beginning. Nothing here can harm you, so it is a good place to learn how to walk the Way.",
+			"choices": [{"t": "Why am I here?"}, {"t": "I'm ready. Show me.", "goto": 2}]},
+		{"who": DREAMER, "text": "Soon the dream will turn, and you will wake in a city with a great burden on your back. You will need to flee from it to the Wicket Gate. All you learn in this garden, you will use on that road."},
+		{"who": DREAMER, "text": "Tell me: have you walked in worlds like this one before?",
+			"choices": [{"t": "No, this is new to me.", "fn": func(): G.guide = "full"}, {"t": "Yes, I've played MMOs.", "fn": func(): G.guide = "light"}]},
+		{"who": DREAMER, "text": "Then I will show you one thing at a time. You can turn my tips off whenever you like, in More → Guide."}],
+		_lesson_move)
+
+func _lesson_move() -> void:
+	var L: bool = not G.settings.left_handed
+	hud.coach.run([
+		{"kind": "action", "text": "Put your thumb on the left side of the screen and drag to walk. Walk into the glowing circle by my lamp.",
+			"short": "Drag on the left to walk. Go to the glowing circle.",
+			"target": func(): return _joy_zone(L), "done": func(): return obj_idx > 0},
+		{"tour": true, "text": "Well walked! You can also just tap the ground, and you will walk there.", "target": null},
+		{"tour": true, "text": "This is you. The green bar is Health. The blue bar is Zeal: it powers your skills. Tap this plate any time to see your Status.",
+			"target": func(): return hud.plate},
+		{"tour": true, "text": "Your next step always shows here. Tap this box and you will walk there by yourself.", "target": func(): return hud.quest_box},
+		{"tour": true, "text": "The map. The gold ★ marks where to go. ✦ 0/2 counts the secrets hidden on this map. Tap the map to see your quest log.",
+			"target": func(): return hud.minimap},
+		{"tour": true, "text": "More holds everything else: Status, Skills, Satchel, the Pilgrim's Guide and Settings. A red number on it means points are waiting to be spent.",
+			"target": func(): return hud.more_btn},
+		{"tour": true, "text": "Messages from the world appear here. Tap to read older ones.", "target": func(): return hud.chat_box},
+		{"kind": "action", "text": "Now tend the Young Vine. Tap the quest box to walk there, or tap the vine itself.", "short": "Go to the Young Vine.",
+			"target": func(): return hud.quest_box, "done": func(): return nearest_ent() != null and nearest_ent().id == "vine" or cur_obj() != "tend"},
+		{"kind": "action", "text": "When you are close to something, this big button shows what you can do with it. Tap Tend.", "short": "Tap Tend.",
+			"target": func(): return hud.act_btn, "done": func(): return cur_obj() != "tend"}])
+
+func _joy_zone(L: bool) -> Rect2:
+	var vs := get_viewport().get_visible_rect().size
+	return Rect2(Vector2(40 if L else vs.x * 0.62, vs.y * 0.5), Vector2(vs.x * 0.3, vs.y * 0.4))
+
+## First Base and Job Level-ups teach levels, attributes and skills.
+func _level_lesson(kind: String) -> void:
+	if map_id != "eden":
+		if kind.begins_with("Job") and G.tip_once("job_up_city"):
+			hud.coach.tip("Job Level up: +2 skill points. Open More → Skills to make First Steps or Take Refuge stronger.", func(): return hud.more_btn, 6.0)
+		elif kind.begins_with("Base") and G.tip_once("base_up_city"):
+			hud.coach.tip("Base Level up: +2 attribute points. Open More → Status to spend them.", func(): return hud.more_btn, 6.0)
+		return
+	if kind.begins_with("Base") and G.tip_once("first_base"):
+		get_tree().create_timer(1.2).timeout.connect(_lesson_stats)
+
+func _lesson_stats() -> void:
+	hud.coach.run([
+		{"text": "You grew! Your Base Level is now %d. There are two kinds of level, shown here: Base and Job." % G.lvl, "target": func(): return hud.lv_txt},
+		{"text": "Base Level is you. Each one gives 2 attribute points and refills your Health and Zeal. Job Level is your calling. Each one gives 2 skill points.", "tour": true,
+			"target": func(): return hud.lv_txt},
+		{"tour": true, "text": "This thin bar along the bottom fills with experience. When it is full, you level up. Quests, tending, reading and overcoming foes all give experience, and you never lose it.",
+			"target": func(): return hud.exp_bar},
+		{"kind": "action", "text": "Let's spend your 2 attribute points. Tap More (see the red +2).", "short": "Tap More.",
+			"target": func(): return hud.more_btn, "done": func(): return hud.overlay_open() or G.stat_pts == 0},
+		{"kind": "action", "text": "Tap Status.", "target": func(): return hud.more_tiles.get("status"),
+			"done": func(): return hud.sheet_tab == "status" or G.stat_pts == 0, "skip_if": func(): return hud.sheet_tab == "status"},
+		{"kind": "action", "text": "Six attributes shape you. Tap + to add a point. The green words show exactly what it changes. Steadfastness gives more Health; Fortitude hits harder. Resetting is free here, so try anything.",
+			"short": "Tap + twice. Green text shows the effect.",
+			"target": func(): return hud.stat_plus.get("ste"), "done": func(): return G.stat_pts == 0},
+		{"kind": "action", "text": "Well chosen. Close the window with ✕, or tap the dark area beside it.", "target": null, "done": func(): return not hud.overlay_open()},
+		{"kind": "tip", "text": "Next: gather figs from the Fig Tree. Tap the quest box to walk there.", "target": func(): return hud.quest_box, "secs": 4.5}])
+
+func _lesson_skills() -> void:
+	hud.coach.run([
+		{"tour": true, "text": "Your figs went into your Satchel (More → Satchel). This quick-item button eats one to restore Health. You will want food after the garden.",
+			"target": func(): return hud.item_btn},
+		{"text": "Your Job Level rose to %d, so you have %d skill points. Skills are special actions that cost Zeal. Let's learn your first one." % [G.job, G.skill_pts],
+			"target": func(): return hud.lv_txt},
+		{"kind": "action", "text": "Tap More.", "target": func(): return hud.more_btn, "done": func(): return hud.overlay_open() or G.has_skill("tend")},
+		{"kind": "action", "text": "Tap Skills.", "target": func(): return hud.more_tiles.get("skills"),
+			"done": func(): return hud.sheet_tab == "skills" or G.has_skill("tend"), "skip_if": func(): return hud.sheet_tab == "skills"},
+		{"kind": "action", "text": "Tap Learn on Tend and Keep. It is a garden skill for Eden only. Keep your other point: you will want it for First Steps after you wake.",
+			"short": "Learn Tend and Keep.", "target": func(): return hud.skill_learn.get("tend"), "done": func(): return G.has_skill("tend")},
+		{"kind": "action", "text": "Learned! Close this window (✕ or tap beside it).", "target": null, "done": func(): return not hud.overlay_open()},
+		{"text": "Your skill is now on your skill bar. The blue number is its Zeal cost. After you use it, a dark sweep shows it recharging.",
+			"target": func(): return hud.skill_btns[0]},
+		{"kind": "action", "text": "Walk next to a drooping lily and tap Tend and Keep.", "short": "Tend a drooping lily.",
+			"target": func(): return hud.skill_btns[0], "done": func(): return lilies_done >= 1}])
+
+func _lesson_manna() -> void:
+	hud.coach.run([
+		{"text": "Word Study gave you Manna. Manna is gathered through the means of grace: reading the Word, rest and worship. Its count is shown here, by your experience.",
+			"target": func(): return hud.exp_txt},
+		{"tour": true, "text": "Later you spend Manna on Disciplines and Refreshments. If you fall in battle, a little unspent Manna spoils, so spend it rather than hoard it.", "target": null},
+		{"text": "You have learned to walk, to tend, to grow and to use a skill. One thing remains: behold the two trees in the midst of the garden.", "target": func(): return hud.quest_box}])
+
+## Objectives that finish by themselves (spend points, learn a skill).
+func _eden_obj_tick() -> void:
+	match cur_obj():
+		"stats":
+			if G.stat_pts == 0:
+				complete()
+		"learn":
+			if G.has_skill("tend"):
+				complete()
+
+func _on_new_obj() -> void:
+	if map_id != "eden":
+		return
+	match cur_obj():
+		"learn":
+			if G.tip_once("skills_lesson"):
+				get_tree().create_timer(1.0).timeout.connect(_lesson_skills)
+
+# ------------------------------------------------------------------ cinema
+func _cinema(on: bool) -> void:
+	cinema = on
+	hud.cinema(on)
+	if quest_mark:
+		quest_mark.visible = not on
+	if not on:
+		cam_focus = null
+
+## The Fall, played out in the garden rather than on black cards. The man and the woman are
+## not shown: the player is the Dreamer's witness. God is never shown or voiced.
+func _fall_scene() -> void:
+	_cinema(true)
+	target = null; move_target = null; pending = null
+	cam_focus = Vector3(16, 0, 0.5)
+	_serpent = SpriteActor.new(); add_child(_serpent); _serpent.position = Vector3(19.2, 0, 1.4)
+	_serpent.setup({"tex": G.tex("res://assets/sprites/serpent.png"), "hframes": 2, "vframes": 1, "pixel": 0.04, "rows": false, "shadow": 0.7,
+		"anims": {"idle": [0, 1]}, "fps": {"idle": 2.0}}, "", Color.WHITE)
+	_serpent.visible = false
+	hud.run_dialog([
+		{"who": DREAMER, "text": "Behold the two trees in the midst of the garden: the tree of life, and the tree of the knowledge of good and evil.", "src": "[BSB: Genesis 2:9" + BSB},
+		{"who": DREAMER, "text": "The man was told he could eat freely of every tree but one. In the day he ate of that tree, he would surely die.", "src": "[BSB: Genesis 2:16–17" + BSB},
+		{"who": DREAMER, "text": "And I saw in my dream that the serpent spoke in the garden, and questioned the word that had been given.", "src": "[BSB: Genesis 3:1" + BSB,
+			"fn": _fall_serpent},
+		{"who": DREAMER, "text": "The fruit was taken and eaten. The man, the head of all his kind, broke the covenant, and all his children fell with him.", "src": "[BSB: Genesis 3:6 · Romans 5:12" + BSB,
+			"fn": func(): _fall_darken(0.5)},
+		{"who": DREAMER, "text": "Their eyes were opened, and they knew shame. They hid themselves among the trees of the garden.", "src": "[BSB: Genesis 3:7–8" + BSB,
+			"fn": _fall_hide},
+		{"who": DREAMER, "text": "So the man was driven out, east of Eden. Cherubim and a flaming sword, turning every way, guarded the way back to the tree of life.", "src": "[BSB: Genesis 3:24" + BSB,
+			"fn": func(): _show_cherubim()},
+		{"who": DREAMER, "text": "Now my dream turns, pilgrim. Wake… and remember the garden."}],
+		func(): G.goto("world", {"map": "city", "wake": true}))
+
+func _fall_serpent() -> void:
+	_serpent.visible = true; _serpent.squash(0.3)
+	Fx.dust(self, _serpent.position, Color(0.3, 0.35, 0.25, 0.6), 6)
+
+func _fall_hide() -> void:
+	_fall_darken(1.0)
+	_serpent.visible = false
+	cam_focus = Vector3(10, 0, -4)
+
+func _fall_darken(k: float) -> void:
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(sun, "light_color", Color("ffcf9a").lerp(Color("8a7a9a"), k), 2.0)
+	tw.tween_property(sun, "light_energy", lerpf(0.62, 0.32, k), 2.0)
+	tw.tween_property(env, "ambient_light_energy", lerpf(0.34, 0.18, k), 2.0)
+	post.set_shader_parameter("tint", Vector3(1.0, 0.96, 0.9).lerp(Vector3(0.82, 0.82, 0.95), k))
+	for h in holy_lights:
+		if h is OmniLight3D:
+			create_tween().tween_property(h, "light_energy", 0.3, 2.0)
+	if k >= 1.0:
+		shake(0.25)
+		Fx.particles(self, player.position + Vector3(0, 6, 0), {"amount": 40, "life": 4.0, "one_shot": false, "explode": 0.0, "sphere": 10.0,
+			"vmin": 0.2, "vmax": 0.6, "gravity": Vector3(0.3, -0.6, 0), "color": Color("8a6a3a"), "size": 0.16, "tex": "res://assets/fx/petal.png", "add": false, "local": false})
+
+func _show_cherubim() -> void:
+	var gate := Vector3(24, 0, 0)
+	cam_focus = gate + Vector3(-3, 0, 0)
+	for z in [-2.2, 2.2]:
+		var c := Sprite3D.new(); c.texture = G.tex("res://assets/fx/cherub.png"); c.pixel_size = 0.03; c.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		c.shaded = false; c.position = gate + Vector3(0, 2.2, z); c.modulate = Color(1, 0.96, 0.8, 0.0); add_child(c)
+		create_tween().tween_property(c, "modulate:a", 0.95, 1.2)
+		_cherub_nodes.append(c)
+	var sword := Sprite3D.new(); sword.texture = G.tex("res://assets/fx/flame_sword.png"); sword.pixel_size = 0.03; sword.shaded = false
+	sword.position = gate + Vector3(0, 2.0, 0); sword.modulate = Color(1, 1, 1, 0); add_child(sword)
+	create_tween().tween_property(sword, "modulate:a", 1.0, 0.8)
+	var spin := create_tween().set_loops(); spin.tween_property(sword, "rotation:z", TAU, 1.6).as_relative()
+	var fl := OmniLight3D.new(); fl.light_color = Color("ff9a40"); fl.light_energy = 3.0; fl.omni_range = 7.0; fl.position = gate + Vector3(0, 2, 0); add_child(fl)
+	_cherub_nodes.append(sword)
+	G.haptic(40)
+
+# ------------------------------------------------------------------ City of Destruction
+func _wake_scene() -> void:
+	_cinema(true)
+	pact.play("rest")
+	cam_dist = 12.0
+	hud.run_dialog([
+		{"who": DREAMER, "text": "I saw a man clothed with rags, standing in a certain place, with his face from his own house, a book in his hand, and a great burden upon his back.",
+			"src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"},
+		{"who": DREAMER, "text": "That man is you, pilgrim. This is the City of Destruction. You were born in Adam, and the burden is your sin. It slows you, and you cannot put it down by yourself."},
+		{"who": G.pname, "text": "What shall I do?", "fn": _wake_rise},
+		{"who": DREAMER, "text": "First, rise. Slothlings crowd these streets: the sins of sloth that would keep you sitting still. Overcome them, and someone will come to show you the way."}],
+		_wake_done)
+
+func _wake_rise() -> void:
+	pact.play("idle"); Fx.dust(self, player.position, Color(0.7, 0.68, 0.66, 0.5), 4)
+
+func _wake_done() -> void:
+	_cinema(false)
+	cam_dist = 17.0
+	_city_lessons()
+
+func _city_lessons() -> void:
+	if not is_inside_tree():
+		return
+	var steps := [
+		{"kind": "action", "text": "Tap Attack, or tap a Slothling, to fight. You keep striking until it is overcome. Combat is new: it only begins after the garden.",
+			"short": "Tap Attack to fight.", "target": func(): return hud.atk_btn, "done": func(): return slain >= 1}]
+	if not G.has_skill("steps"):
+		steps += [
+			{"kind": "action", "text": "Well fought! Now learn a fighting skill. Tap More.", "short": "Learn First Steps: tap More.",
+				"target": func(): return hud.more_btn, "done": func(): return hud.overlay_open() or G.has_skill("steps")},
+			{"kind": "action", "text": "Tap Skills.", "target": func(): return hud.more_tiles.get("skills"),
+				"done": func(): return hud.sheet_tab == "skills" or G.has_skill("steps"), "skip_if": func(): return hud.sheet_tab == "skills"},
+			{"kind": "action", "text": "Learn First Steps: a heavy lunge. If you still have a point, Take Refuge heals you.", "target": func(): return hud.skill_learn.get("steps"),
+				"done": func(): return G.has_skill("steps")},
+			{"kind": "action", "text": "Close the window (✕ or tap beside it).", "target": null, "done": func(): return not hud.overlay_open()}]
+	steps += [
+		{"kind": "action", "text": "Stand next to a Slothling and tap First Steps.", "short": "Use First Steps.",
+			"target": func(): return _skill_btn_for("steps"), "done": func(): return used_steps or not G.has_skill("steps")}]
+	hud.coach.run(steps)
+
+func _skill_btn_for(id: String) -> Control:
+	var ids: Array = hud.bar_skills()
+	var k := ids.find(id)
+	return hud.skill_btns[k] if k >= 0 else null
+
+func _city_tips_tick() -> void:
+	if map_id != "city" or cinema or hud.coach.busy():
+		return
+	if slain >= 2 and G.tip_once("auto"):
+		hud.coach.tip("Auto attacks and uses your skills for you. It works only in fields like this street; bosses and story moments are always yours to play.", func(): return hud.auto_btn, 6.0)
+	elif slain >= 3 and not _any_aggro() and G.hp < G.hp_max * 0.7 and G.tip_once("sit"):
+		hud.coach.tip("Sit to recover Health and Zeal three times faster. Moving stands you up.", func(): return hud.sit_btn, 6.0)

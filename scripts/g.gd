@@ -39,6 +39,32 @@ var kos := 0
 var snaps := 0
 var start_ms := 0
 var log_lines: Array = []
+## Attributes (GDD: Fortitude, Diligence, Steadfastness, Wisdom, Sobriety, Hope). All pilgrims begin equal.
+const STATS := ["for", "dil", "ste", "wis", "sob", "hop"]
+const STAT_INFO := {
+	"for": {"name": "Fortitude", "short": "FOR", "does": "Stronger basic attacks and First Steps.", "plain": "Hit harder"},
+	"dil": {"name": "Diligence", "short": "DIL", "does": "Faster attacks.", "plain": "Attack faster"},
+	"ste": {"name": "Steadfastness", "short": "STE", "does": "More Health and less damage taken.", "plain": "Stay standing"},
+	"wis": {"name": "Wisdom", "short": "WIS", "does": "More Zeal and stronger skills.", "plain": "More skills"},
+	"sob": {"name": "Sobriety", "short": "SOB", "does": "Fewer misses; keeps your aim true.", "plain": "Miss less"},
+	"hop": {"name": "Hope", "short": "HOP", "does": "More critical hits and faster Zeal recovery.", "plain": "Lucky strikes"}}
+const STAT_START := 3
+var stat := {}
+var stat_pts := 0
+## Skills (2 skill points per Job Level). Max levels for the Pilgrim (Novice) job.
+const SKILL_INFO := {
+	"tend": {"name": "Tend and Keep", "icon": "tend", "max": 1, "zeal": 8, "cd": 3.0, "eden": true, "kind": "active",
+		"does": "Tend a plant that needs care. Used only in Eden. [BSB: Genesis 2:15]"},
+	"steps": {"name": "First Steps", "icon": "steps", "max": 5, "zeal": 10, "cd": 6.0, "kind": "active",
+		"does": "A sure lunge at your target for heavy damage."},
+	"refuge": {"name": "Take Refuge", "icon": "refuge", "max": 5, "zeal": 15, "cd": 12.0, "kind": "active",
+		"does": "Restores Health. [BSB: Psalm 9:9]"}}
+const SKILL_ORDER := ["tend", "steps", "refuge"]
+var skill_lv := {}
+var skill_pts := 0
+## Onboarding: "full" (new to MMOs), "light" (played MMOs), "off" (tips skipped).
+var guide := "full"
+var tips_seen := {}
 var settings := {"auto_loot": true, "reduce_motion": false, "left_handed": false, "dmg_numbers": true, "hud_opacity": 1.0, "reduce_flashing": false, "fx_high": true, "haptics": true}
 var minor := false
 ## World model (GDD v0.3): the Way is solo, Houses and Wilds are shared, Musters are queued.
@@ -76,6 +102,76 @@ func reset() -> void:
 	manna = 0.0; bag = {}; weary = false; burden = false; kos = 0; snaps = 0
 	start_ms = Time.get_ticks_msec(); log_lines = []
 	marks = 0; secrets = {}; muster_party = []; house_rested = false; my_waymarks = []
+	stat = {}
+	for k in STATS: stat[k] = STAT_START
+	stat_pts = 0; skill_pts = 0; skill_lv = {"tend": 0, "steps": 0, "refuge": 0}; tips_seen = {}
+	recalc(); hp = hp_max; zeal = zeal_max
+
+# ------------------------------------------------------------------ derived numbers
+## Every stat has one visible job, so the Status window can show "before -> after".
+func calc_for(s: Dictionary, base_lv: int) -> Dictionary:
+	return {
+		"hp": 80 + 14 * (base_lv - 1) + 12 * int(s.ste),
+		"zeal": 28 + 5 * (base_lv - 1) + 6 * int(s.wis),
+		"atk": 4 + 2 * int(s["for"]) + base_lv,
+		"interval": maxf(0.6, 1.2 - 0.04 * int(s.dil)),
+		"miss": maxf(0.0, 0.11 - 0.012 * int(s.sob)),
+		"crit": 0.06 + 0.015 * int(s.hop),
+		"guard": int(s.ste) / 3,
+		"regen": 1.0 + 0.15 * int(s.hop),
+		"power": 1.0 + 0.05 * (int(s.wis) - STAT_START)}
+
+var d := {}   # current derived numbers
+func recalc() -> void:
+	d = calc_for(stat, lvl)
+	var hp_frac := hp / float(hp_max) if hp_max > 0 else 1.0
+	var ze_frac := zeal / float(zeal_max) if zeal_max > 0 else 1.0
+	hp_max = d.hp; zeal_max = d.zeal
+	hp = clampf(hp_max * hp_frac, 0.0, hp_max); zeal = clampf(zeal_max * ze_frac, 0.0, zeal_max)
+
+func raise_stat(k: String) -> bool:
+	if stat_pts <= 0:
+		return false
+	stat[k] = int(stat[k]) + 1; stat_pts -= 1
+	recalc(); haptic(15); stats_changed.emit()
+	return true
+
+func reset_stats() -> void:
+	var spent := 0
+	for k in STATS:
+		spent += int(stat[k]) - STAT_START; stat[k] = STAT_START
+	stat_pts += spent
+	recalc(); stats_changed.emit()
+
+func learn_skill(id: String) -> bool:
+	var info: Dictionary = SKILL_INFO[id]
+	if skill_pts <= 0 or int(skill_lv.get(id, 0)) >= int(info.max):
+		return false
+	skill_lv[id] = int(skill_lv.get(id, 0)) + 1; skill_pts -= 1
+	say("%s is now level %d." % [info.name, skill_lv[id]], INFO)
+	haptic(25); stats_changed.emit()
+	return true
+
+func has_skill(id: String) -> bool:
+	return int(skill_lv.get(id, 0)) > 0
+
+## Skill numbers at the current level (what the Skills window shows and the world uses).
+func skill_num(id: String, lv: int = -1) -> Dictionary:
+	if lv < 0:
+		lv = int(skill_lv.get(id, 0))
+	lv = maxi(lv, 1)
+	match id:
+		"steps": return {"dmg": int((d.atk * 1.5 + 4 * lv) * d.power), "text": "Deals about %d damage." % int((d.atk * 1.5 + 4 * lv) * d.power)}
+		"refuge": return {"heal": int((20 + 10 * lv) * d.power), "text": "Restores %d Health." % int((20 + 10 * lv) * d.power)}
+		"tend": return {"text": "Brings one drooping plant back to bloom."}
+	return {"text": ""}
+
+func tip_once(id: String) -> bool:
+	## true the first time an id is asked for (onboarding tips show once).
+	if tips_seen.has(id) or guide == "off":
+		return false
+	tips_seen[id] = true
+	return true
 
 func tex(path: String) -> Texture2D:
 	if not _tex_cache.has(path):
@@ -104,12 +200,13 @@ func add_xp(amount: int, job_amount: int = -1, region: String = "") -> void:
 		job_amount = int(amount * 0.6)
 	xp += amount; jxp += job_amount
 	while lvl < 5 and xp >= XPT[lvl]:
-		lvl += 1; hp_max += 14; hp = hp_max; zeal_max += 5; zeal = zeal_max
-		say("Base Level %d! You gain 2 attribute points." % lvl, INFO)
+		lvl += 1; stat_pts += 2
+		recalc(); hp = hp_max; zeal = zeal_max
+		say("Base Level %d! +2 attribute points (More → Status)." % lvl, INFO)
 		level_up.emit("Base Level Up!")
-	if job < 10 and jxp >= job * 45:
-		job += 1
-		say("Job Level %d." % job, INFO)
+	while job < 10 and jxp >= job * 45:
+		job += 1; skill_pts += 2
+		say("Job Level %d! +2 skill points (More → Skills)." % job, INFO)
 		level_up.emit("Job Level Up!")
 	if lvl >= 5 and region == "eden":
 		say("Base Level 5: Eden Isle can teach you no further.", INFO)
@@ -180,6 +277,25 @@ func _tinted(path: String, col: Color) -> Image:
 				img.set_pixel(x, y, Color(p.r * col.r, p.g * col.g, p.b * col.b, p.a))
 	return img
 
+## Haptics. Android needs the VIBRATE permission (export preset). Mobile browsers use navigator.vibrate.
+## Light 10 ms = UI tap; 20-30 = confirm or hit; 40+ = level up, KO.
 func haptic(ms: int = 20) -> void:
-	if settings.get("haptics", true) and OS.has_feature("mobile"):
+	if not settings.get("haptics", true):
+		return
+	if OS.has_feature("web"):
+		if OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.has_feature("mobile"):
+			JavaScriptBridge.eval("if (navigator.vibrate) navigator.vibrate(%d);" % ms, true)
+	elif OS.has_feature("android") or OS.has_feature("ios"):
 		Input.vibrate_handheld(ms)
+
+func haptic_pattern(kind: String) -> void:
+	match kind:
+		"tap": haptic(10)
+		"confirm": haptic(22)
+		"hit": haptic(28)
+		"hurt": haptic(40)
+		"level":
+			haptic(35)
+			get_tree().create_timer(0.12).timeout.connect(func(): haptic(35))
+			get_tree().create_timer(0.24).timeout.connect(func(): haptic(60))
+		"ko": haptic(90)

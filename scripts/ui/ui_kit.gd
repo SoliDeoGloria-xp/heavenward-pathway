@@ -109,6 +109,7 @@ static func press_feel(b: Control) -> void:
 	b.resized.connect(func(): b.pivot_offset = b.size * 0.5)
 	if b is BaseButton:
 		b.button_down.connect(func():
+			G.haptic(10)
 			b.pivot_offset = b.size * 0.5
 			b.create_tween().tween_property(b, "scale", Vector2(0.94, 0.94), 0.06))
 		b.button_up.connect(func():

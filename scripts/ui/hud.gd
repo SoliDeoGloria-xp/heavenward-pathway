@@ -19,6 +19,9 @@ var status_row: HBoxContainer
 var quest_lbl: Label
 var quest_box: PanelContainer
 var chat_lbl: RichTextLabel
+var chat_box: PanelContainer
+var plate: PanelContainer
+var letterbox: Array = []
 var minimap: Control
 var coord_lbl: Label
 var exp_bar: TextureProgressBar
@@ -41,6 +44,11 @@ var hud_nodes: Array = []
 var snapshot_ui: Control
 var combat_nodes: Array = []
 var quick_item := "Bread of Provision"
+var more_tiles := {}        # tab -> Button in the More grid (coach targets)
+var stat_plus := {}         # stat -> "+" Button in Status
+var skill_learn := {}       # skill -> Learn Button in Skills
+var sheet_tab := ""         # tab currently open in the side sheet
+var coach: Coach
 
 const SKILLS := [
 	[{"id": "steps", "name": "First Steps", "icon": "steps"}, {"id": "refuge", "name": "Take Refuge", "icon": "refuge"}, {"id": "", "name": "Lv 10", "icon": "lock"}, {"id": "", "name": "Lv 15", "icon": "lock"}],
@@ -54,6 +62,7 @@ func _ready() -> void:
 	G.log_added.connect(_on_log)
 	G.stats_changed.connect(refresh)
 	_on_log("", Color.WHITE)
+	coach = Coach.new(); coach.hud = self; add_child(coach)
 
 # ------------------------------------------------------------------ build
 func _build() -> void:
@@ -112,21 +121,23 @@ func _build_plate(L: bool) -> void:
 	var top := HBoxContainer.new()
 	var nm := UIKit.label(G.pname, 23, UIKit.BLUE_INK, true); nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(nm)
-	lv_txt = UIKit.label("", 19, UIKit.SUB, true); top.add_child(lv_txt)
+	lv_txt = UIKit.label("", 20, UIKit.BLUE_INK, true); top.add_child(lv_txt)
 	v.add_child(top)
 	var hp_box := Control.new(); hp_box.custom_minimum_size = Vector2(260, 20)
 	hp_trail = UIKit.gauge("hp", 260, 20); hp_trail.texture_progress = G.tex("res://assets/ui/gauge_trail.png"); UIKit.full_rect(hp_trail)
 	hp_box.add_child(hp_trail)
 	plate_hp = UIKit.gauge("hp", 260, 20); plate_hp.texture_under = null; UIKit.full_rect(plate_hp)
 	hp_box.add_child(plate_hp)
-	hp_txt = UIKit.outlined("", 15); hp_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; UIKit.full_rect(hp_txt); hp_box.add_child(hp_txt)
+	hp_txt = UIKit.outlined("", 17); hp_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; UIKit.full_rect(hp_txt); hp_box.add_child(hp_txt)
 	v.add_child(hp_box)
-	plate_ze = UIKit.gauge("zeal", 260, 16)
-	ze_txt = UIKit.outlined("", 13); ze_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; UIKit.full_rect(ze_txt); plate_ze.add_child(ze_txt)
+	plate_ze = UIKit.gauge("zeal", 260, 19)
+	ze_txt = UIKit.outlined("", 15); ze_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; UIKit.full_rect(ze_txt); plate_ze.add_child(ze_txt)
 	v.add_child(plate_ze)
+	exp_txt = UIKit.label("", 16, UIKit.SUB, true); v.add_child(exp_txt)
 	status_row = HBoxContainer.new(); status_row.add_theme_constant_override("separation", 6); v.add_child(status_row)
 	h.add_child(v)
 	p.gui_input.connect(func(e): if _is_tap(e): open_sheet("status"))
+	plate = p
 	root.add_child(p)
 	_corner(p, L, true, 16, 14)
 	hud_nodes.append(p)
@@ -136,7 +147,7 @@ func _build_quest(L: bool) -> void:
 	quest_box.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/chip.png", 10, 12))
 	quest_box.custom_minimum_size = Vector2(390, 0)
 	var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 2)
-	var t := UIKit.outlined("▸ %s  ·  tap to auto-path" % str(world.info("layer")), 16, Color("ffd36a"))
+	var t := UIKit.outlined("▸ %s  ·  tap to walk there" % str(world.info("layer")), 18, Color("ffd36a"))
 	v.add_child(t)
 	quest_lbl = UIKit.outlined("", 21, Color.WHITE); quest_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quest_lbl.custom_minimum_size = Vector2(360, 0)
@@ -144,7 +155,7 @@ func _build_quest(L: bool) -> void:
 	quest_box.add_child(v)
 	quest_box.gui_input.connect(func(e): if _is_tap(e): world.auto_path_quest())
 	root.add_child(quest_box)
-	_corner(quest_box, L, true, 16, 150)
+	_corner(quest_box, L, true, 16, 168)
 	hud_nodes.append(quest_box)
 
 func _build_minimap(L: bool) -> void:
@@ -153,17 +164,17 @@ func _build_minimap(L: bool) -> void:
 	minimap = Minimap.new(); minimap.hud = self; minimap.custom_minimum_size = Vector2(200, 200)
 	minimap.gui_input.connect(func(e): if _is_tap(e): open_sheet("way"))
 	box.add_child(minimap)
-	coord_lbl = UIKit.outlined("", 16, Color.WHITE); coord_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	coord_lbl = UIKit.outlined("", 17, Color.WHITE); coord_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(coord_lbl)
 	root.add_child(box)
 	_corner(box, not L, true, 14, 12)
 	hud_nodes.append(box)
-	more_btn = TouchBtn.new(84, "res://assets/ui/btn_small.png", "menu", "More")
-	more_btn.caption_size = 15
+	more_btn = TouchBtn.new(88, "res://assets/ui/btn_small.png", "menu", "More")
+	more_btn.caption_size = 17; more_btn.kind = "utility"
 	more_btn.pressed.connect(open_more)
 	root.add_child(more_btn); _corner(more_btn, not L, true, 226, 14); hud_nodes.append(more_btn)
-	snap_btn = TouchBtn.new(84, "res://assets/ui/btn_small.png", "camera", "Snap")
-	snap_btn.caption_size = 15
+	snap_btn = TouchBtn.new(88, "res://assets/ui/btn_small.png", "camera", "Snap")
+	snap_btn.caption_size = 17; snap_btn.kind = "utility"
 	snap_btn.pressed.connect(enter_snapshot)
 	root.add_child(snap_btn); _corner(snap_btn, not L, true, 226, 106); hud_nodes.append(snap_btn)
 
@@ -173,81 +184,103 @@ func _build_chat(L: bool) -> void:
 	p.custom_minimum_size = Vector2(470, 64)
 	chat_lbl = RichTextLabel.new(); chat_lbl.bbcode_enabled = true; chat_lbl.fit_content = true; chat_lbl.scroll_active = false
 	chat_lbl.custom_minimum_size = Vector2(450, 50); chat_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chat_lbl.add_theme_font_size_override("normal_font_size", 17)
+	chat_lbl.add_theme_font_size_override("normal_font_size", 19)
 	chat_lbl.add_theme_font_override("normal_font", G.font_ui_bold)
 	chat_lbl.add_theme_constant_override("outline_size", 4)
 	chat_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	p.add_child(chat_lbl)
 	p.gui_input.connect(func(e): if _is_tap(e): open_chat())
+	chat_box = p
 	root.add_child(p)
 	_corner(p, L, false, 16, 22)
 	hud_nodes.append(p)
 
 func _build_combat(L: bool) -> void:
 	var side := not L  # cluster sits on the opposite side of the joystick
-	var cx := 20.0; var cy := 26.0
+	var cx := 20.0; var cy := 34.0
 	atk_btn = TouchBtn.new(176, "res://assets/ui/btn_attack.png", "staff", "Attack")
-	atk_btn.caption_size = 22
+	atk_btn.caption_size = 24; atk_btn.kind = "primary"
 	atk_btn.pressed.connect(func(): world.attack_pressed())
 	root.add_child(atk_btn); _corner(atk_btn, side, false, cx, cy); hud_nodes.append(atk_btn); combat_nodes.append(atk_btn)
 	# arc of 4 skills around the attack button
-	var arc := [Vector2(204, 10), Vector2(186, 128), Vector2(110, 214), Vector2(12, 226)]
+	var arc := [Vector2(204, 6), Vector2(190, 126), Vector2(112, 216), Vector2(8, 232)]
 	for i in 4:
 		var b := TouchBtn.new(112, "res://assets/ui/btn_skill.png", "", "")
-		b.caption_size = 15
+		b.caption_size = 17
 		var idx := i
 		b.pressed.connect(func(): _skill_pressed(idx))
 		root.add_child(b); _corner(b, side, false, cx + arc[i].x, cy + arc[i].y)
-		skill_btns.append(b); hud_nodes.append(b); combat_nodes.append(b)
-	page_btn = TouchBtn.new(72, "res://assets/ui/btn_small.png", "page", "1/2")
-	page_btn.caption_size = 14
+		skill_btns.append(b); hud_nodes.append(b)
+	page_btn = TouchBtn.new(76, "res://assets/ui/btn_small.png", "page", "1/2")
+	page_btn.caption_size = 16; page_btn.kind = "utility"
 	page_btn.pressed.connect(func(): page = 1 - page; _apply_page())
-	root.add_child(page_btn); _corner(page_btn, side, false, cx + 236, cy + 270); hud_nodes.append(page_btn); combat_nodes.append(page_btn)
-	auto_btn = TouchBtn.new(88, "res://assets/ui/btn_small.png", "auto", "Auto")
-	auto_btn.tex_on = G.tex("res://assets/ui/btn_auto_on.png"); auto_btn.caption_size = 15
-	auto_btn.pressed.connect(func(): auto_btn.on = not auto_btn.on; auto_btn.queue_redraw(); world.set_auto(auto_btn.on))
-	root.add_child(auto_btn); _corner(auto_btn, side, false, cx + 330, cy + 4); hud_nodes.append(auto_btn); combat_nodes.append(auto_btn)
-	item_btn = TouchBtn.new(88, "res://assets/ui/btn_small.png", "bread", "")
+	root.add_child(page_btn); _corner(page_btn, side, false, cx + 236, cy + 276); hud_nodes.append(page_btn); combat_nodes.append(page_btn)
+	auto_btn = TouchBtn.new(92, "res://assets/ui/btn_small.png", "auto", "Auto")
+	auto_btn.tex_on = G.tex("res://assets/ui/btn_auto_on.png"); auto_btn.caption_size = 17; auto_btn.kind = "utility"; auto_btn.state_text = "OFF"
+	auto_btn.pressed.connect(func():
+		auto_btn.on = not auto_btn.on; auto_btn.state_text = "ON" if auto_btn.on else "OFF"; auto_btn.queue_redraw(); world.set_auto(auto_btn.on))
+	root.add_child(auto_btn); _corner(auto_btn, side, false, cx + 336, cy + 4); hud_nodes.append(auto_btn); combat_nodes.append(auto_btn)
+	item_btn = TouchBtn.new(92, "res://assets/ui/btn_small.png", "bread", "Item")
+	item_btn.caption_size = 17; item_btn.kind = "utility"
 	item_btn.pressed.connect(func(): world.use_item(quick_item))
 	item_btn.long_pressed.connect(func():
 		quick_item = "Garden Fig" if quick_item == "Bread of Provision" else "Bread of Provision"
-		item_btn.set_icon("fig" if quick_item == "Garden Fig" else "bread"); refresh())
-	root.add_child(item_btn); _corner(item_btn, side, false, cx + 300, cy + 112); hud_nodes.append(item_btn)
-	sit_btn = TouchBtn.new(72, "res://assets/ui/btn_small.png", "sit", "Sit")
-	sit_btn.caption_size = 14
+		item_btn.set_icon("fig" if quick_item == "Garden Fig" else "bread"); G.say("Quick item: %s" % quick_item, G.SYS); refresh())
+	root.add_child(item_btn); _corner(item_btn, side, false, cx + 306, cy + 116); hud_nodes.append(item_btn)
+	sit_btn = TouchBtn.new(80, "res://assets/ui/btn_small.png", "sit", "Sit")
+	sit_btn.caption_size = 16; sit_btn.kind = "utility"
 	sit_btn.pressed.connect(func(): world.toggle_sit())
-	root.add_child(sit_btn); _corner(sit_btn, side, false, cx + 420, cy + 10); hud_nodes.append(sit_btn)
-	act_btn = TouchBtn.new(124, "res://assets/ui/btn_attack.png", "talk", "Act")
-	act_btn.caption_size = 20
+	root.add_child(sit_btn); _corner(sit_btn, side, false, cx + 436, cy + 8); hud_nodes.append(sit_btn)
+	act_btn = TouchBtn.new(132, "res://assets/ui/btn_attack.png", "talk", "Act")
+	act_btn.caption_size = 22; act_btn.kind = "primary"
 	act_btn.pressed.connect(func(): world.act_pressed())
-	root.add_child(act_btn); _corner(act_btn, side, false, cx + 352, cy + 262); hud_nodes.append(act_btn)
+	root.add_child(act_btn); _corner(act_btn, side, false, cx + 356, cy + 262)
 	_apply_page()
 
+## Skills usable on this map, in bar order. Eden-only skills show only in Eden.
+func bar_skills() -> Array:
+	var out: Array = []
+	for id in G.SKILL_ORDER:
+		var info: Dictionary = G.SKILL_INFO[id]
+		if not G.has_skill(id):
+			continue
+		if info.get("eden", false) != (world != null and world.map_id == "eden"):
+			continue
+		out.append(id)
+	return out
+
 func _build_exp() -> void:
-	exp_bar = UIKit.gauge("exp", 100, 10)
+	exp_bar = UIKit.gauge("exp", 100, 12)
 	exp_bar.anchor_left = 0; exp_bar.anchor_right = 1; exp_bar.anchor_top = 1; exp_bar.anchor_bottom = 1
-	exp_bar.offset_top = -10; exp_bar.offset_bottom = 0
+	exp_bar.offset_top = -12; exp_bar.offset_bottom = 0
 	root.add_child(exp_bar); hud_nodes.append(exp_bar)
-	exp_txt = UIKit.outlined("", 14, Color("fff3c0"))
-	exp_txt.anchor_left = 1; exp_txt.anchor_right = 1; exp_txt.anchor_top = 1; exp_txt.anchor_bottom = 1
-	exp_txt.offset_left = -330; exp_txt.offset_top = -30; exp_txt.offset_right = -12; exp_txt.offset_bottom = -10
-	exp_txt.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	root.add_child(exp_txt); hud_nodes.append(exp_txt)
+
 
 func _apply_page() -> void:
+	var ids := bar_skills()
 	for i in 4:
-		var s: Dictionary = SKILLS[page][i]
 		var b: TouchBtn = skill_btns[i]
-		b.set_icon(s.icon); b.caption = s.name; b.disabled = s.id == ""
+		b.cd_frac = 0.0; b.cd_text = ""; b.cost = ""
+		if page == 1:
+			b.kind = "empty"; b.set_icon("lock"); b.caption = "Calling"; b.disabled = false
+		elif i < ids.size():
+			var info: Dictionary = G.SKILL_INFO[ids[i]]
+			b.kind = "skill"; b.set_icon(info.icon); b.caption = info.name; b.disabled = false
+			b.cost = str(info.zeal)
+		else:
+			b.kind = "empty"; b.set_icon(""); b.caption = "+ Skill" if G.skill_pts > 0 else "Empty"; b.disabled = false
 		b.queue_redraw()
 	page_btn.caption = "%d/2" % (page + 1); page_btn.queue_redraw()
 
 func _skill_pressed(i: int) -> void:
-	var s: Dictionary = SKILLS[page][i]
-	if s.id == "":
-		G.say("This skill slot opens with your Calling (job) or a higher Job Level.", G.WARN)
+	if page == 1:
+		G.say("Page 2 holds your Calling's skills. You choose a Calling (Valiant, Watcher or Shepherd) at the Interpreter's House.", G.WARN)
 		return
-	world.skill(s.id)
+	var ids := bar_skills()
+	if i >= ids.size():
+		open_sheet("skills")   # an empty slot leads straight to where skills are learned
+		return
+	world.skill(ids[i])
 
 func _is_tap(e: InputEvent) -> bool:
 	return e is InputEventScreenTouch and not e.pressed
@@ -266,7 +299,7 @@ func refresh() -> void:
 	ze_txt.text = "%d / %d" % [G.zeal, G.zeal_max]
 	lv_txt.text = "Base %d · Job %d" % [G.lvl, G.job]
 	exp_bar.value = G.base_pct() * 1000.0
-	exp_txt.text = "Base %.1f%%  ·  Job %.1f%%  ·  Manna %s" % [G.base_pct() * 100.0, G.job_pct() * 100.0, str(snappedf(G.manna, 0.1))]
+	exp_txt.text = "EXP %d%%  ·  Job %d%%  ·  Manna %s" % [int(G.base_pct() * 100.0), int(G.job_pct() * 100.0), str(snappedf(G.manna, 0.1))]
 	for c in status_row.get_children():
 		c.queue_free()
 	if G.burden:
@@ -275,18 +308,34 @@ func refresh() -> void:
 		status_row.add_child(_chip("Weariness", Color("5c6e98")))
 	if world and world.sitting:
 		status_row.add_child(_chip("Resting", Color("2f7a3a")))
+	if world != null and world.cinema:
+		return
+	var combat: bool = world != null and world.is_combat()
+	var snap_off := snapshot_ui == null
 	if item_btn:
+		var n := int(G.bag.get(quick_item, 0))
+		if n == 0 and quick_item == "Bread of Provision" and int(G.bag.get("Garden Fig", 0)) > 0:
+			quick_item = "Garden Fig"; item_btn.set_icon("fig")
 		item_btn.badge = str(int(G.bag.get(quick_item, 0)))
+		item_btn.caption = quick_item.split(" ")[-1]
+		item_btn.visible = snap_off and (combat or G.bag.has("Garden Fig") or G.bag.has("Bread of Provision"))
 		item_btn.queue_redraw()
+	if sit_btn:
+		sit_btn.visible = snap_off and (combat or (world != null and world.map_id == "palace"))
+		sit_btn.on = world != null and world.sitting; sit_btn.queue_redraw()
 	if snap_btn:
 		snap_btn.visible = world != null and world.snapshot_unlocked and snapshot_ui == null
 	if more_btn:
-		var pts := (G.lvl - 1) * 2 + (G.job - 1) * 2
+		var pts := G.stat_pts + G.skill_pts
 		more_btn.badge = "+%d" % pts if pts > 0 else ""
 		more_btn.queue_redraw()
-	var city: bool = world != null and world.is_combat()
-	for n in combat_nodes:
-		n.visible = city and snapshot_ui == null
+	for nd in combat_nodes:
+		nd.visible = combat and snap_off
+	_apply_page()
+	var nsk := bar_skills().size()
+	for k in skill_btns.size():
+		# off the battlefield only learned skills show; empty slots appear where fights happen
+		skill_btns[k].visible = snap_off and (combat or (world != null and world.map_id == "eden" and k < nsk))
 
 func _chip(t: String, c: Color) -> Control:
 	var p := PanelContainer.new()
@@ -306,22 +355,25 @@ func _process(_d: float) -> void:
 			hp_trail.value = maxf(plate_hp.value, hp_trail.value - _d * 900.0)
 	else:
 		hp_trail.value = plate_hp.value; trail_delay = 0.35
-	# cooldowns
+	# cooldowns (skill bar is built from the skills learned for this map)
+	var ids := bar_skills()
 	for i in 4:
-		var s: Dictionary = SKILLS[page][i]
 		var b: TouchBtn = skill_btns[i]
-		if s.id != "":
-			var f: float = world.cooldown_frac(s.id)
+		if page == 0 and i < ids.size():
+			var id: String = ids[i]
+			var f: float = world.cooldown_frac(id)
 			var was := b.cd_frac
 			b.cd_frac = f
-			b.cd_text = str(int(ceil(world.cd[s.id]))) if f > 0.0 else ""
+			b.cd_text = str(int(ceil(world.cd.get(id, 0.0)))) if f > 0.0 else ""
 			if was > 0.0 and f <= 0.0:
 				b.flash()
-			b.disabled = G.zeal < ({"steps": 10, "refuge": 15}).get(s.id, 0)
+			b.disabled = G.zeal < int(G.SKILL_INFO[id].zeal)
 			b.queue_redraw()
 	# context Act button
 	var n = world.nearest_ent()
-	if n != null and snapshot_ui == null:
+	if n != null and snapshot_ui == null and not world.cinema:
+		if n.get("kind", "") == "waymark" and G.tip_once("waymark"):
+			coach.tip("A Waymark: a short note another pilgrim left on the road. Tap Read. If it helped, give thanks.", act_btn, 5.5)
 		act_btn.visible = true
 		act_btn.caption = n.act
 		act_btn.set_icon(n.icon)
@@ -412,6 +464,8 @@ func _dim(close_on_tap: bool = true) -> Control:
 	return d
 
 func clear_overlay() -> void:
+	sheet_tab = ""
+	_dlg_state = []
 	for c in overlay.get_children():
 		c.queue_free()
 
@@ -427,10 +481,18 @@ func open_more() -> void:
 	_dim()
 	var w := UIKit.window("Menu", Vector2(720, 0))
 	var grid := GridContainer.new(); grid.columns = 5; grid.add_theme_constant_override("h_separation", 12); grid.add_theme_constant_override("v_separation", 12)
-	var items := [["bag", "Satchel", "bag"], ["equip", "Equipment", "equip"], ["skills", "Skills", "skills"], ["status", "Status", "status"], ["way", "The Way", "quest"],
-		["waymark", "Waymark", "scroll"], ["", "Congregation", "congregation"], ["", "Friends", "friends"], ["chat", "Chat log", "talk"], ["settings", "Settings", "settings"]]
+	var items := [["status", "Status", "status"], ["skills", "Skills", "skills"], ["bag", "Satchel", "bag"], ["equip", "Equipment", "equip"], ["way", "The Way", "quest"],
+		["guide", "Guide", "guide"], ["waymark", "Waymark", "scroll"], ["chat", "Chat log", "talk"], ["", "Friends", "friends"], ["settings", "Settings", "settings"]]
+	more_tiles.clear()
 	for it in items:
 		var b := Button.new(); b.custom_minimum_size = Vector2(128, 128); b.focus_mode = Control.FOCUS_NONE
+		more_tiles[it[0]] = b
+		var pts := G.stat_pts if it[0] == "status" else (G.skill_pts if it[0] == "skills" else 0)
+		if pts > 0:
+			var bd := UIKit.outlined("+%d" % pts, 20, Color.WHITE)
+			var bs := StyleBoxFlat.new(); bs.bg_color = Color("d23a2a"); bs.set_corner_radius_all(12); bs.content_margin_left = 8; bs.content_margin_right = 8
+			var bp := PanelContainer.new(); bp.add_theme_stylebox_override("panel", bs); bp.add_child(bd); bp.position = Vector2(84, -6); bp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.add_child(bp)
 		var v := VBoxContainer.new(); v.alignment = BoxContainer.ALIGNMENT_CENTER; UIKit.full_rect(v); v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var ic := UIKit.icon_rect(it[2], 60); v.add_child(ic)
 		var l := UIKit.label(it[1], 17, UIKit.BLUE_INK, true); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -439,6 +501,7 @@ func open_more() -> void:
 		b.pressed.connect(func():
 			if tab == "chat": open_chat()
 			elif tab == "waymark": waymark_place()
+			elif tab == "guide": open_sheet("guide")
 			elif tab == "": _locked(nm)
 			else: open_sheet(tab))
 		grid.add_child(b)
@@ -479,18 +542,22 @@ func open_sheet(tab: String) -> void:
 	overlay.add_child(sheet)
 	var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 10); sheet.add_child(v)
 	var tabs := HBoxContainer.new(); tabs.add_theme_constant_override("separation", 4)
-	for t in [["bag", "Satchel"], ["equip", "Equip"], ["skills", "Skills"], ["status", "Status"], ["way", "The Way"], ["settings", "Settings"]]:
+	sheet_tab = tab
+	for t in [["status", "Status"], ["skills", "Skills"], ["bag", "Satchel"], ["equip", "Equip"], ["way", "Way"], ["guide", "Guide"], ["settings", "⚙"]]:
 		var key: String = t[0]
 		var b := UIKit.button(t[1], func(): open_sheet(key), 0)
-		b.custom_minimum_size = Vector2(0, 52)
+		b.custom_minimum_size = Vector2(0, 56); b.add_theme_font_size_override("font_size", 20)
 		if key == tab:
 			b.add_theme_stylebox_override("normal", UIKit.sb("res://assets/ui/btn_gold.png", 10, 12))
 		tabs.add_child(b)
 	var close := UIKit.button("✕", clear_overlay, 56)
 	tabs.add_child(close)
 	v.add_child(tabs)
-	var body := VBoxContainer.new(); body.add_theme_constant_override("separation", 10); body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	v.add_child(body)
+	var scroll := ScrollContainer.new(); scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	v.add_child(scroll)
+	var body := VBoxContainer.new(); body.add_theme_constant_override("separation", 10); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(body)
+	stat_plus.clear(); skill_learn.clear()
 	match tab:
 		"bag": _sheet_bag(body)
 		"equip": _sheet_equip(body)
@@ -498,6 +565,7 @@ func open_sheet(tab: String) -> void:
 		"status": _sheet_status(body)
 		"way": _sheet_way(body)
 		"settings": _sheet_settings(body)
+		"guide": _sheet_guide(body)
 	sheet.modulate.a = 0.0
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(sheet, "modulate:a", 1.0, 0.18)
@@ -548,28 +616,138 @@ func _sheet_equip(b: VBoxContainer) -> void:
 	b.add_child(UIKit.label("The whole Armor of God is given at the Palace Beautiful armory, the same for every pilgrim. It is never sold, refined or levelled.", 17, UIKit.SUB, false, true))
 
 func _sheet_skills(b: VBoxContainer) -> void:
-	b.add_child(UIKit.label("Skills · Pilgrim (Job %d)" % G.job, 26, UIKit.BLUE_INK, true))
-	for s in [["steps", "First Steps", "A sure first blow (20–24 damage). 10 Zeal · 6 s cooldown. Auto-slot: on."],
-		["refuge", "Take Refuge", "Restores 30 health. 15 Zeal · 12 s cooldown. Auto-slot: below 45% health. [BSB: Psalm 9:9]"],
-		["lock", "More skills", "Open with Job Level and your Calling (Valiant, Watcher, Shepherd) at the Interpreter's House."]]:
+	var head := HBoxContainer.new()
+	var t := UIKit.label("Skills · Pilgrim (Job Lv %d)" % G.job, 26, UIKit.BLUE_INK, true); t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(t); head.add_child(_points_chip("Skill points", G.skill_pts)); b.add_child(head)
+	b.add_child(UIKit.label("Each Job Level gives 2 skill points. Spend 1 to learn a skill or raise it a level. Learned skills appear on your skill bar by themselves.", 18, UIKit.SUB, false, true))
+	for id in G.SKILL_ORDER:
+		var info: Dictionary = G.SKILL_INFO[id]
+		var lv := int(G.skill_lv.get(id, 0))
+		var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 12))
 		var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 12)
-		h.add_child(UIKit.icon_rect(s[0], 64))
-		var v := VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		v.add_child(UIKit.label(s[1], 21, UIKit.INK, true)); v.add_child(UIKit.label(s[2], 17, UIKit.SUB, false, true))
-		h.add_child(v); b.add_child(h)
-	b.add_child(UIKit.label("Skill points: %d (2 per Job Level)" % ((G.job - 1) * 2), 17, UIKit.SUB))
+		var ic := UIKit.icon_rect(info.icon, 64)
+		if lv == 0:
+			ic.modulate = Color(1, 1, 1, 0.55)
+		h.add_child(ic)
+		var v := VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.add_theme_constant_override("separation", 2)
+		var nm := HBoxContainer.new()
+		nm.add_child(UIKit.label(info.name, 22, UIKit.INK, true))
+		nm.add_child(UIKit.label("   Lv %d / %d" % [lv, info.max], 19, Color("2a5bd7") if lv > 0 else UIKit.SUB, true))
+		v.add_child(nm)
+		v.add_child(UIKit.label(info.does, 17, UIKit.SUB, false, true))
+		var nums := "Zeal %d · recharges in %d s" % [info.zeal, int(info.cd)]
+		if lv > 0:
+			nums = G.skill_num(id).text + "  " + nums
+		if lv > 0 and lv < int(info.max):
+			nums += "\nNext level: " + G.skill_num(id, lv + 1).text
+		elif lv == 0:
+			nums = "When learned: " + G.skill_num(id, 1).text + "  " + nums
+		if info.get("eden", false):
+			nums += "\nOnly in Eden: it is a non-combat skill for tending the garden."
+		v.add_child(UIKit.label(nums, 17, UIKit.INK, false, true))
+		h.add_child(v)
+		var lbl := "Learn" if lv == 0 else ("Level up" if lv < int(info.max) else "Max")
+		var can := G.skill_pts > 0 and lv < int(info.max)
+		var bt := UIKit.button(lbl, func():
+			if G.learn_skill(id):
+				open_sheet("skills"), 150, can)
+		bt.disabled = not can
+		bt.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		skill_learn[id] = bt
+		h.add_child(bt)
+		card.add_child(h); b.add_child(card)
+	var lock := PanelContainer.new(); lock.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 12))
+	var lh := HBoxContainer.new(); lh.add_theme_constant_override("separation", 12)
+	lh.add_child(UIKit.icon_rect("lock", 56))
+	lh.add_child(UIKit.label("Calling skills (skill bar page 2) open when you choose a Calling (Valiant, Watcher or Shepherd) at the Interpreter's House.", 17, UIKit.SUB, false, true))
+	lh.get_child(1).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lock.add_child(lh); b.add_child(lock)
+
+func _points_chip(label: String, n: int) -> Control:
+	var p := PanelContainer.new()
+	var st := StyleBoxFlat.new(); st.bg_color = Color("d23a2a") if n > 0 else Color(0.36, 0.43, 0.6); st.set_corner_radius_all(10)
+	st.content_margin_left = 12; st.content_margin_right = 12; st.content_margin_top = 4; st.content_margin_bottom = 4
+	p.add_theme_stylebox_override("panel", st)
+	p.add_child(UIKit.label("%s: %d" % [label, n], 20, Color.WHITE, true))
+	return p
 
 func _sheet_status(b: VBoxContainer) -> void:
-	b.add_child(UIKit.label("Status · %s" % G.pname, 26, UIKit.BLUE_INK, true))
-	var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 16)
-	var hexc: Control = load("res://scripts/screens/create.gd").Hexagon.new(); hexc.custom_minimum_size = Vector2(220, 220)
-	h.add_child(hexc)
-	var grid := GridContainer.new(); grid.columns = 2; grid.add_theme_constant_override("h_separation", 24); grid.add_theme_constant_override("v_separation", 6)
-	for s in ["Fortitude", "Diligence", "Steadfastness", "Wisdom", "Sobriety", "Hope"]:
-		grid.add_child(UIKit.label(s, 19)); grid.add_child(UIKit.label("1", 19, UIKit.INK, true))
-	h.add_child(grid); b.add_child(h)
-	b.add_child(UIKit.label("Status points to spend: %d (allocation arrives in the next build)" % ((G.lvl - 1) * 2), 17, UIKit.SUB, false, true))
-	b.add_child(UIKit.label("Base Lv %d · Job Lv %d · Health %d/%d · Zeal %d/%d · Manna %s" % [G.lvl, G.job, G.hp, G.hp_max, G.zeal, G.zeal_max, str(snappedf(G.manna, 0.1))], 18))
+	var head := HBoxContainer.new()
+	var t := UIKit.label("Status · %s" % G.pname, 26, UIKit.BLUE_INK, true); t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(t); head.add_child(_points_chip("Points", G.stat_pts)); b.add_child(head)
+	b.add_child(UIKit.label("Each Base Level gives 2 attribute points. Tap + to spend one. The green text shows what the next point changes.", 18, UIKit.SUB, false, true))
+	var grid := GridContainer.new(); grid.columns = 4; grid.add_theme_constant_override("h_separation", 12); grid.add_theme_constant_override("v_separation", 6)
+	var dd: Dictionary = G.d
+	for k in G.STATS:
+		var info: Dictionary = G.STAT_INFO[k]
+		var nb := VBoxContainer.new(); nb.add_theme_constant_override("separation", -2); nb.custom_minimum_size = Vector2(196, 0)
+		nb.add_child(UIKit.label(info.name, 21, UIKit.INK, true))
+		nb.add_child(UIKit.label(info.plain, 16, UIKit.SUB))
+		grid.add_child(nb)
+		var val := UIKit.label(str(G.stat[k]), 26, UIKit.BLUE_INK, true); val.custom_minimum_size = Vector2(44, 0)
+		grid.add_child(val)
+		var plus := UIKit.button("+", func():
+			if G.raise_stat(k):
+				open_sheet("status"), 64, G.stat_pts > 0)
+		plus.disabled = G.stat_pts <= 0
+		plus.add_theme_font_size_override("font_size", 30)
+		stat_plus[k] = plus
+		grid.add_child(plus)
+		var nxt := G.stat.duplicate(); nxt[k] = int(nxt[k]) + 1
+		var after: Dictionary = G.calc_for(nxt, G.lvl)
+		var eff := UIKit.label(_stat_delta(k, dd, after), 17, Color("2f7a3a"), true, true)
+		eff.custom_minimum_size = Vector2(250, 0); eff.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(eff)
+	b.add_child(grid)
+	var sum := UIKit.parchment("Health %d · Zeal %d · Attack %d · Attacks every %.2f s\nMiss chance %d%% · Critical chance %d%% · Damage blocked %d · Zeal back %.1f/s" % [
+		dd.hp, dd.zeal, dd.atk, dd.interval, int(round(dd.miss * 100)), int(round(dd.crit * 100)), dd.guard, dd.regen])
+	b.add_child(sum)
+	var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 10)
+	row.add_child(UIKit.button("Reset points", func(): G.reset_stats(); open_sheet("status"), 0))
+	row.add_child(UIKit.label("Resetting is free during the Prologue and Chapter 1, so try things out.", 16, UIKit.SUB, false, true))
+	row.get_child(1).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.add_child(row)
+	b.add_child(UIKit.label("Base Lv %d · Job Lv %d · Manna %s" % [G.lvl, G.job, str(snappedf(G.manna, 0.1))], 18, UIKit.SUB))
+
+func _stat_delta(k: String, a: Dictionary, b: Dictionary) -> String:
+	match k:
+		"for": return "+1: Attack %d → %d" % [a.atk, b.atk]
+		"dil": return "+1: attack every %.2f → %.2f s" % [a.interval, b.interval]
+		"ste": return "+1: Health %d → %d" % [a.hp, b.hp] + ("  · block +1" if b.guard > a.guard else "")
+		"wis": return "+1: Zeal %d → %d, skills +5%%" % [a.zeal, b.zeal]
+		"sob": return "+1: miss chance %d%% → %d%%" % [int(round(a.miss * 100)), int(round(b.miss * 100))]
+		"hop": return "+1: critical %.1f%% → %.1f%%" % [a.crit * 100, b.crit * 100]
+	return ""
+
+const GUIDE := [
+	["Moving and camera", "Drag anywhere on the left half of the screen to walk; a joystick appears under your thumb. Or tap the ground to walk there. Tap a person or thing to walk to it and use it.\n\nPinch to zoom. Swipe with two fingers to turn the camera."],
+	["The screen", "Top left: your portrait plate. Green bar = Health. Blue bar = Zeal (spent on skills). Tap the plate for Status.\n\nLeft: your current quest. Tap it to walk there automatically.\n\nTop right: the minimap (★ = where to go, ✦ = secrets found here) and More, which holds every menu.\n\nBottom: messages, and the thin experience bar."],
+	["Quests", "The quest tracker always shows one next step. A yellow ! floats over the person or thing you need. A glowing circle on the ground is a place to walk to. Tap the tracker to auto-walk."],
+	["Levels: Base and Job", "You have two levels.\n\nBase Level grows you as a person. Each one gives +2 attribute points (spend them in Status) and refills Health and Zeal.\n\nJob Level grows your calling. Each one gives +2 skill points (spend them in Skills).\n\nBoth fill from experience: quests, tending, reading, and overcoming foes. You never lose experience."],
+	["Attributes", "Fortitude: hit harder.\nDiligence: attack faster.\nSteadfastness: more Health, take less damage.\nWisdom: more Zeal, stronger skills.\nSobriety: miss less.\nHope: more critical hits, Zeal returns faster.\n\nThe Status window shows exactly what the next point changes. Resetting is free early on."],
+	["Skills and Zeal", "Skills cost Zeal (the blue number on the button) and need a moment to recharge (the dark clock sweep). Zeal refills over time, faster while you sit, and a little each time you strike.\n\nLearn and level skills in Skills with skill points. Learned skills go on your bar automatically. An empty dashed slot opens the Skills window."],
+	["Items", "Things you gather go into your Satchel (More → Satchel). The quick-item button eats or uses one; long-press it to switch between items."],
+	["Fighting", "Tap Attack (or tap a foe) to attack the nearest one. Your character keeps attacking until it is overcome.\n\nA red circle under you means a strong blow is coming: walk out of it before it fills.\n\nAuto attacks and uses your skills for you, only in fields. Bosses and story moments are always yours to play."],
+	["Falling and rest", "If your Health reaches zero you rest and rise at a safe place. You never lose experience. You become Weary (a little slower) for a short while, and 5% of unspent Manna spoils."],
+	["Manna", "Manna is gathered through the means of grace: reading in Word Study, rest on the Lord's Day, gathering with others. You will spend it on Disciplines and Refreshments. Spend it rather than hoard it."],
+	["Secrets and Waymarks", "Each map hides 2 secrets that glint only when you are close (✦ by the minimap counts them).\n\nWaymarks are short set phrases other pilgrims left on the road. Read them and thank the ones that helped. You can raise one from More → Waymark."],
+	["Other pilgrims", "The Way (the story road) is walked alone or with friends you invite. Faint figures are other pilgrims passing on their own journey. Houses like the Palace Beautiful are shared, and the Muster Board gathers a company for big battles."]]
+
+func _sheet_guide(b: VBoxContainer) -> void:
+	b.add_child(UIKit.label("Pilgrim's Guide", 26, UIKit.BLUE_INK, true))
+	b.add_child(UIKit.label("Short answers to the questions every new pilgrim asks.", 18, UIKit.SUB))
+	for g in GUIDE:
+		var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 12))
+		var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 4)
+		v.add_child(UIKit.label(g[0], 22, UIKit.INK, true))
+		v.add_child(UIKit.label(g[1], 18, UIKit.SUB, false, true))
+		card.add_child(v); b.add_child(card)
+	var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 10)
+	row.add_child(UIKit.button("Tips: " + {"full": "Full", "light": "Light", "off": "Off"}[G.guide], func():
+		G.guide = {"full": "light", "light": "off", "off": "full"}[G.guide]; open_sheet("guide"), 220))
+	row.add_child(UIKit.label("Full explains everything; Light gives short hints; Off hides tips.", 16, UIKit.SUB, false, true))
+	row.get_child(1).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.add_child(row)
 
 func _sheet_way(b: VBoxContainer) -> void:
 	b.add_child(UIKit.label("The Way · Quest log", 26, UIKit.BLUE_INK, true))
@@ -606,40 +784,130 @@ func _rebuild() -> void:
 	_on_log("", Color.WHITE)
 
 # ------------------------------------------------------------------ dialogs
+## Conversation box: speaker portrait, name plate, typewriter text, tap anywhere to continue,
+## optional reply choices. Lines: {who, text, src?, portrait?, choices?: [{t, fn?}], fn?: Callable (runs when shown)}
+const PORTRAITS := {"The Dreamer": "res://assets/portraits/dreamer.png", "Evangelist": "res://assets/portraits/evangelist.png"}
+var _dlg_lbl: Label
+var _dlg_tw: Tween
+var _dlg_line := {}
+
+func _portrait_tex(who: String, explicit: String) -> Texture2D:
+	if explicit != "":
+		return G.tex(explicit)
+	if PORTRAITS.has(who):
+		return G.tex(PORTRAITS[who])
+	if who == G.pname:
+		var at := AtlasTexture.new(); at.atlas = G.player_sheet if G.player_sheet else G.build_player_sheet(); at.region = Rect2(2, 0, 28, 30)
+		return at
+	return null
+
 func _dialog_window(who: String, text: String, src: String, portrait: String) -> Dictionary:
-	var d := ColorRect.new(); UIKit.full_rect(d); d.color = Color(0.02, 0.03, 0.08, 0.25); d.mouse_filter = Control.MOUSE_FILTER_STOP
+	var d := ColorRect.new(); UIKit.full_rect(d); d.color = Color(0.02, 0.03, 0.08, 0.3); d.mouse_filter = Control.MOUSE_FILTER_STOP
 	overlay.add_child(d)
-	if portrait != "":
-		var pt := TextureRect.new(); pt.texture = G.tex(portrait); pt.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; pt.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
-		pt.anchor_top = 1; pt.anchor_bottom = 1; pt.offset_left = 30; pt.offset_right = 330; pt.offset_top = -420; pt.offset_bottom = -40
+	var is_player := who == G.pname
+	var ptex := _portrait_tex(who, portrait)
+	var ins := UIKit.safe_insets(get_viewport())
+	if ptex:
+		var pt := TextureRect.new(); pt.texture = ptex; pt.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; pt.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pt.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if ptex is AtlasTexture else CanvasItem.TEXTURE_FILTER_LINEAR
+		pt.anchor_top = 1; pt.anchor_bottom = 1
+		pt.anchor_left = 1.0 if is_player else 0.0; pt.anchor_right = pt.anchor_left
+		var pw := 210.0 if not (ptex is AtlasTexture) else 170.0
+		if is_player:
+			pt.offset_right = -24 - ins.z; pt.offset_left = pt.offset_right - pw
+		else:
+			pt.offset_left = 24 + ins.x; pt.offset_right = pt.offset_left + pw
+		pt.offset_top = -270 - pw * 1.25 + 40; pt.offset_bottom = -230
 		pt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		overlay.add_child(pt)
-	var w := UIKit.window("", Vector2(820, 210))
-	w.root.anchor_left = 0.5; w.root.anchor_right = 0.5; w.root.anchor_top = 1; w.root.anchor_bottom = 1
-	w.root.offset_left = -330; w.root.offset_right = 520; w.root.offset_top = -270; w.root.offset_bottom = -30
-	w.body.add_child(UIKit.label("[%s]" % who, 23, Color("1d4fb8"), true))
-	w.body.add_child(UIKit.label(text, 24, UIKit.INK, false, true))
+		if not G.settings.reduce_motion:
+			pt.modulate.a = 0.0; create_tween().tween_property(pt, "modulate:a", 1.0, 0.2)
+	var w := UIKit.window("", Vector2(0, 220))
+	w.root.anchor_left = 0; w.root.anchor_right = 1; w.root.anchor_top = 1; w.root.anchor_bottom = 1
+	w.root.offset_left = 24 + ins.x; w.root.offset_right = -24 - ins.z; w.root.offset_top = -250 - ins.w; w.root.offset_bottom = -22 - ins.w
+	var top := HBoxContainer.new()
+	var nm := UIKit.label(who, 24, Color("1d4fb8") if not is_player else Color("2f7a3a"), true); nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(nm)
+	w.body.add_child(top)
+	_dlg_lbl = UIKit.label(text, 27, UIKit.INK, false, true)
+	_dlg_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	w.body.add_child(_dlg_lbl)
 	if src != "":
-		w.body.add_child(UIKit.label(src, 15, UIKit.SUB, false, true))
+		w.body.add_child(UIKit.label(src, 16, UIKit.SUB, false, true))
 	overlay.add_child(w.root)
+	# typewriter (instant with Reduce Motion)
+	if _dlg_tw: _dlg_tw.kill()
+	if not G.settings.reduce_motion:
+		_dlg_lbl.visible_ratio = 0.0
+		_dlg_tw = create_tween(); _dlg_tw.tween_property(_dlg_lbl, "visible_ratio", 1.0, clampf(text.length() * 0.018, 0.25, 2.2))
+	w["dim"] = d; w["top"] = top
 	return w
+
+func _typing() -> bool:
+	return _dlg_lbl != null and is_instance_valid(_dlg_lbl) and _dlg_lbl.visible_ratio < 1.0
+
+var _dlg_state: Array = []
+func dialog_active() -> bool:
+	return not _dlg_state.is_empty()
+
+## Test/skip hook: continue the open conversation (picks a reply when one is asked for).
+func dialog_next(choice: int = 0) -> void:
+	if _dlg_state.is_empty():
+		return
+	var lines: Array = _dlg_state[0]; var done: Callable = _dlg_state[1]; var i: int = _dlg_state[2]
+	var L: Dictionary = lines[i]
+	if L.has("choices"):
+		var cc: Dictionary = L.choices[mini(choice, L.choices.size() - 1)]
+		if cc.has("fn"): cc.fn.call()
+		run_dialog(lines, done, int(cc.goto) if cc.has("goto") else i + 1)
+	else:
+		run_dialog(lines, done, i + 1)
 
 func run_dialog(lines: Array, done: Callable, i: int = 0) -> void:
 	clear_overlay()
 	if i >= lines.size():
+		_dlg_state = []
 		done.call(); return
+	_dlg_state = [lines, done, i]
 	var L: Dictionary = lines[i]
+	if L.has("fn"):
+		L.fn.call()
 	var w := _dialog_window(L.get("who", ""), L.text, L.get("src", ""), L.get("portrait", ""))
-	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END; row.add_theme_constant_override("separation", 8)
+	var advance := func():
+		if _typing():
+			if _dlg_tw: _dlg_tw.kill()
+			_dlg_lbl.visible_ratio = 1.0
+			return
+		G.haptic(8)
+		run_dialog(lines, done, i + 1)
 	if L.has("choices"):
+		# replies sit above the box, on the player's side
+		var col := VBoxContainer.new(); col.add_theme_constant_override("separation", 8)
+		col.anchor_left = 1; col.anchor_right = 1; col.anchor_top = 1; col.anchor_bottom = 1
+		col.offset_right = -40 - UIKit.safe_insets(get_viewport()).z; col.offset_left = col.offset_right - 440
+		col.offset_bottom = -262; col.offset_top = col.offset_bottom - 70 * L.choices.size()
+		col.grow_vertical = Control.GROW_DIRECTION_BEGIN
 		for c in L.choices:
 			var cc: Dictionary = c
-			row.add_child(UIKit.button(cc.t, func():
+			var b := UIKit.button("▸ " + cc.t, func():
 				if cc.has("fn"): cc.fn.call()
-				run_dialog(lines, done, i + 1), 220))
+				if cc.has("goto"):
+					run_dialog(lines, done, int(cc.goto))
+				else:
+					run_dialog(lines, done, i + 1), 440, true)
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT; b.custom_minimum_size.y = 62
+			col.add_child(b)
+		overlay.add_child(col)
+		w.dim.gui_input.connect(func(e): if e is InputEventScreenTouch and not e.pressed and _typing(): advance.call())
 	else:
-		row.add_child(UIKit.button("Next ▶", func(): run_dialog(lines, done, i + 1), 160))
-	w.body.add_child(row)
+		var hint := UIKit.label("Tap to continue ▼", 18, UIKit.SUB, true)
+		w.top.add_child(hint)
+		var tap := func(e):
+			if e is InputEventScreenTouch and not e.pressed:
+				advance.call()
+		w.dim.gui_input.connect(tap)
+		w.root.gui_input.connect(tap)
+		w.root.mouse_filter = Control.MOUSE_FILTER_STOP
 
 func evangelist_dialog() -> void:
 	var src := "John Bunyan, The Pilgrim's Progress (1678) · public domain"
@@ -922,6 +1190,27 @@ func enter_snapshot() -> void:
 	note.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP); note.position = Vector2(-380, 96); note.size = Vector2(760, 30); note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	snapshot_ui.add_child(note)
 
+## Story scenes: the HUD steps aside and black bars frame the shot.
+func cinema(on: bool) -> void:
+	for n in hud_nodes:
+		if is_instance_valid(n): n.visible = not on
+	if act_btn: act_btn.visible = false
+	for b in letterbox:
+		if is_instance_valid(b): b.queue_free()
+	letterbox.clear()
+	if on:
+		for top in [true, false]:
+			var bar := ColorRect.new(); bar.color = Color(0, 0, 0, 0.92); bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			bar.anchor_left = 0; bar.anchor_right = 1
+			bar.anchor_top = 0.0 if top else 1.0; bar.anchor_bottom = bar.anchor_top
+			bar.offset_top = 0 if top else 0; bar.offset_bottom = 0
+			root.add_child(bar); root.move_child(bar, 1); letterbox.append(bar)
+			var tw := create_tween()
+			if top: tw.tween_property(bar, "offset_bottom", 64.0, 0.5)
+			else: tw.tween_property(bar, "offset_top", -64.0, 0.5)
+	else:
+		refresh()
+
 func exit_snapshot() -> void:
 	if snapshot_ui:
 		snapshot_ui.queue_free(); snapshot_ui = null
@@ -1015,16 +1304,27 @@ class Minimap extends Control:
 		draw_string(G.font_ui_bold, Vector2((size.x - tw) * 0.5, 30), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
 
 # ------------------------------------------------------------------ progression moments
+var _banner_busy_until := 0.0
 func level_banner(kind: String) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	if now < _banner_busy_until:
+		var wait := _banner_busy_until - now
+		_banner_busy_until += 2.2
+		get_tree().create_timer(wait).timeout.connect(func(): _level_banner_show(kind))
+		return
+	_banner_busy_until = now + 2.2
+	_level_banner_show(kind)
+
+func _level_banner_show(kind: String) -> void:
 	var base := kind.begins_with("Base")
 	var box := VBoxContainer.new(); box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	box.position = Vector2(-360, 70 if base else 150); box.size = Vector2(720, 100); box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.position = Vector2(-360, 140); box.size = Vector2(720, 100); box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	var t := UIKit.outlined(kind.to_upper(), 58, Color("ffe27a") if base else Color("b8e0ff"), G.font_title)
 	t.add_theme_color_override("font_outline_color", Color("5a3600") if base else Color("12305a"))
 	t.add_theme_constant_override("outline_size", 12)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var sub := UIKit.outlined("+2 attribute points  ·  tap More to view" if base else "+2 skill points", 22, Color.WHITE)
+	var sub := UIKit.outlined("+2 attribute points  ·  More → Status" if base else "+2 skill points  ·  More → Skills", 24, Color.WHITE)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(t); box.add_child(sub)
 	root.add_child(box)
@@ -1035,6 +1335,7 @@ func level_banner(kind: String) -> void:
 	tw.chain().tween_interval(1.6)
 	tw.chain().tween_property(box, "modulate:a", 0.0, 0.5)
 	tw.chain().tween_callback(box.queue_free)
+	G.haptic_pattern("level")
 	exp_bar.modulate = Color(2.2, 2.0, 1.4)
 	create_tween().tween_property(exp_bar, "modulate", Color.WHITE, 0.8)
 	more_btn.flash()

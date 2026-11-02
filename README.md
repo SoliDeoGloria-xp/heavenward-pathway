@@ -20,12 +20,20 @@ A playable demo of the opening of *Heavenward Pathway Online* (HPO), a Reformed,
 
 1. Title, then an age gate (13+), then the one-world screen (no server choice).
 2. Make Character: an 8-direction turntable, hair style and colour, robe colour, and the six-attribute hexagon. Divine names are blocked.
-3. The Bunyan dream opening.
-4. **Eden Isle** (the Dreamer's vision, no combat). Walk to the light, tend the vine, gather figs, name the lamb, then do the Word Study at the stone tablet (BSB placeholder, Manna +5). Base Level is capped at 5.
-5. **The Fall**: fixed panels narrated by the Dreamer, ending with the cherubim. God is never shown or voiced.
-6. **The City of Destruction**: 2D sprites fight on a 3D street.
-   - Attack, First Steps, Take Refuge, Auto and quick items.
-   - Drops, Base and Job level-ups, and the KO/rest flow: Weariness, 5% Manna spoilage, no XP loss.
+3. **The Bunyan dream opening** as a conversation: the Dreamer speaks to you over a painted scene, and you choose your replies.
+4. **Eden Isle, the Prologue** (the Dreamer's vision, no combat, about 10 to 15 minutes). The Dreamer walks beside you and teaches one thing at a time:
+   - walking (joystick and tap-to-walk), then a short tour of the screen (portrait plate, quest box, map, More, messages)
+   - the Act button (tend the vine), then **levels** (Base vs Job) and the experience bar
+   - **attributes**: spend your first 2 points in Status, with a live "what this point changes" preview and free resets
+   - the Satchel and quick-item button (figs)
+   - **skills**: learn Tend and Keep with a skill point, see it appear on the skill bar, and use it on three drooping lilies (Zeal cost, recharge)
+   - naming the lamb, then Word Study at the stone tablet and what **Manna** is
+   - Base Level is capped at 5 here.
+5. **The Fall** plays out in the garden: the light dims, the serpent appears, leaves fall, and cherubim with a flaming sword guard the way east, while the Dreamer narrates (BSB references). The man and woman are not shown; God is never shown or voiced.
+6. **The City of Destruction**: you wake under the burden and talk with the Dreamer, then learn to fight:
+   - Attack, then learn **First Steps** (and Take Refuge) with your skill points and use it
+   - tips for red telegraph circles, low health (Take Refuge or Bread), Auto and Sit, shown once each
+   - drops, Base and Job level-ups, and the KO/rest flow: Weariness, 5% Manna spoilage, no XP loss.
 7. **Evangelist**: Bunyan's public-domain lines with a portrait cut-in, then the parchment roll. Snapshot mode unlocks, and you follow the shining light to the warp.
 8. **Onward**: story cards skip ahead to the end of Act II (Slough, Wicket Gate, Interpreter, the Cross, Hill Difficulty).
 9. **Palace Beautiful, the first House**: a shared hub with other pilgrims (simulated offline) who wander, sit and chat. Speak with Watchful, rest at the hearth (required once before Act III), raise a Waymark, then answer the Muster Board.
@@ -64,6 +72,27 @@ Built from the code-side items in the 100-improvement review.
 - **Status visuals:** a dark burden haze in the City and sweat drops while weary.
 - **UI motion:** windows pop in, side sheets slide, and buttons dip on press. Skills grey out when Zeal is short. The HUD respects safe areas.
 - **Settings:** Reduce motion, Reduce flashing, High-quality effects (blur and rain) and Vibration.
+
+## Onboarding, stats and skills (onboarding pass)
+
+- **The Dreamer** is the single guide voice (as Gielinor's guide in OSRS or Paimon in Genshin). His coach bubble rings the exact button to press, dims the rest of the screen for short explanations, and never blocks you when you need to act. Tips come in three levels, chosen in the first conversation and changeable in More → Guide: Full (new to MMOs), Light (played MMOs) and Off.
+- **Pilgrim's Guide** (More → Guide): twelve short answers (moving, the screen, quests, levels, attributes, skills and Zeal, items, fighting, falling and rest, Manna, secrets and Waymarks, other pilgrims).
+- **Attributes** start at 3 each; each Base Level gives 2 points. What each one does:
+
+  | Attribute | Effect |
+  | --- | --- |
+  | Fortitude | basic attack and First Steps damage |
+  | Diligence | attack speed |
+  | Steadfastness | max Health, damage blocked |
+  | Wisdom | max Zeal, skill power |
+  | Sobriety | fewer misses |
+  | Hope | critical chance, Zeal regeneration |
+
+  Resetting is free in the demo. The numbers are demo tuning, not final balance.
+- **Skills**: each Job Level gives 2 skill points. Pilgrim skills are Tend and Keep (Eden only, Lv 1), First Steps (Lv 5) and Take Refuge (Lv 5). Learned skills fill the skill bar by themselves; an empty dashed slot opens the Skills window.
+- **Phone buttons** are told apart by shape and colour: gold discs are main actions (Attack, Act), blue discs are skills (with a name label and a Zeal-cost badge), slate squares are utilities (Auto with ON/OFF, Sit, item, page, More), and dashed rings are empty slots. Off the battlefield, Attack and empty slots are hidden.
+- **Haptics**: every button gives a light tap; hits, level-ups and KO have their own patterns. The Android build now requests the VIBRATE permission (it was missing, so vibration never worked on Android). Mobile browsers use `navigator.vibrate` where supported. Turn it off in Settings → Vibration.
+- New placeholder art: `tools/gen_onboarding_assets.py` (Dreamer portrait, lilies, serpent, cherubim, flaming sword, Tend and Guide icons).
 
 ## Controls (phone)
 
