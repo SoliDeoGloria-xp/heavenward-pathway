@@ -1057,6 +1057,7 @@ func _ko() -> void:
 	dead = true; target = null; auto_on = false; move_target = null
 	pact.play("rest")
 	G.kos += 1
+	G.haptic_pattern("ko")
 	var spoil: float = snappedf(G.manna * 0.05, 0.1)
 	G.manna = maxf(0.0, G.manna - spoil)
 	hud.show_ko(spoil)
