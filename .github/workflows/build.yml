@@ -39,6 +39,7 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
+          retention-days: 1
 
   deploy-pages:
     name: Publish to GitHub Pages
@@ -76,4 +77,4 @@ jobs:
         with:
           name: hpo-android-debug-apk
           path: build/android/hpo-debug.apk
-          retention-days: 30
+          retention-days: 3

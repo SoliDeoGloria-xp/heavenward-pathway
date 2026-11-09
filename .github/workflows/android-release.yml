@@ -83,6 +83,7 @@ jobs:
         with:
           name: hpo-upload-key-ENCRYPTED-backup
           path: signing/upload.keystore.enc
+          retention-days: 1
       - name: Switch preset to a Gradle AAB build
         run: |
           sed -i 's/^gradle_build\/use_gradle_build=false/gradle_build\/use_gradle_build=true/' export_presets.cfg
@@ -110,7 +111,24 @@ jobs:
           echo "--- manifest SDK levels (must show targetSdkVersion 36) ---"
           tr -c "[:print:]" "\n" < /tmp/manifest.pb | grep -v "^.\?$" | grep -A1 -E "^(minSdkVersion|targetSdkVersion|package|versionCode|versionName)$" || true
           echo "Signed with real upload key: ${{ steps.ks.outputs.real }}"
-      - uses: actions/upload-artifact@v4
+      # The AAB goes to a GitHub Release, NOT an Actions artifact: release assets do not count against
+      # the repo's Actions storage quota, artifacts do. It is a DRAFT so only repo maintainers can see it;
+      # open Releases, download the .aab, upload it to Play Console (publish the draft only if you want it public).
+      - name: Name the AAB
+        id: name
+        run: |
+          SUFFIX=""
+          if [ "${{ steps.ks.outputs.real }}" = "no" ]; then SUFFIX="-THROWAWAY-KEY"; fi
+          FILE="hpo-${{ github.event.inputs.version_name }}-code${{ github.event.inputs.version_code }}${SUFFIX}.aab"
+          cp build/android/hpo-release.aab "build/android/${FILE}"
+          echo "file=build/android/${FILE}" >> "$GITHUB_OUTPUT"
+          echo "tag=aab-v${{ github.event.inputs.version_name }}-code${{ github.event.inputs.version_code }}${SUFFIX}" >> "$GITHUB_OUTPUT"
+      - name: Publish AAB to a GitHub Release (free storage)
+        uses: softprops/action-gh-release@v2
         with:
-          name: hpo-android-release-aab${{ steps.ks.outputs.real == 'no' && '-THROWAWAY-KEY' || '' }}
-          path: build/android/hpo-release.aab
+          tag_name: ${{ steps.name.outputs.tag }}
+          name: "HPO ${{ github.event.inputs.version_name }} (versionCode ${{ github.event.inputs.version_code }})${{ steps.ks.outputs.real == 'no' && ' THROWAWAY KEY - do not upload to Play' || '' }}"
+          body: "Android App Bundle for Google Play Console. Signed with the real upload key: ${{ steps.ks.outputs.real }}."
+          draft: true
+          prerelease: ${{ steps.ks.outputs.real == 'no' }}
+          files: ${{ steps.name.outputs.file }}
