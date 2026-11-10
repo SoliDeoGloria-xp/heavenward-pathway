@@ -58,7 +58,11 @@
     "type": "tend",
     "text": "Brings one drooping plant back to bloom."
    },
-   "does": "Tend a plant that needs care. Used only in Eden. [BSB: Genesis 2:15]"
+   "does": "Tend a plant that needs care. Used only in Eden. [BSB: Genesis 2:15]",
+   "vfx": {
+    "kind": "water",
+    "color": "#b8f0c0"
+   }
   },
   "steps": {
    "name": "First Steps",
@@ -76,7 +80,11 @@
     "range": 2.2,
     "lunge": true
    },
-   "does": "A sure lunge at your target for heavy damage."
+   "does": "A sure lunge at your target for heavy damage.",
+   "vfx": {
+    "kind": "slash",
+    "color": "#fff2b0"
+   }
   },
   "refuge": {
    "name": "Take Refuge",
@@ -92,7 +100,11 @@
     "base": 20,
     "per_lv": 10
    },
-   "does": "Restores Health. [BSB: Psalm 9:9]"
+   "does": "Restores Health. [BSB: Psalm 9:9]",
+   "vfx": {
+    "kind": "shield",
+    "color": "#bfe4ff"
+   }
   },
   "rest_prayer": {
    "name": "Prayer of Rest",
@@ -109,7 +121,11 @@
     "per_lv": 8,
     "secs": 8
    },
-   "does": "Be still a moment: Zeal returns. Taught in the Interpreter's reading room. [BSB: Matthew 11:28]"
+   "does": "Be still a moment: Zeal returns. Taught in the Interpreter's reading room. [BSB: Matthew 11:28]",
+   "vfx": {
+    "kind": "prayer",
+    "color": "#cfe0ff"
+   }
   },
   "watchful_eye": {
    "name": "Watchful Eye",
@@ -129,7 +145,11 @@
     "show_mult": 100,
     "text": "+%d%% critical hits for %d s."
    },
-   "does": "Watch closely and strike where it counts. [BSB: 1 Peter 5:8]"
+   "does": "Watch closely and strike where it counts. [BSB: 1 Peter 5:8]",
+   "vfx": {
+    "kind": "watch",
+    "color": "#ffe9a0"
+   }
   },
   "steady": {
    "name": "Steady Footing",
@@ -165,7 +185,11 @@
     "text": "Blocks %d more of every blow for %d s.",
     "show_mult": 1
    },
-   "does": "Raise the shield against every flaming arrow. [BSB: Ephesians 6:16]"
+   "does": "Raise the shield against every flaming arrow. [BSB: Ephesians 6:16]",
+   "vfx": {
+    "kind": "shield",
+    "color": "#ffd27a"
+   }
   },
   "good_fight": {
    "name": "Good Fight",
@@ -182,7 +206,11 @@
     "range": 2.4,
     "lunge": true
    },
-   "does": "A heavy, honest blow. [BSB: 1 Timothy 6:12]"
+   "does": "A heavy, honest blow. [BSB: 1 Timothy 6:12]",
+   "vfx": {
+    "kind": "slash",
+    "color": "#ff9a70"
+   }
   },
   "stand_firm": {
    "name": "Stand Firm",
@@ -198,7 +226,11 @@
     "per_lv": 4,
     "radius": 3.2
    },
-   "does": "Hold your ground and strike all who press in. [BSB: Ephesians 6:13]"
+   "does": "Hold your ground and strike all who press in. [BSB: Ephesians 6:13]",
+   "vfx": {
+    "kind": "wave",
+    "color": "#e0b070"
+   }
   },
   "arrow_truth": {
    "name": "Arrow of Truth",
@@ -215,7 +247,11 @@
     "range": 9.0,
     "lunge": false
    },
-   "does": "A true shot from far off. [BSB: Psalm 127:4]"
+   "does": "A true shot from far off. [BSB: Psalm 127:4]",
+   "vfx": {
+    "kind": "arrow",
+    "color": "#b8ffb0"
+   }
   },
   "keep_watch": {
    "name": "Keep Watch",
@@ -234,7 +270,11 @@
     "text": "+%d%% critical hits for %d s.",
     "show_mult": 100
    },
-   "does": "Stay awake and see clearly. [BSB: Mark 13:37]"
+   "does": "Stay awake and see clearly. [BSB: Mark 13:37]",
+   "vfx": {
+    "kind": "watch",
+    "color": "#b8ffb0"
+   }
   },
   "sound_alarm": {
    "name": "Sound the Alarm",
@@ -250,7 +290,11 @@
     "per_lv": 4,
     "radius": 4.2
    },
-   "does": "The trumpet warns, and every foe nearby is struck. [BSB: Ezekiel 33:6]"
+   "does": "The trumpet warns, and every foe nearby is struck. [BSB: Ezekiel 33:6]",
+   "vfx": {
+    "kind": "wave",
+    "color": "#d8ffa0"
+   }
   },
   "edge_word": {
    "name": "Edge of the Word",
@@ -267,7 +311,11 @@
     "range": 8.0,
     "lunge": false
    },
-   "does": "Living and active, sharper than any two-edged sword. [BSB: Hebrews 4:12]"
+   "does": "Living and active, sharper than any two-edged sword. [BSB: Hebrews 4:12]",
+   "vfx": {
+    "kind": "word",
+    "color": "#d0b0ff"
+   }
   },
   "lamp_feet": {
    "name": "Lamp to My Feet",
@@ -286,7 +334,11 @@
     "text": "Skills are %d%% stronger for %d s.",
     "show_mult": 100
    },
-   "does": "The Word lights the next step. [BSB: Psalm 119:105]"
+   "does": "The Word lights the next step. [BSB: Psalm 119:105]",
+   "vfx": {
+    "kind": "lamp",
+    "color": "#ffe9a0"
+   }
   },
   "rightly_divide": {
    "name": "Rightly Divide",
@@ -302,7 +354,11 @@
     "per_lv": 5,
     "radius": 3.6
    },
-   "does": "Truth handled accurately strikes every error at once. [BSB: 2 Timothy 2:15]"
+   "does": "Truth handled accurately strikes every error at once. [BSB: 2 Timothy 2:15]",
+   "vfx": {
+    "kind": "word",
+    "color": "#f0d8ff"
+   }
   },
   "still_waters": {
    "name": "Still Waters",
@@ -317,7 +373,11 @@
     "base": 40,
     "per_lv": 14
    },
-   "does": "Lead beside quiet waters; Health is restored. [BSB: Psalm 23:2]"
+   "does": "Lead beside quiet waters; Health is restored. [BSB: Psalm 23:2]",
+   "vfx": {
+    "kind": "water",
+    "color": "#a8d8ff"
+   }
   },
   "rod_staff": {
    "name": "Rod and Staff",
@@ -336,7 +396,11 @@
     "text": "Blocks %d more of every blow for %d s.",
     "show_mult": 1
    },
-   "does": "Comfort and protection in the dark valley. [BSB: Psalm 23:4]"
+   "does": "Comfort and protection in the dark valley. [BSB: Psalm 23:4]",
+   "vfx": {
+    "kind": "shield",
+    "color": "#f0e0b0"
+   }
   },
   "seek_lost": {
    "name": "Seek the Lost",
@@ -353,7 +417,11 @@
     "range": 7.0,
     "lunge": false
    },
-   "does": "Go after the one that strayed; strike what holds it. [BSB: Luke 15:4]"
+   "does": "Go after the one that strayed; strike what holds it. [BSB: Luke 15:4]",
+   "vfx": {
+    "kind": "smite",
+    "color": "#ffe9b0"
+   }
   },
   "daily_bread": {
    "name": "Daily Bread",
@@ -368,7 +436,11 @@
     "base": 30,
     "per_lv": 10
    },
-   "does": "Provision enough for today. [BSB: Matthew 6:11]"
+   "does": "Provision enough for today. [BSB: Matthew 6:11]",
+   "vfx": {
+    "kind": "gift",
+    "color": "#ffe0a0"
+   }
   },
   "faithful_little": {
    "name": "Faithful in Little",
@@ -384,7 +456,11 @@
     "per_lv": 8,
     "secs": 8
    },
-   "does": "Small things kept well; Zeal returns. [BSB: Luke 16:10]"
+   "does": "Small things kept well; Zeal returns. [BSB: Luke 16:10]",
+   "vfx": {
+    "kind": "gift",
+    "color": "#c8e0ff"
+   }
   },
   "well_done": {
    "name": "Well Done",
@@ -403,7 +479,11 @@
     "text": "Attack %d%% faster for %d s.",
     "show_mult": 100
    },
-   "does": "Work heartily while there is time. [BSB: Matthew 25:21]"
+   "does": "Work heartily while there is time. [BSB: Matthew 25:21]",
+   "vfx": {
+    "kind": "lamp",
+    "color": "#ffd27a"
+   }
   },
   "press_on": {
    "name": "Press On",
@@ -420,7 +500,11 @@
     "range": 3.2,
     "lunge": true
    },
-   "does": "Reach forward and strike. [BSB: Philippians 3:14]"
+   "does": "Reach forward and strike. [BSB: Philippians 3:14]",
+   "vfx": {
+    "kind": "wind",
+    "color": "#ffd0a0"
+   }
   },
   "run_endurance": {
    "name": "Run with Endurance",
@@ -439,7 +523,11 @@
     "text": "Attack %d%% faster for %d s.",
     "show_mult": 100
    },
-   "does": "Lay aside every weight. [BSB: Hebrews 12:1]"
+   "does": "Lay aside every weight. [BSB: Hebrews 12:1]",
+   "vfx": {
+    "kind": "wind",
+    "color": "#d0f0ff"
+   }
   },
   "narrow_way": {
    "name": "Narrow Way",
@@ -455,7 +543,11 @@
     "per_lv": 4,
     "radius": 3.0
    },
-   "does": "Keep to the path and sweep aside what blocks it. [BSB: Matthew 7:14]"
+   "does": "Keep to the path and sweep aside what blocks it. [BSB: Matthew 7:14]",
+   "vfx": {
+    "kind": "wave",
+    "color": "#ffb070"
+   }
   },
   "all_prayer": {
    "name": "All-Prayer",
@@ -472,7 +564,11 @@
     "radius": 4.0
    },
    "does": "When the sword is of no use: cry out, and every foe near you is struck. It costs no Zeal, for it is not your strength that is spent. The only thing that harms the fiends of the dark valley. [BSB: Ephesians 6:18]",
-   "needs": "all_prayer"
+   "needs": "all_prayer",
+   "vfx": {
+    "kind": "prayer",
+    "color": "#fff6d8"
+   }
   },
   "hold_line": {
    "name": "Hold the Line",
@@ -492,6 +588,10 @@
    "req": {
     "skill": "stand_firm",
     "lv": 2
+   },
+   "vfx": {
+    "kind": "wave",
+    "color": "#ffcf8a"
    }
   },
   "endure": {
@@ -547,6 +647,10 @@
    "req": {
     "skill": "arrow_truth",
     "lv": 2
+   },
+   "vfx": {
+    "kind": "arrow",
+    "color": "#f0ffe0"
    }
   },
   "sober_watch": {
@@ -602,6 +706,10 @@
    "req": {
     "skill": "edge_word",
     "lv": 2
+   },
+   "vfx": {
+    "kind": "smite",
+    "color": "#e0c8ff"
    }
   },
   "hidden_heart": {
@@ -656,6 +764,10 @@
    "req": {
     "skill": "still_waters",
     "lv": 2
+   },
+   "vfx": {
+    "kind": "water",
+    "color": "#b0f0b0"
    }
   },
   "know_flock": {
@@ -709,6 +821,10 @@
    "req": {
     "skill": "daily_bread",
     "lv": 2
+   },
+   "vfx": {
+    "kind": "gift",
+    "color": "#ffc8d8"
    }
   },
   "good_measure": {
@@ -763,6 +879,10 @@
    "req": {
     "skill": "press_on",
     "lv": 2
+   },
+   "vfx": {
+    "kind": "wave",
+    "color": "#e0d0b0"
    }
   },
   "light_pack": {

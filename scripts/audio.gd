@@ -33,6 +33,8 @@ func music(id: String) -> void:
 		return
 	_music_id = id
 	var stream := _load(id, [MUSIC_DIR])
+	if stream is AudioStreamOggVorbis:
+		(stream as AudioStreamOggVorbis).loop = true
 	var tw := create_tween()
 	tw.tween_property(_music, "volume_db", SILENT_DB, FADE_S)
 	tw.tween_callback(func() -> void:

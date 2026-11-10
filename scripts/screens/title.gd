@@ -56,7 +56,7 @@ func _gui_input(e: InputEvent) -> void:
 func start() -> void:
 	if G.lords_day():
 		_lords_day_panel()
-	elif G.has_save():
+	elif G.any_save():
 		_continue_panel()
 	else:
 		start_age()
@@ -71,10 +71,18 @@ func _panel(title: String, width: float) -> VBoxContainer:
 	return w.body
 
 func _continue_panel() -> void:
-	var b := _panel("Welcome back, pilgrim", 560)
-	b.add_child(UIKit.label("Your journey is saved on this device.", 20, UIKit.SUB, false, true))
-	b.add_child(UIKit.button("Continue", _continue, 0, true))
-	b.add_child(UIKit.button("New game (replaces the save)", func() -> void: phase = "start"; start_age(), 0))
+	var b := _panel("Welcome back, pilgrim", 760)
+	b.add_child(UIKit.label("Journeys saved on this device. Choose one to continue, or begin a new one in any slot.", 19, UIKit.SUB, false, true))
+	for i in G.SAVE_SLOTS:
+		var idx: int = i
+		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 8)
+		var summary := G.slot_summary(i)
+		var l := UIKit.label("%d.  %s" % [i + 1, summary if summary != "" else "Empty"], 19, UIKit.INK, summary != "", true); l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(l)
+		if summary != "":
+			row.add_child(UIKit.button("Continue", func() -> void: G.slot = idx; _continue(), 170, true))
+		row.add_child(UIKit.button("New", func() -> void: G.slot = idx; phase = "start"; start_age(), 110))
+		b.add_child(row)
 
 func _continue() -> void:
 	if G.load_game():

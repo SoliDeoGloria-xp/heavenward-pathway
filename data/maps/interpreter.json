@@ -58,7 +58,7 @@
     5
    ],
    "tile": "dirt",
-   "tint": "#8a6a58"
+   "tint": "#6e3430"
   },
   {
    "t": "wall",
@@ -178,6 +178,117 @@
     0,
     3
    ]
+  },
+  {
+   "t": "pillars",
+   "points": [
+    [
+     -12.5,
+     -7
+    ],
+    [
+     -7.5,
+     -7
+    ],
+    [
+     -2.5,
+     -7
+    ],
+    [
+     2.5,
+     -7
+    ],
+    [
+     7.5,
+     -7
+    ],
+    [
+     12.5,
+     -7
+    ]
+   ],
+   "h": 4.4,
+   "tint": "#e8e0d0"
+  },
+  {
+   "t": "box",
+   "at": [
+    15.2,
+    2
+   ],
+   "size": [
+    0.9,
+    3.2,
+    5
+   ],
+   "tile": "bark",
+   "tint": "#7a5a40"
+  },
+  {
+   "t": "box",
+   "at": [
+    -15.2,
+    3
+   ],
+   "size": [
+    0.9,
+    3.2,
+    6
+   ],
+   "tile": "bark",
+   "tint": "#7a5a40"
+  },
+  {
+   "t": "banner",
+   "at": [
+    -3.2,
+    7.6
+   ],
+   "color": "#7a2a2a"
+  },
+  {
+   "t": "banner",
+   "at": [
+    3.2,
+    7.6
+   ],
+   "color": "#2a3a7a"
+  },
+  {
+   "t": "motes",
+   "at": [
+    0,
+    0
+   ],
+   "color": "#ffe9b0",
+   "n": 20,
+   "r": 10,
+   "size": 0.06,
+   "y": 2.2
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    4.5
+   ],
+   "size": [
+    5,
+    9
+   ],
+   "tile": "dirt",
+   "tint": "#6e3430"
+  },
+  {
+   "t": "crates",
+   "area": [
+    -14,
+    5,
+    3,
+    3
+   ],
+   "n": 4,
+   "seed": 81
   }
  ],
  "ents": [
@@ -209,8 +320,8 @@
    "act": "Behold",
    "icon": "eye",
    "prop": {
-    "t": "pedestal",
-    "color": "#f0d890"
+    "t": "diorama",
+    "kind": "picture"
    }
   },
   {
@@ -224,8 +335,8 @@
    "act": "Behold",
    "icon": "eye",
    "prop": {
-    "t": "pedestal",
-    "color": "#c8b8a0"
+    "t": "diorama",
+    "kind": "parlor"
    }
   },
   {
@@ -239,8 +350,8 @@
    "act": "Behold",
    "icon": "eye",
    "prop": {
-    "t": "pedestal",
-    "color": "#f0a8b8"
+    "t": "diorama",
+    "kind": "children"
    }
   },
   {
@@ -254,8 +365,8 @@
    "act": "Behold",
    "icon": "eye",
    "prop": {
-    "t": "pedestal",
-    "color": "#ff9a40"
+    "t": "diorama",
+    "kind": "fire"
    }
   },
   {
@@ -269,8 +380,8 @@
    "act": "Behold",
    "icon": "eye",
    "prop": {
-    "t": "pedestal",
-    "color": "#a8c8ff"
+    "t": "diorama",
+    "kind": "armed"
    }
   },
   {

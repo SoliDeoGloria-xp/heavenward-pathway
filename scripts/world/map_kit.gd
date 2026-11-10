@@ -5,6 +5,8 @@ extends RefCounted
 var w: World
 const STANDEE_HEIGHT := 1.75       # world units
 const STANDEE_PX := 96.0
+var blinkers: Array = []         # watching eyes that wink out now and then
+var drifters: Array = []         # ground fog cards: [node, home, phase]
 var bobbers: Array = []          # nodes that float gently (tableau orbs)
 var spinners: Array = []         # [node, radians per second]
 
@@ -268,6 +270,10 @@ func _ambient_tick(delta: float) -> void:
 			h.modulate.a = 0.45 + sin(w.t * 1.6) * 0.15
 	for sp in spinners:
 		sp[0].rotation.y += delta * float(sp[1])
+	for d in drifters:
+		d[0].position = d[1] + Vector3(sin(w.t * 0.15 + d[2]) * 1.6, 0, cos(w.t * 0.11 + d[2]) * 1.0)
+	for e in blinkers:
+		e.visible = fmod(w.t * 0.35 + e.position.x * 3.1, 4.0) > 0.25
 	for b in bobbers:
 		b.position.y += sin(w.t * 2.0 + b.position.x) * 0.003
 	# target ring + outline on the current target

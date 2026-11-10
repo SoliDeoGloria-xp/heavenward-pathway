@@ -39,7 +39,7 @@
   ],
   "mini": "#a8c48a",
   "ground": "cobble",
-  "ground_tint": "#fff5e0",
+  "ground_tint": "#c8c0b4",
   "weather": ""
  },
  "props": [
@@ -68,20 +68,60 @@
    "seed": 21
   },
   {
-   "t": "lamp",
+   "t": "torch",
    "at": [
     -8,
     -6
    ],
-   "color": "#ffd080"
+   "color": "#ffd080",
+   "light": true
   },
   {
-   "t": "lamp",
+   "t": "torch",
    "at": [
     8,
     -6
    ],
-   "color": "#ffd080"
+   "color": "#ffd080",
+   "light": true
+  },
+  {
+   "t": "banner",
+   "at": [
+    -9,
+    -2
+   ],
+   "color": "#2a4a8a"
+  },
+  {
+   "t": "banner",
+   "at": [
+    9,
+    -2
+   ],
+   "color": "#8a2a2a"
+  },
+  {
+   "t": "crates",
+   "area": [
+    -9,
+    3,
+    2,
+    3
+   ],
+   "n": 3,
+   "seed": 121
+  },
+  {
+   "t": "crates",
+   "area": [
+    7.5,
+    3,
+    2,
+    3
+   ],
+   "n": 3,
+   "seed": 122
   }
  ],
  "ents": [

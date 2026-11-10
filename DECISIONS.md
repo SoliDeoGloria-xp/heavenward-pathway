@@ -2,6 +2,14 @@
 
 Made while building, where the brief and the design doc left room. Each can be changed in data.
 
+**Added in 0.4.0**
+
+- **The player is a delivered picture, not a paper-doll.** Only a front pose exists per pilgrim, so every facing shows the front (mirrored left and right) and the actions are generated. Character creation offers two looks instead of hair and robe colours.
+- **Music is instrumental arrangements of four hymn tunes** I am confident of note for note (New Britain, Slane, Old Hundredth, Eventide). Other hymns were left out rather than risk wrong melodies. No lyrics appear anywhere. The audio is synthesized and has not been listened to by a person.
+- **The Shining Ones are pillars of light** with a name label and no figure.
+- **Fantasy dressing** (crystals, glowing mushrooms, standing stones, watching eyes, will-o'-the-wisps) is scenery only; none of it is a game system or carries doctrine.
+- **Old save files** (single-slot `save.json`) are not migrated to the three-slot files.
+
 **Added in 0.3.0**
 
 - **Gear never overlaps the Armor of God.** Slots are Hand, Garment, Cloak and Keepsake; no belt, breastplate, shoes, shield, helmet or sword exists as an item (the validator enforces it). Gear text calls it help for the road, not a measure of the pilgrim.

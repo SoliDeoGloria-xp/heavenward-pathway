@@ -23,6 +23,8 @@ const PLACEHOLDER_PIXEL := 0.04
 const MOB_ATTACK_S := 0.5
 const NO_RESPAWN := -99.0
 const BOSS_NAME_SIZE := 36
+const BOSS_INTRO_S := 1.8
+const NAME_RANGE := 4.5            # a foe's name shows when it is targeted or this close
 const MOB_SHEET := {"hframes": 7, "vframes": 1, "rows": false, "anims": {"idle": [0, 1], "walk": [2, 3], "attack": [2, 3], "hurt": [4], "die": [5, 6]}, "fps": {"idle": 2.0, "walk": 4.0, "die": 3.0}}
 
 var w: World
@@ -179,6 +181,8 @@ func spawn_boss(id: String, pos: Vector3) -> Dictionary:
 	mobs.append(boss)
 	boss_atk_t = 3.0; boss_count = 0; boss_enraged = false
 	G.say("%s bars the way!" % md.name, G.WARN)
+	if w.hud:
+		_boss_intro(pos, md.name)
 	return boss
 
 func _mob_tick(delta: float) -> void:
@@ -215,6 +219,8 @@ func _mob_tick(delta: float) -> void:
 				m.wander_t = randf_range(2, 5); m.wander = m.home + Vector3(randf_range(-3, 3), 0, randf_range(-3, 3))
 			goal = m.wander
 		var to := goal - a.position; to.y = 0
+		if a.name_lbl and not m.get("boss", false):
+			a.name_lbl.visible = m == target or (d < NAME_RANGE and target == null)
 		var stop: float = m.reach if m.aggro else 0.2
 		if to.length() > stop:
 			var v := to.normalized() * (1.9 if m.aggro else 0.9) * delta
@@ -313,13 +319,36 @@ func _mob_down(m: Dictionary) -> void:
 	if target == m:
 		target = null
 	slain += 1
-	G.note_kill(String(m.id)); Gear.roll_drop(m)
+	G.note_kill(String(m.id)); _loot(m); G.sfx("mob_die")
 	G.say("You overcame the %s." % m.name, G.SYS)
 	_pay_kill(m)
 	if m.drop != "" and randf() < DROP_CHANCE:
 		w.kit._drop(m.drop, "bread" if m.drop == "Bread of Provision" else "equip", a.position)
 	w.quests.on_kill(m)
 	mob_slain.emit(m)
+
+## Denarii and sometimes gear; a found piece pops out of the foe in its rarity's colour.
+func _loot(m: Dictionary) -> void:
+	var it := Gear.roll_drop(m)
+	G.sfx("mob_die")
+	if it.is_empty():
+		return
+	var c := Color(String(Gear.rarity(it).color)).lightened(0.35)
+	w.kit._float_text(m.actor.position + Vector3(0, 2.0, 0), Gear.label(it), c)
+	_fade_shaft(Fx.shaft(w, m.actor.position, 4.0, 0.7))
+	Fx.star(w, m.actor.position + Vector3(0, 1.2, 0)); G.sfx("drop")
+
+func _fade_shaft(node: Sprite3D) -> void:
+	var tw := w.create_tween()
+	tw.tween_interval(0.5); tw.tween_property(node, "modulate:a", 0.0, 0.6); tw.tween_callback(node.queue_free)
+
+## A boss enters: the camera goes to it, its name is shown, it roars.
+func _boss_intro(pos: Vector3, title: String) -> void:
+	w.cam_focus = pos
+	G.sfx("boss_roar"); w.shake(0.45); G.audio.music("boss")
+	Fx.ring(w, pos, Color(1.0, 0.4, 0.3), 5.0, 0.8); Fx.dust(w, pos, Color(0.5, 0.45, 0.4, 0.7), 18)
+	w.get_tree().create_timer(BOSS_INTRO_S).timeout.connect(func() -> void:
+		if not w.cinema: w.cam_focus = null)
 
 ## Kill XP is optional extra on top of the quest budget (ledger source "mob").
 func _pay_kill(m: Dictionary) -> void:
@@ -379,7 +408,8 @@ func skill(id: String) -> void:
 	if not done:
 		return
 	G.zeal -= int(info.zeal); cd[id] = float(info.cd); gcd = GCD
-	G.say("%s!" % info.name, G.SYS); G.sfx("skill")
+	G.say("%s!" % info.name, G.SYS)
+	SkillFx.play(w, id, target.actor.position if (target != null and String(fx.type) == "strike") else w.player.position)
 	G.stats_changed.emit()
 
 func _cast_tend() -> bool:
@@ -404,8 +434,6 @@ func _cast_strike(id: String, info: Dictionary, fx: Dictionary, dmg: int) -> boo
 		Fx.afterimages(w, w.pact, from, dest, 3)
 		Fx.dust(w, from, Color(0.8, 0.76, 0.66, 0.6), 6)
 		w.create_tween().tween_property(w.player, "position", dest, 0.09).set_ease(Tween.EASE_OUT)
-	Fx.burst(w, m.actor.position + Vector3(0, 0.8, 0), Color("fff2b0"), 22)
-	Fx.ring(w, m.actor.position, Color(1, 0.95, 0.7), 1.8, 0.4)
 	hit_mob(m, dmg + randi_range(-2, 2), true, false, id)
 	return true
 
@@ -418,8 +446,6 @@ func _cast_aoe(id: String, fx: Dictionary, dmg: int) -> bool:
 	if not hit:
 		G.say("No foe is close enough.", G.WARN); return false
 	w.pact.play_once("cast", 0.5)
-	Fx.ring(w, w.player.position, Color(1, 0.95, 0.7), float(fx.radius), 0.5)
-	w.shake(0.2)
 	return true
 
 func _cast_heal(amount: float) -> bool:
@@ -428,24 +454,22 @@ func _cast_heal(amount: float) -> bool:
 	w.pact.play_once("cast", 0.5)
 	w.pact.flash(Color("fff0b0"), 0.6)
 	w.kit._float_text(w.player.position + Vector3(0, 2.2, 0), "+%d" % int(h), Color("7cff7c"))
-	Fx.dome(w, w.player.position)
 	return true
 
 func _cast_regen(fx: Dictionary, zeal: float) -> bool:
 	regen_until = w.t + float(fx.secs); regen_rate = zeal / float(fx.secs)
 	w.pact.play_once("cast", 0.5)
-	Fx.ring(w, w.player.position, Color(0.7, 0.85, 1.0), 1.8, 0.6)
 	return true
 
 func _cast_buff(fx: Dictionary, add: float) -> bool:
 	buffs[String(fx.stat)] = {"add": add, "until": w.t + float(fx.secs)}
 	w.pact.play_once("cast", 0.5)
 	w.pact.flash(Color("bfe4ff"), 0.6)
-	Fx.spiral(w, w.player.position + Vector3(0, 0.2, 0), Color("b8e0ff"))
 	return true
 
 # ------------------------------------------------------------------ KO
 func _ko() -> void:
+	G.sfx("ko")
 	if dead:
 		return
 	dead = true; target = null; w.auto_on = false; w.move_target = null
@@ -664,9 +688,10 @@ func _boss_down(m: Dictionary) -> void:
 	if target == m:
 		target = null
 	_pay_kill(m)
-	G.note_kill(String(m.id)); Gear.roll_drop(m)
+	G.note_kill(String(m.id)); _loot(m)
 	if m.drop != "":
 		G.bag_add(m.drop, 1)
+	G.audio.music(String(w.def.get("music", "")))
 	if m.muster:
 		_muster_cleared(m)
 	else:

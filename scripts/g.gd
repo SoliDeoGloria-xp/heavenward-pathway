@@ -21,7 +21,9 @@ const BLOCKED := ["god", "jesus", "christ", "emmanuel", "immanuel", "shaddai", "
 const ONLINE := false
 ## Internal-testing switch: lets testers bypass Lord's Day Mode from Settings. Set false for public launch.
 const DEV_UNLOCK := true
-const SAVE_PATH := "user://save.json"
+const SAVE_SLOTS := 3
+const SAVE_FILE := "user://save_%d.json"
+var slot := 0                     # the save slot in use
 const SETTINGS_PATH := "user://settings.json"
 const SAVE_VERSION := 1
 const PILGRIM := "pilgrim"
@@ -116,7 +118,7 @@ var font_ui_bold: FontVariation
 var font_title: FontVariation
 var theme: Theme
 var _tex_cache := {}
-var player_sheet: ImageTexture
+var player_sheet: Texture2D
 var sprite_tint := Color.WHITE
 
 func _ready() -> void:
@@ -484,20 +486,38 @@ const SAVED := ["pname", "hair_style", "hair_col", "robe_col", "lvl", "job", "xp
 	"gear", "gear_uid", "equipped", "storage", "denarii", "stones", "fruit_stone", "bestiary", "daily"]
 const SAVED_INTS := ["hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "kos", "snaps", "stat_pts", "skill_pts", "marks", "gear_uid", "denarii"]
 
-func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+func save_path(i: int = -1) -> String:
+	return SAVE_FILE % (slot if i < 0 else i)
+
+func has_save(i: int = -1) -> bool:
+	return FileAccess.file_exists(save_path(i))
+
+func any_save() -> bool:
+	for i in SAVE_SLOTS:
+		if has_save(i):
+			return true
+	return false
+
+## One line for the title screen's slot list; "" for an empty slot.
+func slot_summary(i: int) -> String:
+	var f := FileAccess.open(save_path(i), FileAccess.READ)
+	var d0: Variant = JSON.parse_string(f.get_as_text()) if f else null
+	if not (d0 is Dictionary):
+		return ""
+	var job_label: String = "Pilgrim" if d0.get("job_id", PILGRIM) == PILGRIM else String(JOBS[d0.job_id].name)
+	return "%s · %s · Base %d · %s · %d min" % [d0.get("pname", "Pilgrim"), job_label, int(d0.get("lvl", 1)), String(data("maps/" + String(d0.get("cur_map", "eden"))).name), int(d0.get("played_ms", 0)) / 60000]
 
 func save_game() -> void:
 	var out := {"version": SAVE_VERSION, "played_ms": played_ms + Time.get_ticks_msec() - start_ms, "lords_day_mode": lords_day()}
 	for k in SAVED:
 		out[k] = get(k)
-	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var f := FileAccess.open(save_path(), FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(out))
 
 ## Returns false when there is no usable save (the title then offers only a new game).
 func load_game() -> bool:
-	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var f := FileAccess.open(save_path(), FileAccess.READ)
 	var d0: Variant = JSON.parse_string(f.get_as_text()) if f else null
 	if not (d0 is Dictionary) or int(d0.get("version", 0)) != SAVE_VERSION:
 		return false
@@ -519,7 +539,7 @@ func load_game() -> bool:
 
 func delete_save() -> void:
 	if has_save():
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path()))
 
 func minutes_played() -> int:
 	return maxi(1, int((played_ms + Time.get_ticks_msec() - start_ms) / 60000.0))
@@ -557,11 +577,14 @@ func goto(screen: String, data: Dictionary = {}) -> void:
 	main.show_screen(screen, data)
 
 ## Composite the layered paper-doll sheet (body + tinted robe + tinted hair + staff) into one texture.
-func build_player_sheet() -> ImageTexture:
-	var robe: Color = ROBES[robe_col % ROBES.size()]
-	if job_id != PILGRIM:   # the Calling shows on the robe: the chosen colour leans toward the job's
-		robe = robe.lerp(Color(String(JOBS[job_id].tint)), JOB_TINT_MIX)
-	player_sheet = build_sheet(hair_style, hair_col, robe_col, true, robe)
+const PLAYER_CELL := Vector2(64, 96)        # one frame of a player sheet (assets/sprites/player)
+const PLAYER_FACE := Rect2(10, 10, 44, 46)   # head and shoulders inside the first frame, for portraits
+const PILGRIM_LOOKS := ["pilgrim", "pilgrim_b"]
+
+## The player's sheet: the look chosen at creation while a Pilgrim, then the Calling's own look.
+func build_player_sheet() -> Texture2D:
+	var look: String = PILGRIM_LOOKS[hair_style % PILGRIM_LOOKS.size()] if job_id == PILGRIM else job_id
+	player_sheet = tex("res://assets/sprites/player/%s.png" % look)
 	return player_sheet
 
 ## Any pilgrim's sheet (other players, party members, passing pilgrims). Cached per look.

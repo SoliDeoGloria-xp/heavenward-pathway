@@ -28,13 +28,12 @@ func _ready() -> void:
 	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	atlas = AtlasTexture.new()
 	preview = TextureRect.new(); preview.texture = atlas
-	preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	preview.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	stage.add_child(preview)
 	lb.add_child(stage)
-	lb.add_child(_arrow_row("Hair style", func(): _hair_style(-1), func(): _hair_style(1), true))
-	lb.add_child(_arrow_row("Hair colour", func(): _hair_col(-1), func(): _hair_col(1), false))
+	lb.add_child(_arrow_row("Look", func(): _hair_style(-1), func(): _hair_style(1), true))
 	root.add_child(lw.root)
 	# --- right: details
 	var rw := UIKit.window("Pilgrim", Vector2(0, 0))
@@ -48,10 +47,7 @@ func _ready() -> void:
 	rb.add_child(name_edit)
 	msg = UIKit.label("3 to 16 letters. Divine names are reserved.", 18, UIKit.SUB)
 	rb.add_child(msg)
-	rb.add_child(UIKit.label("Robe colour", 22, UIKit.BLUE_INK, true))
-	swatch_row = HBoxContainer.new(); swatch_row.add_theme_constant_override("separation", 10)
-	rb.add_child(swatch_row)
-	_swatches()
+	swatch_row = HBoxContainer.new()   # robe colours belonged to the old paper-doll; looks are whole pictures now
 	var hx := HBoxContainer.new(); hx.add_theme_constant_override("separation", 18)
 	var hex := Hexagon.new(); hex.custom_minimum_size = Vector2(190, 190)
 	hx.add_child(hex)
@@ -97,15 +93,14 @@ func _swatches() -> void:
 		swatch_row.add_child(b)
 
 func _hair_style(d: int) -> void:
-	G.hair_style = (G.hair_style + d + 3) % 3; _rebuild()
+	G.hair_style = (G.hair_style + d + G.PILGRIM_LOOKS.size()) % G.PILGRIM_LOOKS.size(); _rebuild()
 
 func _hair_col(d: int) -> void:
 	G.hair_col = (G.hair_col + d + G.HAIRS.size()) % G.HAIRS.size(); _rebuild()
 
 func _rebuild() -> void:
 	atlas.atlas = G.build_player_sheet()
-	hair_lbl.text = "%d / 3" % (G.hair_style + 1)
-	hair_swatch.color = G.HAIRS[G.hair_col]
+	hair_lbl.text = "%d / %d" % [G.hair_style + 1, G.PILGRIM_LOOKS.size()]
 
 func _process(delta: float) -> void:
 	turn += delta
@@ -113,7 +108,7 @@ func _process(delta: float) -> void:
 	var rows := [0, 1, 2, 3, 4, 3, 2, 1]
 	var flip := dir8 >= 5
 	var walk := 1 + int(turn * 6.0) % 4
-	atlas.region = Rect2(walk * 32, rows[dir8] * 48, 32, 48)
+	atlas.region = Rect2(Vector2(walk, rows[dir8]) * G.PLAYER_CELL, G.PLAYER_CELL)
 	preview.flip_h = flip
 
 func _make() -> void:

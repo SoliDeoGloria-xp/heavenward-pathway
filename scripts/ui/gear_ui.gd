@@ -133,6 +133,14 @@ static func bench(hud: Node) -> void:
 	row.add_child(UIKit.button("Done", func() -> void: hud.clear_overlay(), 160, true)); w.body.add_child(row)
 	hud._center(w.root)
 
+## The objective that holds a map's Dreamer's Page, or {} when the map has none.
+static func _page_of(map_id: String) -> Dictionary:
+	var def: Dictionary = G.data("maps/" + map_id)
+	for o in def.get("side", []) + def.get("objectives", []):
+		if o.get("page", false):
+			return o
+	return {}
+
 # ------------------------------------------------------------------ Codex sheet: daily portion and bestiary
 static func codex(hud: Node, b: VBoxContainer) -> void:
 	b.add_child(UIKit.label("Codex", 26, UIKit.BLUE_INK, true))
@@ -148,6 +156,14 @@ static func codex(hud: Node, b: VBoxContainer) -> void:
 	hud.more_tiles["daily_claim"] = claim
 	b.add_child(_row("Daily portion: overcome %d foes (%d/%d)" % [int(rules.kills), mini(int(st.kills), int(rules.kills)), int(rules.kills)],
 		"Manna +%d and Denarii +%d. There are no streaks; a missed day costs nothing." % [int(rules.reward_manna), int(rules.reward_denarii)], [claim], "bread"))
+	b.add_child(UIKit.label("The Dreamer's Pages (%d found)" % Quests.pages_found(), 20, UIKit.INK, true))
+	for map_id in G.data("acts").order:
+		var page := _page_of(map_id)
+		if page.is_empty() or not G.flags.has("page_" + map_id):
+			continue
+		var dlg: String = page.dialog
+		b.add_child(_row(String(G.data("maps/" + map_id).name), "", [UIKit.button("Read", func() -> void:
+			hud.clear_overlay(); hud.world.scene.play(dlg, func() -> void: pass), ROW_BTN)], "page"))
 	b.add_child(UIKit.label("Bestiary: what you have met on the road", 20, UIKit.INK, true))
 	var why: Dictionary = G.PROG["weakness"].why
 	var any := false

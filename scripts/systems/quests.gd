@@ -133,7 +133,7 @@ func _save() -> void:
 		G.save_game()
 
 func leave(to: String) -> void:
-	w.ending = true
+	w.ending = true; G.sfx("warp")
 	G.goto("world", {"map": to})
 
 # ------------------------------------------------------------------ effects (declarative, so progress can be replayed after a load)
@@ -323,7 +323,7 @@ func _side_done(sd: Dictionary) -> void:
 	apply(sd.get("on_done", {}))
 	if sd.get("page", false):
 		w.show_ent(sd.ent, false)
-		G.flags["page_" + w.map_id] = true
+		G.flags["page_" + w.map_id] = true; G.sfx("page")
 		G.say("Dreamer's Page found (%d of %d). They are kept in More → The Way." % [pages_found(), G.data("acts").order.size() - 1], G.INFO)
 	else:
 		G.say("Done: %s" % sd.text, G.INFO)

@@ -70,7 +70,8 @@ W×H, real alpha transparency. Do NOT draw a checkerboard. No text."*
 | Props: Wicket Gate, the Cross, the sepulchre, the Arbour, chained lions, tableau pedestals, stepping stones | Boxes and spheres built in code (`scripts/maps/data_map.gd`) | Prop billboard contract. The Cross scene shows only the cross, the tomb and light |
 | Job looks (Valiant, Watcher, Expositor, Shepherd, Steward, Wayfarer) | Robe tint per job | One `robe_<job>.png` layer per job on the character contract |
 | Portraits: every named NPC above | Dreamer and Evangelist only | Portrait contract |
-| Audio | Silent | `assets/audio/music/<id>.ogg` for `eden, city, slough, interpreter, cross, hill, palace, boss`; `assets/audio/sfx/<id>.ogg` for `quest, skill, bell` |
+| Audio | Synthesized hymn-tune loops and effects | Recorded music for `eden, city, slough, interpreter, cross, hill, palace, boss, valley, shadow` and recorded effects, same file names |
+| Player and Calling sheets | One front pose each, actions generated | Full sheets on the character contract: 5 facings × idle, walk 1–4, attack 1–2, sit, rest, cast, for the pilgrim (two looks) and the six Callings |
 
 <!-- scan results below are written by tools/check_assets.py -->
 

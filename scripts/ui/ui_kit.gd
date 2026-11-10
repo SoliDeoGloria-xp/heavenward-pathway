@@ -100,6 +100,7 @@ static func button(text: String, cb: Callable, min_w: float = 0.0, gold: bool = 
 	b.theme = G.theme
 	b.custom_minimum_size = Vector2(min_w, 56)
 	b.focus_mode = Control.FOCUS_NONE
+	b.pressed.connect(func() -> void: G.sfx("tap"))
 	if gold:
 		var g := sb("res://assets/ui/btn_gold.png", 10, 14)
 		b.add_theme_stylebox_override("normal", g); b.add_theme_stylebox_override("hover", g)

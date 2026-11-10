@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 (versionCode 5) — the world, the pilgrims, music and effects
+
+- **The pilgrim is drawn art now.** The player uses the delivered pilgrim pictures (two looks at creation) and each Calling has its own look: Valiant, Watcher, Expositor, Shepherd, Steward, Wayfarer. Walk, attack, sit, rest and cast are generated from the single delivered pose. Hair and robe colour choices are gone with the old paper-doll.
+- **Every map rebuilt with scenery.** Rock ridges and far skylines frame each place; the Slough has dead trees, fog, will-o'-the-wisps and a lit Wicket Gate; the Interpreter's five pictures are small scenes; the Cross has steps, flowers and a rock tomb; the Hill climbs between rising cliffs; the Valley of Humiliation has a stream, a bridge and a ring of standing stones where Apollyon waits; the Valley of the Shadow has crags, watching eyes, a burning pit and crystals marking the path. Ground tiles are toned down everywhere.
+- **Music.** Ten looping themes arranged from four public-domain hymn tunes: New Britain ("Amazing Grace"), Slane ("Be Thou My Vision"), Old Hundredth (the Doxology) and Eventide ("Abide with Me"). Instrumental, synthesized. Bosses switch to a battle arrangement.
+- **Sound.** 23 effects: steps, taps, hits, deaths, heals, buffs, arrows, prayer, loot, pages, portals, boss roar, KO.
+- **Every skill has its own effect** (twelve styles, thirty colourings) and matching sound.
+- **Staging.** Bosses enter with a camera turn, a roar and battle music; found gear pops out in its rarity's colour.
+- **HUD.** Dialogue hides the controls; the map banner waits for dialogue; foe names show only for your target; unused skill slots are hidden; the "step complete" mark sits under the tracker.
+- **Codex.** Found Dreamer's Pages can be read again. **Saves.** Three slots.
+- The three Shining Ones are now figures of light with no drawn form.
+
 ## 0.3.0 (versionCode 4) — the loot loop, deeper combat, Act III
 
 - **Road gear.** Four slots (Hand, Garment, Cloak, Keepsake), rarity Clay to Radiant, drops from foes, "Wear the best". The Armor of God stays separate: given whole, never gear.

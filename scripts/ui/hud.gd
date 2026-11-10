@@ -112,7 +112,7 @@ func _build_plate(L: bool) -> void:
 	var face := PanelContainer.new(); face.custom_minimum_size = Vector2(78, 78)
 	var fs := StyleBoxFlat.new(); fs.bg_color = Color("e8eefa"); fs.set_corner_radius_all(39); fs.set_border_width_all(3); fs.border_color = Color("5c6e98")
 	face.add_theme_stylebox_override("panel", fs)
-	var at := AtlasTexture.new(); at.atlas = G.player_sheet if G.player_sheet else G.build_player_sheet(); at.region = Rect2(4, 2, 24, 26)
+	var at := AtlasTexture.new(); at.atlas = G.player_sheet if G.player_sheet else G.build_player_sheet(); at.region = G.PLAYER_FACE
 	var ft := TextureRect.new(); ft.texture = at; ft.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	ft.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ft.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	face.add_child(ft); h.add_child(face)
@@ -260,7 +260,8 @@ func _apply_page() -> void:
 			b.kind = "skill"; b.set_icon(info.icon); b.caption = info.name; b.disabled = false
 			b.cost = str(info.zeal)
 		else:
-			b.kind = "empty"; b.set_icon(""); b.caption = "+ Skill" if G.skill_pts > 0 else "Empty"; b.disabled = false
+			b.kind = "empty"; b.set_icon(""); b.caption = "+ Skill" if G.skill_pts > 0 else ""; b.disabled = false
+		b.visible = b.kind != "empty" or G.skill_pts > 0 or (page > 0 and i == 0)   # unused slots are not drawn
 		b.queue_redraw()
 	page_btn.caption = "%d/%d" % [page + 1, G.bar_pages(world.map_id == "eden").size()]; page_btn.queue_redraw()
 
@@ -392,6 +393,9 @@ func _on_log(_t: String, _c: Color) -> void:
 	chat_lbl.text = s.strip_edges()
 
 func banner(title: String, sub: String) -> void:
+	if dialog_active():   # never over a text box: wait until the scene has been read
+		get_tree().create_timer(0.5).timeout.connect(banner.bind(title, sub))
+		return
 	for c in banner_box.get_children():
 		c.queue_free()
 	var t := UIKit.outlined(title, 64, Color("fff1c8"), G.font_title)
@@ -417,8 +421,8 @@ func set_quest(text: String) -> void:
 func _stamp() -> void:
 	## Wax-seal "step complete" stamp on the tracker plus a pulse.
 	var st := UIKit.outlined("✓ Step complete", 24, Color("ffd36a"))
-	st.position = quest_box.position + Vector2(quest_box.size.x - 230, -14)
-	st.pivot_offset = Vector2(110, 16); st.scale = Vector2(1.8, 1.8); st.rotation = -0.12; st.modulate.a = 0.0
+	st.position = quest_box.position + Vector2(8, quest_box.size.y + 2)   # under the tracker, clear of the name plate
+	st.pivot_offset = Vector2(110, 16); st.scale = Vector2(1.5, 1.5); st.rotation = -0.04; st.modulate.a = 0.0
 	root.add_child(st)
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(st, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK)
@@ -529,6 +533,9 @@ func open_chat() -> void:
 	r.text = s; sc.add_child(r); w.body.add_child(sc)
 	w.body.add_child(UIKit.label("Messages from the world and from the pilgrims of a House appear here.", 16, UIKit.SUB, false, true))
 	_center(w.root)
+
+func _open_sfx() -> void:
+	G.sfx("open")
 
 func open_sheet(tab: String) -> void:
 	_dim()
@@ -821,7 +828,7 @@ func _portrait_tex(who: String, explicit: String) -> Texture2D:
 	if PORTRAITS.has(who):
 		return G.tex(PORTRAITS[who])
 	if who == G.pname:
-		var at := AtlasTexture.new(); at.atlas = G.player_sheet if G.player_sheet else G.build_player_sheet(); at.region = Rect2(2, 0, 28, 30)
+		var at := AtlasTexture.new(); at.atlas = G.player_sheet if G.player_sheet else G.build_player_sheet(); at.region = G.PLAYER_FACE
 		return at
 	return null
 
@@ -891,8 +898,11 @@ func run_dialog(lines: Array, done: Callable, i: int = 0) -> void:
 	clear_overlay()
 	if i >= lines.size():
 		_dlg_state = []
+		_controls(true)
 		done.call(); return
 	_dlg_state = [lines, done, i]
+	banner_box.modulate.a = 0.0
+	_controls(false); G.sfx("dialog")
 	var L: Dictionary = lines[i]
 	if L.has("fn"):
 		L.fn.call()
@@ -1259,6 +1269,16 @@ func enter_snapshot() -> void:
 	snapshot_ui.add_child(note)
 
 ## Story scenes: the HUD steps aside and black bars frame the shot.
+## Dialogue hides the controls (joystick, skills, Act) so nothing shows through the text box.
+func _controls(on: bool) -> void:
+	if world.cinema:
+		return   # a staged scene already hides the whole HUD
+	for n in hud_nodes:
+		if is_instance_valid(n): n.visible = on
+	if act_btn and not on: act_btn.visible = false
+	if on:
+		_apply_page()
+
 func cinema(on: bool) -> void:
 	for n in hud_nodes:
 		if is_instance_valid(n): n.visible = not on

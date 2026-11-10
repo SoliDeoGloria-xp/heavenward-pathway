@@ -5,7 +5,7 @@
 - **Look:** classic Ragnarok Online, with 2D pixel sprites on a lit 3D map and a fixed three-quarter camera.
 - **Controls:** Ragnarok M / Origin style for phones (landscape): floating joystick, Attack with a skill arc, Auto.
 - **Engine:** Godot 4.3, Compatibility renderer (Android and mobile browsers).
-- **Status:** the whole road is playable. Art is placeholder, audio is silent until files are added (see `ASSET_REREQUEST.md`).
+- **Status:** the whole road is playable with delivered character and monster art, built scenery, hymn-tune music and sound effects. Tiles, props and portraits are still generated or built in code (see `ASSET_REREQUEST.md`).
 
 ## Play it
 
@@ -121,7 +121,7 @@ Built from the code-side items in the 100-improvement review.
 
 ## Art and audio
 
-Placeholders come from `tools/gen_assets.py` and keep the game runnable. Delivered art is cleaned by `tools/import_sheets.py` (monster and boss animation sheets → `assets/sprites/mobs/` and `data/sprites.json`) and `tools/import_art.py` (icons, standing NPCs, props); a monster uses a sheet by naming it in `data/mobs.json` (`sprite`, and `size` in world units). Verified art replaces them through `data/asset_overrides.json`: unzip a pack to `assets/p1/` and run `python3 tools/check_assets.py`. The contract and everything still to be drawn are in `ASSET_REREQUEST.md`. Audio files dropped into `assets/audio/music/` and `assets/audio/sfx/` play without code changes.
+Placeholders come from `tools/gen_assets.py` and keep the game runnable. Delivered art is cleaned by `tools/import_sheets.py` (monster and boss animation sheets → `assets/sprites/mobs/` and `data/sprites.json`) and `tools/import_art.py` (icons, standing NPCs, props); a monster uses a sheet by naming it in `data/mobs.json` (`sprite`, and `size` in world units). Verified art replaces them through `data/asset_overrides.json`: unzip a pack to `assets/p1/` and run `python3 tools/check_assets.py`. The contract and everything still to be drawn are in `ASSET_REREQUEST.md`. Music is arranged from public-domain hymn tunes by `tools/gen_music.py` and effects by `tools/gen_sfx.py`; a recording dropped into `assets/audio/music/` or `assets/audio/sfx/` under the same name replaces the synthesized one. Each skill's look is its `vfx` entry in `data/skills.json`. Scenery props are listed in `scripts/maps/data_map.gd`.
 
 Scripture is cited as `[BSB: Book ch:v]`. `python3 tools/pull_bsb.py` fills `data/scripture.json` with the public-domain BSB text of the cited passages so Word Study can show them.
 
@@ -151,7 +151,7 @@ scripts/systems/      combat, quests (objective runner), gear (items, coin, benc
 scripts/world/        map_kit (geometry primitives and feedback)
 scripts/maps/         data_map (builds a map from JSON) and the four hand-built maps
 scripts/ui/           hud, coach, joystick, touch buttons, UIKit
-tools/                validate_data.py, import_sheets.py, import_art.py, gen_sfx.py, check_assets.py, pull_bsb.py, gen_assets.py
+tools/                validate_data.py, import_sheets.py, import_art.py, gen_music.py, gen_sfx.py, gen_backdrops.py, grade_tiles.py, check_assets.py, pull_bsb.py, gen_assets.py
 ```
 
 See also `CHANGELOG.md`, `DECISIONS.md`, `PLAYTEST.md`, `PLAY_CONSOLE.md`, `ASSET_REREQUEST.md`.

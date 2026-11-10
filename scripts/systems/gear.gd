@@ -182,23 +182,24 @@ static func set_stone(id: String) -> void:
 
 # ------------------------------------------------------------------ drops
 ## Called when a foe is overcome: a few Denarii, and sometimes a piece of road gear.
-static func roll_drop(mob: Dictionary) -> void:
+static func roll_drop(mob: Dictionary) -> Dictionary:
 	var rules: Dictionary = db().drops
 	var lv := int(mob.level)
 	var coins := int(ceil(lv * float(rules.denarii_per_level) * (4.0 if mob.get("boss", false) else (2.0 if mob.get("greater", false) else 1.0))))
 	G.denarii += coins
 	var chance: float = 1.0 if mob.get("boss", false) else float(rules.greater_gear_chance if mob.get("greater", false) else rules.gear_chance)
 	if randf() >= chance:
-		return
+		return {}
 	var pool: Array = []
 	for id in db().gear.keys():
 		if int(db().gear[id].level) <= lv:
 			pool.append(id)
 	if pool.is_empty():
-		return
+		return {}
 	var it := add(pool[randi() % pool.size()], maxi(_roll_rarity(lv), int(rules.boss_rarity) if mob.get("boss", false) else 0))
 	if not it.is_empty():
 		G.say("You found %s. (More → Equipment)" % label(it), G.INFO)
+	return it
 
 static func _roll_rarity(lv: int) -> int:
 	for band in db().drops.rarity_weights:

@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 from scipy import ndimage
-from import_sheets import cut_out, BG_MIN
+from import_sheets import cut_out, BG_MIN, _pose
 
 ROOT = Path(__file__).resolve().parent.parent
 RENAMES = {"marksman_npc": "watcher_npc", "marksman_aim": "arrow_of_truth", "virtue_gem": "fruit_stone", "oil_flask": "honey_from_the_rock",
@@ -25,6 +25,13 @@ RENAMES = {"marksman_npc": "watcher_npc", "marksman_aim": "arrow_of_truth", "vir
 SKIP_WORDS = ("_tile", "_frame", "_button", "_slot", "_bar")
 ICON, NPC, PROP_MAX, PAD = 64, 96, 384, 2
 HOLE_MIN_AREA = 120
+# Playable looks: the pilgrim (two looks at character creation) and one per Calling. Each becomes a
+# sheet on the character contract's layout, 10 columns x 5 rows (idle, walk 1-4, attack 1-2, sit,
+# rest/KO, cast), at 64x96 per cell. Only a front pose was delivered, so every direction row
+# repeats it (the game mirrors left/right) and the actions are generated from that pose.
+PLAYABLE = {"pilgrim_npc": "pilgrim", "shepherd_variant": "pilgrim_b", "valiant_npc": "valiant", "marksman_npc": "watcher", "interpreter_npc": "expositor",
+            "shepherd_npc": "shepherd", "steward_npc": "steward", "wayfarer_npc": "wayfarer", "faithful_npc": "faithful", "hopeful_npc": "hopeful"}
+CELL_W, CELL_H, BODY = 64, 96, 84
 ELDERS = ("evangelist_npc", "interpreter_npc")   # drawn young; the story needs old men, so their hair is greyed
 HAIR_BAND = 0.42                                 # hair lies in the top part of a standing figure
 
@@ -57,6 +64,20 @@ def grey_hair(im: Image.Image) -> Image.Image:
         px[..., ch] = np.where(brown, np.clip(silver * tint, 0, 255), px[..., ch])
     return Image.fromarray(px.astype(np.uint8), "RGBA")
 
+def player_sheet(im: Image.Image) -> Image.Image:
+    k = min(BODY / im.height, (CELL_W - 14) / im.width)
+    base = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
+    lying = base.rotate(90, expand=True)
+    poses = [base, _pose(base, dy=-1, lean=0.05), _pose(base, dy=-3, lean=0.02), _pose(base, dy=-1, lean=-0.05), _pose(base, dy=-3, lean=-0.02),
+             _pose(base, dx=-3, lean=-0.10), _pose(base, dx=5, lean=0.16, sx=1.03), _pose(base, sy=0.74, sx=1.06), lying, _pose(base, dy=-2, lean=-0.04, white=0.22)]
+    sheet = Image.new("RGBA", (CELL_W * 10, CELL_H * 5), (0, 0, 0, 0))
+    for row in range(5):
+        for col, p in enumerate(poses):
+            if p.width > CELL_W or p.height > CELL_H:
+                p = p.copy(); p.thumbnail((CELL_W, CELL_H), Image.LANCZOS)
+            sheet.alpha_composite(p, (col * CELL_W + (CELL_W - p.width) // 2, row * CELL_H + CELL_H - p.height))
+    return sheet
+
 def fit(im: Image.Image, w: int, h: int, bottom: bool) -> Image.Image:
     k = min((w - PAD * 2) / im.width, (h - PAD * 2) / im.height)
     im = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
@@ -76,6 +97,10 @@ def main() -> int:
         if len(ys) == 0:
             skipped.append(f.stem); continue
         im = Image.fromarray(rgba[ys.min():ys.max() + 1, xs.min():xs.max() + 1], "RGBA")
+        if f.stem in PLAYABLE:
+            dest = ROOT / "assets" / "sprites" / "player" / f"{PLAYABLE[f.stem]}.png"
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            player_sheet(im).save(dest, optimize=True)
         if f.parent.name == "icons":
             out, im = ROOT / "assets" / "icons" / f"{stem}.png", fit(im, ICON, ICON, False)
         elif stem.endswith("_npc"):

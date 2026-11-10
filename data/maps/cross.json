@@ -30,17 +30,17 @@
   "sun_e": 0.8,
   "sun_c": "#fff0d0",
   "post": [
-   0.9,
+   0.86,
    1.04,
    [
-    1.03,
+    1.02,
     1.0,
-    0.95
+    0.96
    ]
   ],
   "mini": "#b8c08a",
   "ground": "grass",
-  "ground_tint": "#9fb08a",
+  "ground_tint": "#7f9470",
   "weather": ""
  },
  "enter_say": [
@@ -134,26 +134,139 @@
    "range": 12
   },
   {
-   "t": "trees",
-   "area": [
-    -24,
-    -8,
-    48,
-    2
+   "t": "billboard",
+   "at": [
+    0,
+    -17
    ],
-   "n": 10,
-   "seed": 8
+   "art": "bd_mountains",
+   "h": 13,
+   "tint": "#e0cdb0"
   },
   {
-   "t": "trees",
-   "area": [
+   "t": "ridge",
+   "from": [
     -24,
-    6.5,
-    48,
-    1.5
+    -8.6
    ],
-   "n": 10,
-   "seed": 9
+   "to": [
+    8,
+    -8.6
+   ],
+   "h": 2.6,
+   "seed": 91,
+   "tint": "#a09a8a",
+   "n": 12,
+   "cap": "grass",
+   "cap_tint": "#a8b88a"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -24,
+    8.6
+   ],
+   "to": [
+    24,
+    8.6
+   ],
+   "h": 2.2,
+   "seed": 92,
+   "tint": "#a09a8a",
+   "n": 12,
+   "cap": "grass",
+   "cap_tint": "#a8b88a"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    10,
+    -8.6
+   ],
+   "to": [
+    24,
+    -8.6
+   ],
+   "h": 4.2,
+   "seed": 93,
+   "tint": "#a09a8a",
+   "n": 5,
+   "cap": "grass",
+   "cap_tint": "#b0c090"
+  },
+  {
+   "t": "stairs",
+   "at": [
+    9.5,
+    0
+   ],
+   "steps": 7,
+   "w": 3.2,
+   "tint": "#d8d0c0"
+  },
+  {
+   "t": "blooms",
+   "area": [
+    9,
+    -5,
+    14,
+    10
+   ],
+   "n": 46,
+   "seed": 94,
+   "color": "#fff6d0"
+  },
+  {
+   "t": "blooms",
+   "area": [
+    -22,
+    -3.6,
+    30,
+    1.4
+   ],
+   "n": 18,
+   "seed": 95,
+   "color": "#ffd0e0"
+  },
+  {
+   "t": "blooms",
+   "area": [
+    -22,
+    2.2,
+    30,
+    1.4
+   ],
+   "n": 18,
+   "seed": 96,
+   "color": "#d0e0ff"
+  },
+  {
+   "t": "motes",
+   "at": [
+    17,
+    -2
+   ],
+   "color": "#fff2c0",
+   "n": 30,
+   "r": 6,
+   "rise": 0.25,
+   "size": 0.1,
+   "y": 2.0
+  },
+  {
+   "t": "ridge",
+   "from": [
+    15.5,
+    6.6
+   ],
+   "to": [
+    22.5,
+    6.6
+   ],
+   "h": 2.8,
+   "seed": 97,
+   "tint": "#8a8680",
+   "n": 4
   }
  ],
  "anchors": {
@@ -169,16 +282,11 @@
  "ents": [
   {
    "id": "shine0",
-   "kind": "npc",
+   "kind": "light",
    "name": "A Shining One",
    "at": [
     13.4,
     1.0
-   ],
-   "look": [
-    1,
-    5,
-    5
    ],
    "act": "Talk",
    "icon": "talk",
@@ -188,16 +296,11 @@
   },
   {
    "id": "shine1",
-   "kind": "npc",
+   "kind": "light",
    "name": "A Shining One",
    "at": [
     15.8,
     1.9
-   ],
-   "look": [
-    1,
-    5,
-    5
    ],
    "act": "Talk",
    "icon": "talk",
@@ -207,16 +310,11 @@
   },
   {
    "id": "shine2",
-   "kind": "npc",
+   "kind": "light",
    "name": "A Shining One",
    "at": [
     18.2,
     1.0
-   ],
-   "look": [
-    1,
-    5,
-    5
    ],
    "act": "Talk",
    "icon": "talk",
