@@ -46,8 +46,7 @@ func skip_info() -> void:
 func run() -> void:
 	await wait(1.5); await shot("01_title")
 	cur().start_age(); await wait(0.5); await shot("02_age")
-	cur()._age_ok(); await wait(0.4); await shot("03_server")
-	G.goto("create"); await wait(1.2)
+	cur()._age_ok(); await wait(1.2)   # single-player: goes straight to create
 	cur().name_edit.text = "Steadfast"; await wait(0.6); await shot("04_create")
 	cur()._make(); await wait(1.4); await shot("05_dream")
 	cur().advance(); await wait(1.0); await shot("05b_dream_choice")
@@ -67,7 +66,9 @@ func run() -> void:
 	await shot("07e_coach_vine")
 	await tp("vine"); await shot("08_act_prompt"); w.act_pressed(); await wait(2.6)
 	await shot("08b_level_lesson")
-	await skip_info(); await wait(0.3); await shot("08c_coach_more")
+	await skip_info(); await wait(0.3)
+	w.move_target = w.objectives[w.obj_idx].zone; w.player.position = w.objectives[w.obj_idx].zone; await wait(1.0)   # E2 rivers
+	await shot("08c_coach_more")
 	w.hud.open_more(); await wait(0.6); await shot("08d_more")
 	w.hud.open_sheet("status"); await wait(0.6); await shot("08e_status")
 	G.raise_stat("ste"); w.hud.open_sheet("status"); G.raise_stat("for"); w.hud.open_sheet("status"); await wait(0.5); await shot("08f_status_spent")
@@ -99,6 +100,8 @@ func run() -> void:
 	w.hud.clear_overlay(); w.hud.open_more(); await wait(0.4); await shot("14_more")
 	w.hud.clear_overlay(); await skip_info(); w.hud.coach._finish()
 	await tp("trees"); w.act_pressed(); await wait(1.5); await shot("15_fall_trees")
+	print("[pacing] after Eden: Base ", G.lvl, " xp ", G.xp, " | Job ", G.job, " jxp ", G.jxp)
+	assert(G.lvl == 5 and G.xp >= 320 and G.xp <= 340, "Eden must end at Base 5 with ~330 XP")
 	await talk(2); await wait(1.2); await shot("15b_fall_serpent")
 	await talk(2); await wait(2.0); await shot("15c_fall_hide")
 	await talk(1); await wait(1.8); await shot("15d_cherubim")

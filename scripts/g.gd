@@ -16,7 +16,8 @@ const CHAT := Color(0.86, 0.86, 1.0)
 const ROBES := [Color("4f79b8"), Color("7a5aa6"), Color("4e8f55"), Color("b8642e"), Color("a8423a"), Color("5e6b78")]
 const HAIRS := [Color("6a4428"), Color("2a2a32"), Color("d0a85e"), Color("a8423a"), Color("8a909c"), Color("e2dccd")]
 const BLOCKED := ["god", "jesus", "christ", "emmanuel", "immanuel", "shaddai", "lord", "yahweh", "jehovah", "holyspirit", "messiah"]
-const XPT := [0, 40, 90, 150, 220]  # Base 2..5 thresholds
+var PROG := {}          # loaded from data/progression.json
+var base_cap := 5       # Eden Isle caps Base at 5; world.gd raises it on leaving
 
 var main: Node  # set by main.gd
 var pname := "Pilgrim"
@@ -98,7 +99,7 @@ func _ready() -> void:
 	reset()
 
 func reset() -> void:
-	lvl = 1; job = 1; xp = 0; jxp = 0; hp_max = 120; hp = 120; zeal_max = 40; zeal = 40
+	lvl = 1; job = 1; xp = 0; jxp = 0; base_cap = 5; hp_max = 120; hp = 120; zeal_max = 40; zeal = 40
 	manna = 0.0; bag = {}; weary = false; burden = false; kos = 0; snaps = 0
 	start_ms = Time.get_ticks_msec(); log_lines = []
 	marks = 0; secrets = {}; muster_party = []; house_rested = false; my_waymarks = []
@@ -195,32 +196,74 @@ func name_ok(n: String) -> String:
 			return "That name is reserved. Please choose another."
 	return ""
 
+func _load_prog() -> void:
+	if not PROG.is_empty():
+		return
+	var f := FileAccess.open("res://data/progression.json", FileAccess.READ)
+	PROG = JSON.parse_string(f.get_as_text()) if f else {}
+	if PROG.is_empty():
+		PROG = {"base_cost": [40, 60, 90, 130, 190, 260, 350, 470, 620], "job_cost": [20, 30, 45, 60, 80, 100, 130, 170, 220],
+			"base_after10": {"start": 800, "growth": 1.12}, "job_after10": {"start": 220, "growth": 1.10}, "max_base": 99, "max_job": 50}
+
+## XP needed to go from level L to L+1.
+func base_cost(L: int) -> int:
+	_load_prog()
+	var t: Array = PROG["base_cost"]
+	if L <= t.size():
+		return int(t[L - 1])
+	return int(round(float(PROG["base_after10"]["start"]) * pow(float(PROG["base_after10"]["growth"]), L - t.size())))
+
+func job_cost(L: int) -> int:
+	_load_prog()
+	var t: Array = PROG["job_cost"]
+	if L <= t.size():
+		return int(t[L - 1])
+	return int(round(float(PROG["job_after10"]["start"]) * pow(float(PROG["job_after10"]["growth"]), L - t.size())))
+
+func base_total(L: int) -> int:   ## cumulative XP at which level L is reached
+	var n := 0
+	for i in range(1, L):
+		n += base_cost(i)
+	return n
+
 func add_xp(amount: int, job_amount: int = -1, region: String = "") -> void:
+	_load_prog()
 	if job_amount < 0:
-		job_amount = int(amount * 0.6)
+		job_amount = int(amount * 0.4)
 	xp += amount; jxp += job_amount
-	while lvl < 5 and xp >= XPT[lvl]:
+	while lvl < mini(base_cap, int(PROG["max_base"])) and xp >= base_total(lvl + 1):
 		lvl += 1; stat_pts += 2
 		recalc(); hp = hp_max; zeal = zeal_max
 		say("Base Level %d! +2 attribute points (More → Status)." % lvl, INFO)
 		level_up.emit("Base Level Up!")
-	while job < 10 and jxp >= job * 45:
+	var jcap := 10 if base_cap <= 10 else int(PROG["max_job"])
+	while job < jcap and jxp >= job_total(job + 1):
 		job += 1; skill_pts += 2
 		say("Job Level %d! +2 skill points (More → Skills)." % job, INFO)
 		level_up.emit("Job Level Up!")
-	if lvl >= 5 and region == "eden":
-		say("Base Level 5: Eden Isle can teach you no further.", INFO)
+	if lvl >= base_cap and region == "eden":
+		say("Base Level %d: Eden Isle can teach you no further." % base_cap, INFO)
 	stats_changed.emit()
 
+func job_total(L: int) -> int:
+	var n := 0
+	for i in range(1, L):
+		n += job_cost(i)
+	return n
+
 func base_pct() -> float:
-	if lvl >= 5:
+	if lvl >= base_cap:
 		return 1.0
-	var lo: int = XPT[lvl - 1]
-	var hi: int = XPT[lvl]
-	return clampf(float(xp - lo) / float(hi - lo), 0.0, 1.0)
+	var lo := base_total(lvl)
+	return clampf(float(xp - lo) / float(base_cost(lvl)), 0.0, 1.0)
 
 func job_pct() -> float:
-	return clampf(float(jxp - (job - 1) * 45) / 45.0, 0.0, 1.0)
+	var lo := job_total(job)
+	return clampf(float(jxp - lo) / float(job_cost(job)), 0.0, 1.0)
+
+## True when the pilgrim has earned the first job change (Base 10 + Job 10).
+func first_job_ready() -> bool:
+	return lvl >= 10 and job >= 10
 
 func bag_add(item: String, n: int) -> void:
 	bag[item] = int(bag.get(item, 0)) + n

@@ -82,6 +82,7 @@ var _lamb_actor: SpriteActor
 
 func _ready() -> void:
 	map_id = get_meta("data").get("map", "eden")
+	G.base_cap = 5 if map_id == "eden" else 10
 	if not MAPS.has(map_id):
 		map_id = "eden"
 	_build_env()
@@ -483,21 +484,25 @@ func _build_eden() -> void:
 	_weather_petals()
 	_edge_fade(Color("2e4a2a"))
 	# Way traces and secrets (GDD v0.3): solo world, but never quite alone
-	_add_secret("dreamer_note", Vector3(24.0, 0, 2.5), "The Dreamer's Note", "Written in a careful hand: \"Mark well the garden, for you will not walk here again.\"", {"xp": 20})
+	_add_secret("dreamer_note", Vector3(24.0, 0, 2.5), "The Dreamer's Note", "Written in a careful hand: \"Mark well the garden, for you will not walk here again.\"", {"xp": 20, "jxp": 3})
 	_add_secret("lily", Vector3(-23.0, 0, -12.0), "A Lily Among Thorns", "A white lily grows alone by the water. [BSB: Song of Songs 2:2]  You take a cutting: Lily Hairpin (cosmetic headgear).", {"item": "Lily Hairpin"})
 	_add_waymark(Vector3(-9.5, 0, 9.0), "Look up: the vine needs tending", "Wren", 18)
 	_add_waymark(Vector3(-12.0, 0, -2.0), "Read slowly [BSB: Psalm 119:105]", "Psalter", 57)
 	_add_passerby([Vector3(-24, 0, 4), Vector3(-6, 0, 8), Vector3(10, 0, 7), Vector3(24, 0, 5)], "Marigold", "walking in the garden", [1, 2, 2], true)
 	_build_eden_guides()
+	## Six chapters of the Prologue (see data/progression.json and the story doc):
+	## E1 The Orchard (walk, tend) · E2 The Four Rivers (rivers, stats) · E3 The Fields (gather, learn)
+	## E4 The Garden (name, lilies) · E5 The Midst (read) · E6 The Fall (trees). Base XP sums to 330, Job to 35.
 	objectives = [
-		{"id": "walk", "text": "Walk to the glowing circle by the Dreamer's lamp", "zone": Vector3(-8, 0, 7)},
-		{"id": "tend", "text": "Tend the Young Vine (tap Act when close)", "ent": "vine"},
+		{"id": "walk", "text": "Walk to the glowing circle by the Dreamer's lamp", "zone": Vector3(-8, 0, 7), "xp": [20, 5]},
+		{"id": "tend", "text": "Tend the Young Vine (tap Act when close)", "ent": "vine", "xp": [20, 2]},
+		{"id": "rivers", "text": "Follow the water to the river's edge", "zone": Vector3(0, 0, -15), "xp": [35, 5], "chapter": "The Four Rivers"},
 		{"id": "stats", "text": "Spend your attribute points (More → Status)"},
-		{"id": "gather", "text": "Gather figs from the Fig Tree", "ent": "fig"},
+		{"id": "gather", "text": "Gather figs from the Fig Tree", "ent": "fig", "xp": [60, 8], "chapter": "The Fields"},
 		{"id": "learn", "text": "Learn Tend and Keep (More → Skills)"},
-		{"id": "lilies", "text": "Tend the drooping lilies with your skill (0/3)"},
-		{"id": "name", "text": "Give the Lamb a name", "ent": "lamb"},
-		{"id": "read", "text": "Read the Stone Tablet (Word Study)", "ent": "stone"},
+		{"id": "lilies", "text": "Tend the drooping lilies with your skill (0/3)", "chapter": "The Garden"},
+		{"id": "name", "text": "Give the Lamb a name", "ent": "lamb", "xp": [55, 7]},
+		{"id": "read", "text": "Read the Stone Tablet (Word Study)", "ent": "stone", "xp": [20, 2], "chapter": "The Midst of the Garden"},
 		{"id": "trees", "text": "Behold the two trees in the midst of the garden", "ent": "trees"}]
 
 # ------------------------------------------------------------------ City of Destruction
@@ -709,7 +714,7 @@ func hit_mob(m: Dictionary, dmg: int, crit: bool = false, miss: bool = false) ->
 			target = null
 		slain += 1
 		G.say("You overcame the Slothling.", G.SYS)
-		G.add_xp(25, 20)
+		G.add_xp(4, 2)   # 3 + monster level 1
 		if randf() < 0.8:
 			_drop("Bread of Provision", "bread", a.position)
 		if cur_obj() == "fight":
@@ -805,7 +810,12 @@ func cur_obj() -> String:
 	return objectives[obj_idx].id if obj_idx < objectives.size() else ""
 
 func complete() -> void:
+	if obj_idx < objectives.size() and objectives[obj_idx].has("xp"):
+		var xv: Array = objectives[obj_idx].xp
+		G.add_xp(int(xv[0]), int(xv[1]), map_id)
 	obj_idx += 1
+	if obj_idx < objectives.size() and objectives[obj_idx].has("chapter") and map_id == "eden":
+		G.say("Chapter: %s" % objectives[obj_idx].chapter, G.INFO)
 	if cur_obj() == "trees":
 		show_ent("trees", true)
 		var tw := create_tween().set_parallel(true)
@@ -988,7 +998,7 @@ func skill(id: String) -> void:
 			_sparkle(best.pos + Vector3(0, 0.6, 0), Color("dff7ff"))
 			Fx.ring(self, best.pos, Color(0.85, 1, 0.85), 1.6, 0.5)
 			lilies_done += 1
-			G.add_xp(15, 10, "eden")
+			G.add_xp(10, 1, "eden")
 			G.say("The lily lifts its head and blooms.", G.SYS)
 			if cur_obj() == "lilies":
 				objectives[obj_idx].text = "Tend the drooping lilies with your skill (%d/3)" % lilies_done
@@ -1227,14 +1237,12 @@ func _act_vine() -> void:
 	_sparkle(ent("vine").pos + Vector3(0, 1.4, 0))
 	G.say("You tended the vine. It flourishes.", G.SYS)
 	complete()
-	G.add_xp(40, 30, "eden")
 
 func _act_fig() -> void:
 	if cur_obj() != "gather":
 		G.say("The branches are heavy with fruit.", G.SYS); return
 	G.bag_add("Garden Fig", 3); G.say("You got Garden Fig ×3. They are in your Satchel.", G.INFO); _item_pop("fig")
 	complete()
-	G.add_xp(30, 20, "eden")
 
 func _act_lamb() -> void:
 	if cur_obj() != "name":
@@ -1245,7 +1253,7 @@ func _lamb_named(n: String) -> void:
 	ent("lamb").name = n
 	_lamb_actor.set_name_text(n)
 	G.say("You named the lamb %s." % n, G.SYS)
-	G.add_xp(40, -1, "eden"); complete()
+	complete()
 
 func _act_stone() -> void:
 	if cur_obj() != "read":
@@ -1257,7 +1265,7 @@ func _stone_read() -> void:
 	G.manna += 5
 	G.say("Word Study complete. Manna +5.", G.INFO)
 	_motes(player.position)
-	G.add_xp(60, -1, "eden"); complete()
+	complete()
 	if G.tip_once("manna"):
 		get_tree().create_timer(1.4).timeout.connect(_lesson_manna)
 
@@ -1265,6 +1273,7 @@ func _act_trees() -> void:
 	if ending:
 		return
 	ending = true
+	G.add_xp(70, 0, "eden")   # E6 The Fall
 	_fall_scene()
 
 func _act_evangelist() -> void:
@@ -1419,7 +1428,7 @@ func _find_secret(id: String, title: String, text: String, reward: Dictionary) -
 	if reward.has("item"):
 		G.bag_add(reward.item, 1); _item_pop("scroll")
 	if reward.has("xp"):
-		G.add_xp(int(reward.xp), -1, map_id)
+		G.add_xp(int(reward.xp), int(reward.get("jxp", -1)), map_id)
 	G.say("Secret found (%d/%d): %s" % [found.size(), secret_ids.size(), title], G.INFO)
 	hud.secret_card(title, text, found.size(), secret_ids.size())
 	G.haptic(30)
@@ -1655,7 +1664,7 @@ func _act_watchful() -> void:
 
 func _watchful_done() -> void:
 	if cur_obj() == "porter":
-		G.add_xp(30, 20); complete()
+		G.add_xp(60, 12); complete()
 
 func _act_hearth() -> void:
 	if not sitting:
@@ -1665,7 +1674,7 @@ func _act_hearth() -> void:
 		_sparkle(player.position + Vector3(0, 1.2, 0), Color("ffd8a0"))
 		G.hp = G.hp_max; G.zeal = G.zeal_max; G.weary = false
 		G.say("You rest in the House, among the pilgrims. HP and Zeal restored.", G.INFO)
-		G.add_xp(20, 15); complete()
+		G.add_xp(40, 8); complete()
 	else:
 		G.say("You sit by the fire.", G.SYS)
 
@@ -1883,7 +1892,7 @@ func _boss_down(m: Dictionary) -> void:
 	for al in allies:
 		if not al.ai: humans += 1
 	G.marks += humans
-	G.add_xp(120, 80)
+	G.add_xp(200, 60)
 	G.bag_add("Grim's Broken Chain", 1)
 	G.say("Muster cleared! Giant Grim is driven from the way.", G.INFO)
 	G.say("Rewards: Grim's Broken Chain · Fellowship Marks +%d (one per pilgrim in your company)." % humans, G.INFO)

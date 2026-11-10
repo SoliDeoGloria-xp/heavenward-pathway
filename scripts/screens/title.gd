@@ -1,5 +1,5 @@
 extends Control
-## Title (key art + Tap to start) -> age gate (13+) -> one world, no server choice (GDD v0.3).
+## Title (key art + Tap to start) -> age gate (13+) -> create (single-player).
 
 var year := 2008
 var year_lbl: Label
@@ -86,16 +86,7 @@ func _age_ok() -> void:
 	G.minor = age < 18
 	for c in panel_holder.get_children():
 		c.queue_free()
-	phase = "server"
-	var w := UIKit.window("One world for every pilgrim", Vector2(620, 0))
-	var b: VBoxContainer = w.body
-	b.add_child(UIKit.label("No server to choose. Your story is walked solo or with friends; you meet other pilgrims in the Houses, the Wilds and the Muster Board.", 19, UIKit.INK, false, true))
-	var g := GridContainer.new(); g.columns = 2; g.add_theme_constant_override("h_separation", 16); g.add_theme_constant_override("v_separation", 4)
-	for kv in [["Region", "Nearest (automatic)"], ["Language", "English"], ["This demo", "Offline; other pilgrims are simulated"]]:
-		g.add_child(UIKit.label(kv[0], 17, UIKit.SUB)); g.add_child(UIKit.label(kv[1], 17, UIKit.INK, true))
-	b.add_child(g)
-	b.add_child(UIKit.button("Begin the pilgrimage", func(): G.goto("create"), 0, true))
-	panel_holder.add_child(w.root)
+	G.goto("create")   # single-player: no server screen
 
 
 class KeyArt extends Control:

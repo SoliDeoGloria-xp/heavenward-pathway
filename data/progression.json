@@ -1,0 +1,11 @@
+{
+  "base_cost": [40, 60, 90, 130, 190, 260, 350, 470, 620],
+  "job_cost": [20, 30, 45, 60, 80, 100, 130, 170, 220],
+  "base_after10": {"start": 800, "growth": 1.12},
+  "job_after10": {"start": 220, "growth": 1.10},
+  "eden_base_cap": 5,
+  "pilgrim_base_cap": 10,
+  "first_job_gate": {"base": 10, "job": 10},
+  "mob_xp": {"base": "3+level", "greater_mult": 4, "boss": [150, 250]},
+  "max_base": 99, "max_job": 50
+}
