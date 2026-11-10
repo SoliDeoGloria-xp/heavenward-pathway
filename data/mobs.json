@@ -23,7 +23,8 @@
   "tint": "#ffffff",
   "sprite": "pride_common",
   "family": "pride",
-  "size": 1.3
+  "size": 1.3,
+  "kind": "ranged"
  },
  "mire_sloth": {
   "name": "Mire Sloth",
@@ -49,7 +50,8 @@
   "tint": "#ffffff",
   "sprite": "sloth_rare",
   "family": "doubt",
-  "size": 1.4
+  "size": 1.4,
+  "kind": "ranged"
  },
  "stumbler": {
   "name": "Stumbler",
@@ -76,7 +78,8 @@
   "sprite": "pride_elite",
   "family": "pride",
   "drop": "Bronze Buckle",
-  "size": 1.55
+  "size": 1.55,
+  "kind": "ranged"
  },
  "simple": {
   "name": "Simple",
@@ -117,7 +120,8 @@
   "tint": "#d8e0ff",
   "sprite": "lust_rare",
   "family": "doubt",
-  "size": 1.6
+  "size": 1.6,
+  "kind": "ranged"
  },
  "formalist": {
   "name": "Formalist and Hypocrisy",
@@ -159,5 +163,56 @@
   "muster": true,
   "drop": "Grim's Broken Chain",
   "size": 3.6
+ },
+ "vaunt": {
+  "name": "Vaunt",
+  "level": 11,
+  "tint": "#ffffff",
+  "sprite": "pride_rare",
+  "family": "pride",
+  "size": 1.5
+ },
+ "spite": {
+  "name": "Spite",
+  "level": 12,
+  "tint": "#ffffff",
+  "sprite": "wrath_elite",
+  "family": "wrath",
+  "size": 1.5,
+  "kind": "ranged"
+ },
+ "fiend": {
+  "name": "Fiend of the Pit",
+  "level": 13,
+  "tint": "#ffffff",
+  "sprite": "lust_elite",
+  "family": "doubt",
+  "size": 1.6,
+  "only": "all_prayer"
+ },
+ "whisperer": {
+  "name": "Whisperer",
+  "level": 13,
+  "tint": "#ffffff",
+  "sprite": "envy_rare",
+  "family": "doubt",
+  "size": 1.5,
+  "kind": "ranged",
+  "only": "all_prayer"
+ },
+ "apollyon": {
+  "name": "Apollyon",
+  "level": 14,
+  "tint": "#ffffff",
+  "sprite": "apollyon",
+  "family": "pride",
+  "size": 4.2,
+  "boss": true,
+  "hp": 2400,
+  "atk": 19,
+  "slam": 27,
+  "xp_bonus": 60,
+  "volley_below": 0.5,
+  "drop": "Apollyon's Broken Dart"
  }
 }

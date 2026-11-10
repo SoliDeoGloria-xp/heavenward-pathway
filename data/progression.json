@@ -62,5 +62,50 @@
  "mob_share_target": [
   0.15,
   0.25
- ]
+ ],
+ "weakness": {
+  "per_point": 0.03,
+  "cap": 0.45,
+  "families": {
+   "sloth": "dil",
+   "pride": "wis",
+   "gluttony": "sob",
+   "doubt": "hop",
+   "wrath": "ste",
+   "envy": "hop",
+   "lust": "sob",
+   "greed": "for"
+  },
+  "why": {
+   "sloth": "Diligence",
+   "pride": "Wisdom (a sober view of yourself)",
+   "gluttony": "Sobriety",
+   "doubt": "Hope",
+   "wrath": "Steadfastness",
+   "envy": "Hope",
+   "lust": "Sobriety",
+   "greed": "Fortitude"
+  }
+ },
+ "status": {
+  "slow": {
+   "name": "Slowed",
+   "factor": 0.75,
+   "secs": 3.0,
+   "families": [
+    "sloth",
+    "gluttony"
+   ]
+  },
+  "doubting": {
+   "name": "Doubting",
+   "zeal": 6,
+   "secs": 3.0,
+   "families": [
+    "doubt",
+    "envy"
+   ]
+  }
+ },
+ "ranged_reach": 5.5
 }

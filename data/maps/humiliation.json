@@ -1,0 +1,343 @@
+{
+ "id": "humiliation",
+ "act": "humiliation",
+ "name": "The Valley of Humiliation",
+ "sub": "Act III · It is hard going down",
+ "layer": "The Way",
+ "combat": true,
+ "start": [
+  -25,
+  0
+ ],
+ "bounds": [
+  -28,
+  -12,
+  56,
+  24
+ ],
+ "music": "valley",
+ "resumable": true,
+ "look": {
+  "bg": "#26302a",
+  "amb": "#c8d4c0",
+  "amb_e": 0.4,
+  "tint": [
+   0.94,
+   1.0,
+   0.92
+  ],
+  "sun_e": 0.6,
+  "sun_c": "#e8f0d0",
+  "post": [
+   0.9,
+   1.06,
+   [
+    0.98,
+    1.02,
+    0.95
+   ]
+  ],
+  "mini": "#7a9a6a",
+  "ground": "grass",
+  "ground_tint": "#8fae7c",
+  "weather": ""
+ },
+ "enter_say": [
+  "The road drops into a green, quiet valley. Something waits in it."
+ ],
+ "anchors": {
+  "apollyon": [
+   14,
+   0
+  ]
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    56,
+    3
+   ],
+   "tile": "dirt",
+   "tint": "#a89c84"
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -24,
+    -11,
+    48,
+    7
+   ],
+   "n": 14,
+   "seed": 41
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -24,
+    4,
+    48,
+    7
+   ],
+   "n": 14,
+   "seed": 42
+  },
+  {
+   "t": "trees",
+   "area": [
+    -28,
+    -12,
+    56,
+    1.4
+   ],
+   "n": 12,
+   "seed": 43
+  },
+  {
+   "t": "trees",
+   "area": [
+    -28,
+    10.6,
+    56,
+    1.4
+   ],
+   "n": 12,
+   "seed": 44
+  },
+  {
+   "t": "water",
+   "at": [
+    -6,
+    7
+   ],
+   "size": [
+    8,
+    3
+   ],
+   "y": 0.04
+  },
+  {
+   "t": "billboard",
+   "at": [
+    -27.2,
+    -6
+   ],
+   "art": "palace_beautiful",
+   "h": 7
+  },
+  {
+   "t": "light",
+   "at": [
+    14,
+    0
+   ],
+   "y": 4,
+   "color": "#ff8040",
+   "e": 1.6,
+   "range": 10
+  }
+ ],
+ "ents": [
+  {
+   "id": "shade",
+   "kind": "spot",
+   "name": "A shadow across the way",
+   "at": [
+    11,
+    0
+   ],
+   "act": "Go on",
+   "icon": "talk",
+   "hidden": true,
+   "prop": {
+    "t": "pedestal",
+    "color": "#ff6030"
+   }
+  },
+  {
+   "id": "leaves",
+   "kind": "spot",
+   "name": "Leaves by the path",
+   "at": [
+    16,
+    2.5
+   ],
+   "act": "Take",
+   "icon": "hand",
+   "hidden": true,
+   "prop": {
+    "t": "pedestal",
+    "color": "#9fe07a"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    -12,
+    8.6
+   ],
+   "act": "Search",
+   "icon": "eye"
+  },
+  {
+   "id": "warp",
+   "kind": "warp",
+   "name": "The way onward",
+   "at": [
+    26.5,
+    0
+   ],
+   "act": "Go on",
+   "icon": "warp",
+   "hidden": true
+  }
+ ],
+ "spawns": [
+  {
+   "mob": "vaunt",
+   "count": 5,
+   "area": [
+    -14,
+    -3,
+    16,
+    6
+   ],
+   "at": "hunt"
+  },
+  {
+   "mob": "spite",
+   "count": 3,
+   "area": [
+    -6,
+    -4,
+    12,
+    8
+   ],
+   "at": "hunt"
+  }
+ ],
+ "objectives": [
+  {
+   "id": "descend",
+   "type": "path",
+   "points": [
+    [
+     -18,
+     0
+    ],
+    [
+     -10,
+     0
+    ],
+    [
+     -2,
+     0
+    ]
+   ],
+   "dialog_start": "hum.descend",
+   "text": "Go down into the valley, warily",
+   "xp": [
+    100,
+    40
+   ]
+  },
+  {
+   "id": "hunt",
+   "type": "kill",
+   "count": 8,
+   "text": "Vaunts and Spites rise from the grass: overcome them",
+   "xp": [
+    150,
+    80
+   ],
+   "on_done": {
+    "show": [
+     "shade"
+    ]
+   }
+  },
+  {
+   "id": "apollyon",
+   "type": "boss",
+   "mob": "apollyon",
+   "at": [
+    15,
+    0
+   ],
+   "ent": "shade",
+   "dialog": "hum.apollyon",
+   "text": "A foul fiend comes over the field to meet you",
+   "xp": [
+    300,
+    120
+   ],
+   "on_fight": {
+    "hide": [
+     "shade"
+    ]
+   },
+   "on_done": {
+    "dialog": "hum.victory",
+    "show": [
+     "leaves"
+    ]
+   }
+  },
+  {
+   "id": "leaves",
+   "type": "interact",
+   "ent": "leaves",
+   "dialog": "hum.leaves",
+   "text": "You are sorely wounded. Something has been left by the path",
+   "xp": [
+    100,
+    30
+   ],
+   "on_done": {
+    "heal": true,
+    "hide": [
+     "leaves"
+    ],
+    "show": [
+     "warp"
+    ]
+   }
+  },
+  {
+   "id": "exit",
+   "type": "exit",
+   "text": "Go on, sword in hand, to the next valley",
+   "zone": [
+    26.5,
+    0
+   ],
+   "to": "shadow",
+   "ent": "warp",
+   "xp": [
+    0,
+    0
+   ]
+  }
+ ],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "hum.page",
+   "xp": [
+    50,
+    30
+   ],
+   "text": "The Dreamer's Page: the Valley of Humiliation",
+   "page": true
+  }
+ ]
+}

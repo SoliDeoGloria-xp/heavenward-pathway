@@ -40,6 +40,21 @@ Play on a phone in landscape. Note the time at each ★.
 - [ ] Lions' Path, then the Muster with Lumen, Rook and the Steward
 - [ ] The lamb's bell; choose a Calling; robe colour and name plate change
 
+**Gear and the House (0.3.0)**
+- [ ] Foes drop Denarii and sometimes gear; "Wear the best" works
+- [ ] Provisioner (City) and Steward (Palace): buy, sell, store
+- [ ] Armory bench after the Armor is given: refine to +5, cut and set a Fruit stone
+- [ ] Codex: bestiary fills in; daily portion can be received once
+
+**Valley of Humiliation** ★ ~30 min
+- [ ] Ranged Spites throw from afar; pride falls faster with more Wisdom
+- [ ] Apollyon: the dialogue, the volleys below half Health, the leaves afterwards
+
+**Valley of the Shadow of Death** ★ ~30 min
+- [ ] The ditch and the quag punish leaving the path, fairly
+- [ ] Staff does nothing to fiends; All-Prayer does, and costs no Zeal
+- [ ] The voice, daybreak, Faithful
+
 **Whole game**
 - [ ] ★ Total time to the Calling (target ~2 h 20 min)
 - [ ] Quit mid-map, reopen, Continue: same objective, same XP

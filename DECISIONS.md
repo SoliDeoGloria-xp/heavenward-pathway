@@ -2,6 +2,20 @@
 
 Made while building, where the brief and the design doc left room. Each can be changed in data.
 
+**Added in 0.3.0**
+
+- **Gear never overlaps the Armor of God.** Slots are Hand, Garment, Cloak and Keepsake; no belt, breastplate, shoes, shield, helmet or sword exists as an item (the validator enforces it). Gear text calls it help for the road, not a measure of the pilgrim.
+- **Refining is deterministic.** It costs Denarii, always succeeds and never damages the item, so there is no gambling loop.
+- **Fruit stones are cut only from Manna**, and Manna comes only through the means of grace (Word Study, rest, the daily reading). They cannot be bought, dropped or earned by kills. The bench says plainly that fruit is borne, not earned (Galatians 5:22-23, John 15:5).
+- **Weaknesses are mortification by the opposite virtue**: sloth gives way to Diligence, pride to Wisdom, gluttony and lust to Sobriety, doubt and envy to Hope, wrath to Steadfastness, greed to Fortitude.
+- **All-Prayer costs no Zeal.** In the dark valley the pilgrim's own strength is useless; the skill is taught by the story, free, and is the only thing that harms the fiends (Ephesians 6:18).
+- **Apollyon**: the pilgrim answers every accusation by admitting it and pointing to mercy, not merit. After the fight the Dreamer says he stood because he was held. The healing leaves are "brought to him" with no hand shown.
+- **The daily portion has no streaks or penalties** and is not offered as merit: two small prompts and a modest gift.
+- **Act III XP** (700 Base / 300 Job per valley) is my estimate; the design doc gives only a level range for Act III. Tune in `data/acts.json` and the map files.
+- **Callings' extra skills and all gear numbers** are first-pass balance.
+
+**From 0.2.0**
+
 1. **Quest XP is the whole design budget; monster XP is extra.** The doc's chapter lists already sum to 2,210 / 855, so kill XP (3 + level) sits on top, tuned to about 20% (target 15–25%, checked by the validator). It lets a player who skips optional objectives still reach Base 10 / Job 10.
 2. **Boss XP = objective reward + a small kill bonus**, so the total lands in the 150–250 band (Formalist 150, Presumption 150, Grim 200) without breaking the chapter budgets.
 3. **The first-job ceremony is the end of this build.** The brief mentions Apollyon; the approved story doc places the Valley of Humiliation after the first job (Act III), so it is the next chapter, not this one.

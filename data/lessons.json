@@ -7,6 +7,10 @@
   "rest": {
    "text": "Tap Sit. You recover Health and Zeal three times faster while sitting. Moving stands you up.",
    "target": "sit_btn"
+  },
+  "fight": {
+   "text": "Foes can drop gear and Denarii. Gear goes to More → Equipment; the Provisioner by the street sells bread.",
+   "target": "more_btn"
   }
  },
  "slough": {
@@ -51,13 +55,33 @@
    "target": "quest_box"
   },
   "calling": {
-   "text": "Your Calling's skills go on page 2 of the skill bar. Tap the page button to switch.",
+   "text": "Your Calling's skills go on the last page of the skill bar. Tap the page button to switch.",
    "target": "page_btn"
   }
  },
  "trial": {
   "prove": {
-   "text": "The lent skill is on page 2 of your skill bar. Tap the page button, then the skill.",
+   "text": "The lent skill is on the last page of your skill bar. Tap the page button, then the skill.",
+   "target": "page_btn"
+  }
+ },
+ "humiliation": {
+  "hunt": {
+   "text": "New: weaknesses. Each family of sin gives way to a virtue. Pride gives way to Wisdom, Wrath to Steadfastness. See More → Codex.",
+   "target": "more_btn"
+  },
+  "apollyon": {
+   "text": "Apollyon throws darts from afar. Below half Health he throws several at once: keep moving between the circles.",
+   "target": "atk_btn"
+  }
+ },
+ "shadow": {
+  "narrow": {
+   "text": "The ditch is on one hand and the quag on the other. Keep to the glowing waypoints; do not hurry.",
+   "target": "minimap"
+  },
+  "fiends": {
+   "text": "New: All-Prayer. The fiends cannot be hurt by your staff or other skills. Use All-Prayer (your skill bar; tap the page button).",
    "target": "page_btn"
   }
  }

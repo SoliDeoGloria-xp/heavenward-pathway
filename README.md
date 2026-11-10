@@ -1,6 +1,6 @@
 # Heavenward Pathway Online
 
-*Heavenward Pathway Online* (HPO) is a Reformed, allegorical, Ragnarok-style mobile RPG after John Bunyan's *The Pilgrim's Progress*. This build is **single-player and offline**: it plays from the title screen to the first Calling (job change), Acts I and II of the story.
+*Heavenward Pathway Online* (HPO) is a Reformed, allegorical, Ragnarok-style mobile RPG after John Bunyan's *The Pilgrim's Progress*. This build is **single-player and offline**: it plays from the title screen through the first Calling (job change) and on into Act III, where Faithful joins.
 
 - **Look:** classic Ragnarok Online, with 2D pixel sprites on a lit 3D map and a fixed three-quarter camera.
 - **Controls:** Ragnarok M / Origin style for phones (landscape): floating joystick, Attack with a skill arc, Auto.
@@ -27,11 +27,17 @@
 | 4 | The Cross | The burden falls | Status changes, Steady Footing | 150 / 30 |
 | 5 | Hill Difficulty | Two field bosses; the Arbour and the lost roll | Buffs (Watchful Eye), boss telegraphs | 470 / 230 |
 | 6 | Palace Beautiful, the Yard, Lions' Path, Lions' Gate | Calling trial; Muster against Giant Grim with AI companions | Armor of God, companions, the Calling | 620 / 390 |
-| | | | **Total** | **2,210 / 855 = Base 10 / Job 10** |
+| | | | **Total to the Calling** | **2,210 / 855 = Base 10 / Job 10** |
+| 7 | Valley of Humiliation | Apollyon | Weaknesses, the Codex, ranged foes | 700 / 300 |
+| 8 | Valley of the Shadow of Death | The fiends; Faithful joins at daybreak | All-Prayer | 700 / 300 |
 
 Quest XP alone reaches Base 10 and Job 10. Monster XP (3 + level; Greater ×4) is extra, about 20% on top, so a player who skips optional objectives (Obstinate, the six Dreamer's Pages) can make it up by fighting. At the end you choose one of six Callings (Valiant, Watcher, Expositor, Shepherd, Steward, Wayfarer), each with three skills and its own robe colour.
 
 The game saves by itself to one slot on the device (at every map and objective); the title screen offers **Continue**. On the Lord's Day (device time) the game offers only quiet reading.
+
+## Gear, coin and the bench
+
+Foes drop Denarii and road gear (four slots, Clay to Radiant). Vendors buy, sell and store. At the Palace armory, worn gear is refined to +5 and Fruit stones are cut from Manna. All of it is in `data/items.json`; the rules are in `scripts/systems/gear.gd`. The Armor of God is never gear.
 
 ## Adding a chapter (data, not code)
 
@@ -141,11 +147,11 @@ data/                 progression, acts, maps/*.json, dialogue, lessons, mobs, s
 scripts/g.gd          the one autoload: state, data access, XP, save/continue, settings, Lord's Day
 scripts/audio.gd      music and sound hooks (silent when files are missing)
 scripts/screens/      title, create, story (dream), world (loop, input, camera), end
-scripts/systems/      combat, quests (objective runner), lessons (coach), cutscene, folk (other pilgrims)
+scripts/systems/      combat, quests (objective runner), gear (items, coin, bench), lessons (coach), cutscene, folk
 scripts/world/        map_kit (geometry primitives and feedback)
 scripts/maps/         data_map (builds a map from JSON) and the four hand-built maps
 scripts/ui/           hud, coach, joystick, touch buttons, UIKit
-tools/                validate_data.py, import_sheets.py, import_art.py, check_assets.py, pull_bsb.py, gen_assets.py
+tools/                validate_data.py, import_sheets.py, import_art.py, gen_sfx.py, check_assets.py, pull_bsb.py, gen_assets.py
 ```
 
 See also `CHANGELOG.md`, `DECISIONS.md`, `PLAYTEST.md`, `PLAY_CONSOLE.md`, `ASSET_REREQUEST.md`.

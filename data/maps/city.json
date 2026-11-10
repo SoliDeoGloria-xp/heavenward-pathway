@@ -83,6 +83,24 @@
    ],
    "act": "Search",
    "icon": "eye"
+  },
+  {
+   "id": "provisioner",
+   "kind": "npc",
+   "name": "Provisioner",
+   "at": [
+    -9.5,
+    -2.5
+   ],
+   "standee": "wayfarer",
+   "look": [
+    0,
+    0,
+    0
+   ],
+   "act": "Trade",
+   "icon": "bag",
+   "ui": "shop"
   }
  ],
  "spawns": [
@@ -200,7 +218,9 @@
     0
    ],
    "dialog_start": "city.rest",
-   "on_start": {"call": "calm"},
+   "on_start": {
+    "call": "calm"
+   },
    "on_done": {
     "show": [
      "warp"

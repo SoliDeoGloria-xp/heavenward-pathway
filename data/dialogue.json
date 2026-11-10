@@ -810,12 +810,7 @@
  "palace.called": [
   {
    "who": "Discretion",
-   "text": "Then go in peace, {name}. Tomorrow the road goes down into the Valley of Humiliation, and it is hard going down."
-  },
-  {
-   "who": "The Dreamer",
-   "text": "So I saw in my dream that they brought him to the foot of the hill, and gave him a loaf of bread, a bottle of wine, and a cluster of raisins; and then he went on his way.",
-   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+   "text": "Then go in peace, {name}. The road goes down from here into the Valley of Humiliation, and it is hard going down. The south gate is open for you."
   }
  ],
  "palace.hearth": [
@@ -842,6 +837,194 @@
    "who": "Lumen",
    "text": "There he is. Grim stands with the lions and lets no one by. Rook will hold him; you strike; I will keep you on your feet. Step out of the red circles!",
    "src": "Part II of The Pilgrim's Progress tells how Great-heart's company met Giant Grim at the lions."
+  }
+ ],
+ "hum.descend": [
+  {
+   "who": "The Dreamer",
+   "text": "Discretion, Piety, Charity and Prudence went with him to the foot of the hill. They gave him a loaf of bread, a bottle of wine, and a cluster of raisins; and he went on his way.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  },
+  {
+   "who": "Prudence",
+   "text": "It is a hard matter for a pilgrim to go down into this valley and catch no slip by the way. Go warily. Pride walks here, and it hates to go downhill.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Proverbs 16:18]"
+  }
+ ],
+ "hum.apollyon": [
+  {
+   "who": "Apollyon",
+   "text": "Where do you come from, and where are you bound?",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)",
+   "cam": "apollyon"
+  },
+  {
+   "who": "$player",
+   "text": "From the City of Destruction, the place of all evil, and I am going to the City of Zion.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Apollyon",
+   "text": "Then you are one of my subjects. All that country is mine, and I am its prince. How is it that you have run away from your king?",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "$player",
+   "text": "I was born in your dominions. But your service was hard, and your wages were such as no one can live on: for the wages of sin is death.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Romans 6:23]"
+  },
+  {
+   "who": "Apollyon",
+   "text": "You have already been unfaithful to your new master. You sank in the Slough. You slept and lost your roll. You nearly turned back at the lions.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "$player",
+   "text": "All this is true, and much more that you have left out. But the Prince I serve is merciful and ready to forgive. I did not earn my place with him, so my failures cannot buy it back for you.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: 1 John 1:9]"
+  },
+  {
+   "who": "Apollyon",
+   "text": "I am an enemy to this Prince. I hate his person, his laws and his people. Prepare to die. You shall go no further.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "hum.victory": [
+  {
+   "who": "$player",
+   "text": "Do not gloat over me, my enemy! Though I have fallen, I will rise.",
+   "src": "[BSB: Micah 7:8]",
+   "fx": "armor"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "With that the pilgrim gave him a deadly thrust, and Apollyon spread his dragon's wings and sped away. In all these things we are more than conquerors, through the one who loved us.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Romans 8:37] [BSB: James 4:7]"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "He had not won by being strong. He was sorely wounded, and spent. He stood because he was held."
+  }
+ ],
+ "hum.leaves": [
+  {
+   "who": "The Dreamer",
+   "text": "Then there were brought to him some of the leaves of the tree of life. He laid them on the wounds he had received in the battle, and was healed at once.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Revelation 22:2]",
+   "fx": "garment"
+  },
+  {
+   "who": "$player",
+   "text": "I remember that tree. I saw it in the garden, before the way was shut."
+  }
+ ],
+ "hum.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page from my book, trodden into the valley floor. I had written: the valley is as fruitful a place as any the crow flies over, for those who love to walk low in it.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "shadow.enter": [
+  {
+   "who": "The Dreamer",
+   "text": "Now at the end of this valley was another, called the Valley of the Shadow of Death; and the way to the Celestial City lay through the midst of it.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain · [BSB: Jeremiah 2:6]"
+  },
+  {
+   "who": "A man running back",
+   "text": "Back! Back, if you prize your life! We saw the valley itself: dark as pitch, full of howling, and over it the wings of confusion."
+  },
+  {
+   "who": "$player",
+   "text": "Yet this is my way to the desired haven. I will go on.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "shadow.narrow": [
+  {
+   "who": "The Dreamer",
+   "text": "On the right hand was a very deep ditch, into which the blind have led the blind in all ages. On the left was a dangerous quag, with no bottom for the foot to stand on. The pathway between was exceedingly narrow.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Matthew 15:14]"
+  }
+ ],
+ "shadow.pit": [
+  {
+   "who": "The Dreamer",
+   "text": "About the middle of the valley was the mouth of the pit, hard by the wayside. Flame and smoke came out, with sparks and hideous noises, things that cared nothing for a pilgrim's blade.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)",
+   "fx": "sinai"
+  },
+  {
+   "who": "$player",
+   "text": "My staff is no use against these. O Lord, I beg you, deliver my soul!",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Psalm 116:4]"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "So he was forced to put up his sword and take another weapon, called All-Prayer. Learn it now, pilgrim. It is the only thing the fiends give way to.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Ephesians 6:18]",
+   "fx": "armor"
+  }
+ ],
+ "shadow.voice": [
+  {
+   "who": "The Dreamer",
+   "text": "One of the wicked ones came up softly behind him and whispered grievous things, and he thought they had come from his own mind. That troubled him more than anything he had met.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "A voice ahead",
+   "text": "Though I walk through the valley of the shadow of death, I will fear no evil, for you are with me.",
+   "src": "[BSB: Psalm 23:4]"
+  },
+  {
+   "who": "$player",
+   "text": "Someone else who fears God is in this valley. Then I am not alone, and the same hand that keeps him can keep me."
+  },
+  {
+   "who": "The Dreamer",
+   "text": "And by and by the day broke. He turns the shadow of death into morning.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Amos 5:8]",
+   "fx": "dawn"
+  }
+ ],
+ "shadow.faithful": [
+  {
+   "who": "$player",
+   "text": "Ho! Wait for me, and I will be your companion!"
+  },
+  {
+   "who": "Faithful",
+   "text": "{name}? I left our town a little after you. They talked of you there, you know. Some mocked. A few could not stop thinking about it."
+  },
+  {
+   "who": "$player",
+   "text": "I am glad I have overtaken you, and that we can walk as companions on so pleasant a path.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Faithful",
+   "text": "I escaped the Slough, but I met one called Wanton, and old Adam the First, who offered me wages. And Shame followed me half through the valley. I will tell you as we go.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "So I saw in my dream that they went on very lovingly together, and had sweet talk of all that had happened to them on their pilgrimage.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  }
+ ],
+ "shadow.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page from my book, dry in spite of the damp. I had written of a lamp for the feet and a light for the path. I wrote it for the dark; it is no use anywhere else.",
+   "src": "[BSB: Psalm 119:105]"
+  }
+ ],
+ "shop.greet": [
+  {
+   "who": "Steward of the House",
+   "text": "Bread, honey, and plain gear for the road. Nothing here will make you more a pilgrim than you are, but a good cloak keeps off the rain."
   }
  ]
 }

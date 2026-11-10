@@ -156,6 +156,36 @@
    "act": "Search",
    "icon": "eye",
    "hidden": true
+  },
+  {
+   "id": "valley",
+   "kind": "warp",
+   "name": "The south gate",
+   "at": [
+    7,
+    11.5
+   ],
+   "act": "Go down",
+   "icon": "warp",
+   "hidden": true
+  },
+  {
+   "id": "steward",
+   "kind": "npc",
+   "name": "Steward of the House",
+   "at": [
+    10.5,
+    2.5
+   ],
+   "standee": "steward",
+   "look": [
+    0,
+    0,
+    0
+   ],
+   "act": "Trade",
+   "icon": "bag",
+   "ui": "shop"
   }
  ],
  "objectives": [
@@ -292,8 +322,25 @@
    ],
    "on_done": {
     "dialog": "palace.called",
-    "screen": "end"
+    "show": [
+     "valley"
+    ]
    }
+  },
+  {
+   "id": "descend",
+   "type": "exit",
+   "text": "Leave by the south gate for the Valley of Humiliation",
+   "zone": [
+    7,
+    11.5
+   ],
+   "to": "humiliation",
+   "ent": "valley",
+   "xp": [
+    0,
+    0
+   ]
   }
  ],
  "side": []

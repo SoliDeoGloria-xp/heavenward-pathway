@@ -1,0 +1,323 @@
+{
+ "id": "shadow",
+ "act": "shadow",
+ "name": "The Valley of the Shadow of Death",
+ "sub": "Act III · I will fear no evil",
+ "layer": "The Way",
+ "combat": true,
+ "start": [
+  -25,
+  0
+ ],
+ "bounds": [
+  -28,
+  -9,
+  56,
+  18
+ ],
+ "music": "shadow",
+ "resumable": true,
+ "cam_dist": 15,
+ "look": {
+  "bg": "#14141e",
+  "amb": "#9090c0",
+  "amb_e": 0.5,
+  "tint": [
+   0.82,
+   0.84,
+   1.0
+  ],
+  "sun_e": 0.5,
+  "sun_c": "#a0a0e0",
+  "post": [
+   0.7,
+   1.05,
+   [
+    0.9,
+    0.92,
+    1.08
+   ]
+  ],
+  "mini": "#3a3a50",
+  "ground": "dirt",
+  "ground_tint": "#6a6680",
+  "weather": ""
+ },
+ "enter_say": [
+  "Darkness, and a narrow way. You can hardly see where to set your foot."
+ ],
+ "zones": [
+  {
+   "area": [
+    -20,
+    -9,
+    36,
+    7.4
+   ],
+   "hurt": 8,
+   "name": "the ditch"
+  },
+  {
+   "area": [
+    -20,
+    1.6,
+    36,
+    7.4
+   ],
+   "slow": 0.4,
+   "hurt": 5,
+   "name": "the quag"
+  }
+ ],
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    -2,
+    0
+   ],
+   "size": [
+    52,
+    3
+   ],
+   "tile": "dirt",
+   "tint": "#6a6474"
+  },
+  {
+   "t": "path",
+   "at": [
+    -2,
+    -5.4
+   ],
+   "size": [
+    36,
+    7.2
+   ],
+   "tile": "dirt",
+   "tint": "#18161e"
+  },
+  {
+   "t": "water",
+   "at": [
+    -2,
+    5.4
+   ],
+   "size": [
+    36,
+    7.2
+   ],
+   "y": 0.04,
+   "tint": "#2a2a40"
+  },
+  {
+   "t": "rocks",
+   "area": [
+    18,
+    -8,
+    9,
+    16
+   ],
+   "n": 10,
+   "seed": 51
+  },
+  {
+   "t": "light",
+   "at": [
+    -2,
+    -6.5
+   ],
+   "y": 0.6,
+   "color": "#ff5020",
+   "e": 2.6,
+   "range": 7
+  },
+  {
+   "t": "lamp",
+   "at": [
+    -23,
+    1.8
+   ],
+   "color": "#a0a0ff"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    20,
+    1.8
+   ],
+   "color": "#ffe0a0"
+  }
+ ],
+ "ents": [
+  {
+   "id": "faithful",
+   "kind": "npc",
+   "name": "Faithful",
+   "at": [
+    23,
+    0.6
+   ],
+   "standee": "faithful",
+   "look": [
+    0,
+    0,
+    0
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    24.5,
+    -6.5
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "spawns": [
+  {
+   "mob": "fiend",
+   "count": 4,
+   "area": [
+    -6,
+    -0.8,
+    14,
+    1.6
+   ],
+   "at": "fiends"
+  },
+  {
+   "mob": "whisperer",
+   "count": 3,
+   "area": [
+    2,
+    -0.8,
+    10,
+    1.6
+   ],
+   "at": "fiends"
+  }
+ ],
+ "objectives": [
+  {
+   "id": "enter",
+   "type": "zone",
+   "zone": [
+    -21,
+    0
+   ],
+   "dialog": "shadow.enter",
+   "text": "Go into the valley",
+   "xp": [
+    80,
+    30
+   ]
+  },
+  {
+   "id": "narrow",
+   "type": "path",
+   "points": [
+    [
+     -16,
+     0.3
+    ],
+    [
+     -10,
+     0.3
+    ],
+    [
+     -4,
+     0.3
+    ]
+   ],
+   "dialog_start": "shadow.narrow",
+   "text": "Keep to the narrow way between the ditch and the quag",
+   "xp": [
+    120,
+    40
+   ]
+  },
+  {
+   "id": "pit",
+   "type": "zone",
+   "zone": [
+    -2,
+    0.3
+   ],
+   "dialog": "shadow.pit",
+   "text": "Pass the mouth of the pit",
+   "xp": [
+    100,
+    40
+   ],
+   "on_done": {
+    "flag": "all_prayer",
+    "learn": "all_prayer"
+   }
+  },
+  {
+   "id": "fiends",
+   "type": "kill",
+   "count": 6,
+   "text": "Drive off the fiends with All-Prayer",
+   "xp": [
+    150,
+    80
+   ]
+  },
+  {
+   "id": "voice",
+   "type": "zone",
+   "zone": [
+    14,
+    0.3
+   ],
+   "dialog": "shadow.voice",
+   "text": "Go on through the dark",
+   "xp": [
+    100,
+    30
+   ],
+   "on_done": {
+    "show": [
+     "faithful"
+    ],
+    "flag": "dawn"
+   }
+  },
+  {
+   "id": "faithful",
+   "type": "talk",
+   "ent": "faithful",
+   "dialog": "shadow.faithful",
+   "text": "Overtake the pilgrim ahead",
+   "xp": [
+    100,
+    50
+   ],
+   "on_done": {
+    "flag": "faithful_joined",
+    "screen": "end"
+   }
+  }
+ ],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "shadow.page",
+   "xp": [
+    50,
+    30
+   ],
+   "text": "The Dreamer's Page: the Valley of the Shadow",
+   "page": true
+  }
+ ]
+}

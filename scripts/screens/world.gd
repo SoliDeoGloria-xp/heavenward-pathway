@@ -363,9 +363,10 @@ func nearest_ent() -> Variant:
 func use_item(item: String) -> void:
 	if not G.bag_take(item):
 		G.say("You have no %s." % item, G.WARN); return
-	var h := minf(G.hp_max - G.hp, 40.0 if item == "Bread of Provision" else 20.0)
-	G.hp += h
-	kit._float_text(player.position + Vector3(0, 2.2, 0), "+%d" % int(h), Color("7cff7c"))
+	var c: Dictionary = G.data("items").consumables.get(item, {"heal": 20})
+	var h := minf(G.hp_max - G.hp, float(c.get("heal", 0)))
+	G.hp += h; G.zeal = minf(G.zeal_max, G.zeal + float(c.get("zeal", 0)))
+	kit._float_text(player.position + Vector3(0, 2.2, 0), "+%d" % int(h if h > 0 else float(c.get("zeal", 0))), Color("7cff7c") if h > 0 else Color("8ac8ff"))
 	G.say("Used %s." % item, G.SYS)
 	G.stats_changed.emit()
 
@@ -461,6 +462,8 @@ func speed_factor() -> float:
 	var f := WEARY_SPEED if G.weary else 1.0
 	if G.burden:
 		f *= float(G.PROG["burden_slow"])
+	if combat.has_status("slow"):
+		f *= float(G.PROG["status"].slow.factor)
 	var z := _zone_here()
 	return f * float(z.get("slow", 1.0))
 

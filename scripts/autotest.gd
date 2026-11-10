@@ -9,10 +9,12 @@ const SPEED := 3.0                 # game runs faster than real time during the 
 const FIGHT_TIMEOUT_S := 400.0
 const TRIAL_JOB := "valiant"
 const FINAL_JOB := "shepherd"
-const ROUTE := ["city", "slough", "interpreter", "cross", "hill", "palace", "trial", "palace", "lions_path", "palace", "lions", "palace"]
+const ROUTE := ["city", "slough", "interpreter", "cross", "hill", "palace", "trial", "palace", "lions_path", "palace", "lions", "palace", "humiliation", "shadow"]
 
 var dir := ""
 var failures: Array[String] = []
+var pilgrim_quest: Array = []      # quest XP ledger at the moment of the Calling
+var gear_checked := false
 
 func _ready() -> void:
 	dir = OS.get_environment("HPO_SHOTS")
@@ -72,7 +74,7 @@ func _jump(from: String) -> void:
 		G.cur_act = a
 		G.add_xp(int(acts.acts[a].base), int(acts.acts[a].job))
 		G.flags["page_" + a] = true
-	for f in ["city_fight", "prayer_taught"] + (["burden_gone", "sealed", "hill_reached"] if act in ["hill", "palace"] else []):
+	for f in ["city_fight", "prayer_taught"] + (["burden_gone", "sealed", "hill_reached"] if act in ["hill", "palace", "humiliation", "shadow"] else []):
 		G.flags[f] = true
 	G.flags.erase("page_eden")
 	G.goto("world", {"map": from})
@@ -169,6 +171,8 @@ func play_map(map_id: String) -> void:
 		await wait(0.1); guard += 1
 	var w = world()
 	check(w != null and w.map_id == map_id, "expected to arrive on map '%s'" % map_id)
+	if map_id == "humiliation":
+		_pacing("palace")
 	if w == null or w.map_id != map_id:
 		return
 	await wait(1.0)
@@ -235,9 +239,36 @@ func _settle(w) -> void:
 	w.hud.coach._finish()
 	while G.stat_pts > 0:
 		G.raise_stat("for" if G.stat_pts % 2 == 0 else "ste")
-	for id in ["steps", "refuge", "steady", "watchful_eye", "rest_prayer", "steps", "refuge", "steps"] + G.JOBS[G.job_id].skills if G.job_id != G.PILGRIM else ["steps", "refuge", "steady", "watchful_eye", "rest_prayer", "steps", "refuge", "steps", "steps"]:
-		if G.skill_pts > 0 and G.skill_open(id):
-			G.learn_skill(id)
+	var learned := true
+	while G.skill_pts > 0 and learned:
+		learned = false
+		for id in G.SKILL_ORDER:
+			if G.skill_pts > 0 and G.skill_open(id) and not G.SKILL_INFO[id].get("eden", false) and int(G.skill_lv.get(id, 0)) < int(G.SKILL_INFO[id].max):
+				var has_req: bool = not G.SKILL_INFO[id].has("req") or int(G.skill_lv.get(G.SKILL_INFO[id].req.skill, 0)) >= int(G.SKILL_INFO[id].req.lv)
+				if has_req and G.learn_skill(id):
+					learned = true
+	Gear.equip_best()
+	if G.armor and not gear_checked and w.map_id == "palace":
+		await _gear_check(w)
+
+## The loot loop: buy, wear, refine, cut and set a Fruit stone, read the Codex.
+func _gear_check(w) -> void:
+	gear_checked = true
+	G.denarii += 300; G.manna = maxf(G.manna, 4.0)   # test purse
+	w.hud.shop(); await wait(0.4); await shot("ui_shop")
+	check(Gear.buy("tunic") and Gear.buy("Honey from the Rock"), "the vendor must sell gear and provisions")
+	Gear.equip_best()
+	check(not Gear.equipped("garment").is_empty(), "bought gear can be worn")
+	var before: Dictionary = G.d.duplicate()
+	check(Gear.refine(int(Gear.equipped("hand").uid)), "refining an equipped piece succeeds")
+	check(Gear.cut_stone("peace"), "a Fruit stone is cut from Manna"); Gear.set_stone("peace")
+	check(int(G.d.guard) == int(before.guard) + 1 and int(G.d.atk) >= int(before.atk), "the Stone of Peace adds 1 block; refining never lowers Attack")
+	w.hud.bench(); await wait(0.4); await shot("ui_bench")
+	w.hud.open_sheet("equip"); await wait(0.4); await shot("ui_equipment")
+	G.daily_state().read = true
+	w.hud.open_sheet("codex"); await wait(0.4); await shot("ui_codex")
+	w.hud.open_sheet("skills"); await wait(0.4); await shot("ui_skills")
+	w.hud.clear_overlay()
 
 ## Windows opened by an objective (Calling, Muster, Word Study).
 func _ui(w) -> void:
@@ -246,7 +277,8 @@ func _ui(w) -> void:
 		"calling_trial":
 			await shot("ui_calling_trial"); w.hud.more_tiles["calling_" + TRIAL_JOB].pressed.emit()
 		"calling":
-			await shot("ui_calling"); w.hud.more_tiles["calling_" + FINAL_JOB].pressed.emit()
+			await shot("ui_calling"); pilgrim_quest = G.ledger.quest.duplicate(); pilgrim_quest[0] += 0
+			w.hud.more_tiles["calling_" + FINAL_JOB].pressed.emit()
 		"muster":
 			await shot("ui_muster"); w.hud.muster_enter()
 		"word_study":
@@ -314,8 +346,11 @@ func _fight(w, o: Dictionary) -> void:
 			w.combat.target = m
 			if m != null and m.actor.position.distance_to(w.player.position) > 12.0:
 				w.player.position = m.actor.position + Vector3(1.5, 0, 0)
-		for page in 2:
+		var only: String = w.combat.target.get("only", "") if w.combat.target != null else ""
+		for page in G.bar_pages(false).size():
 			for id in G.page_skills(page, false):
+				if only != "" and id != only:
+					continue   # save Zeal for the one thing that works
 				if w.combat.cd.get(id, 0.0) <= 0.0 and G.zeal >= int(G.SKILL_INFO[id].zeal) and w.combat.gcd <= 0.0:
 					w.combat.skill(id)
 		if not shot_done and w.combat.slain >= 1:
@@ -333,13 +368,17 @@ func _pacing(act: String) -> void:
 		 "%s should end at Base %d / Job %d or above, got %d / %d" % [act, plan.end_base, plan.end_job, G.lvl, G.job])
 
 func _final_checks() -> void:
-	_pacing("palace")
 	var q: Array = G.ledger.quest; var m: Array = G.ledger.mob
-	var share := float(m[0]) / float(q[0])
-	print("[pacing] total quest XP %d base / %d job (design: 2210 / 855) | mob XP %d (%.0f%% extra) | %s, Base %d, Job %d" % [q[0], q[1], m[0], share * 100.0, G.job_name(), G.lvl, G.job])
-	check(int(q[0]) == G.base_total(10) and int(q[1]) == 855, "quest XP must total 2210 base / 855 job, got %s" % [q])
-	check(G.job_id == FINAL_JOB and G.job == 1 and G.lvl >= 10, "the first job change must leave Base >= 10 and the new job at Job Level 1")
+	var acts: Dictionary = G.data("acts")
+	var want := [0, 0]
+	for a in acts.order:
+		want[0] += int(acts.acts[a].base); want[1] += int(acts.acts[a].job)
+	print("[pacing] to the Calling: quest XP %s (design: 2210 / 855) | whole run: quest %s, mob XP %d | %s, Base %d, Job %d | Denarii %d, gear %d" % [pilgrim_quest, q, m[0], G.job_name(), G.lvl, G.job, G.denarii, G.gear.size()])
+	check(pilgrim_quest.size() == 2 and int(pilgrim_quest[0]) == G.base_total(10) and int(pilgrim_quest[1]) == 855, "quest XP at the Calling must be 2210 base / 855 job, got %s" % [pilgrim_quest])
+	check(int(q[0]) == want[0] and int(q[1]) == want[1], "quest XP for the whole run must be %s, got %s" % [want, q])
+	check(G.job_id == FINAL_JOB and G.lvl >= 11, "after Act III the pilgrim keeps the Calling and has passed Base 10")
+	check(G.has_skill("all_prayer") and G.flags.has("faithful_joined") and G.bestiary.size() >= 10, "Act III state: All-Prayer learned, Faithful joined, bestiary filled")
 	check(cur() != null and cur().name == "End", "the run must finish on the end screen")
-	check(G.has_save() and G.load_game() and G.cur_map == "palace" and G.job_id == FINAL_JOB, "the final save must hold the Calling")
-	check(G.armor and not G.burden and Quests.pages_found() == 6, "story state: armor given, burden gone, six Dreamer's Pages (got %d)" % Quests.pages_found())
+	check(G.has_save() and G.load_game() and G.cur_map == "shadow" and G.job_id == FINAL_JOB, "the final save must hold the Calling")
+	check(G.armor and not G.burden and Quests.pages_found() == 8, "story state: armor given, burden gone, eight Dreamer's Pages (got %d)" % Quests.pages_found())
 	print("[autotest] marks ", G.marks, " secrets ", G.secrets, " kos ", G.kos)

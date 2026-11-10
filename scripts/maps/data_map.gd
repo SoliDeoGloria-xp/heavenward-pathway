@@ -57,6 +57,7 @@ func prop(p: Dictionary, at: Vector3) -> Node3D:
 		"tomb": return _tomb(at)
 		"arbour": return _arbour(at)
 		"lion": return _lion(at, float(p.get("side", 1)))
+		"billboard": return _billboard(at, String(p.art), float(p.get("h", 6.0)))
 		"pedestal": return _pedestal(at, Color(String(p.get("color", "#fff0c0"))))
 		_: push_warning("Unknown prop type: %s" % p.t)
 	return null
@@ -150,6 +151,14 @@ func _lion(at: Vector3, side: float) -> Node3D:
 	kit._box(Vector3(0.08, 0.08, 2.0), chain, at + Vector3(0, 1.2, side * 1.4), false)
 	return root
 
+## A cleaned picture from assets/props standing upright as scenery, h world units tall.
+func _billboard(at: Vector3, art: String, h: float) -> Node3D:
+	var sp := Sprite3D.new(); sp.texture = G.tex("res://assets/props/%s.png" % art)
+	sp.pixel_size = h / float(sp.texture.get_height()); sp.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	sp.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS; sp.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	sp.position = at + Vector3(0, h * 0.5, 0); w.add_child(sp)
+	return sp
+
 func _pedestal(at: Vector3, color: Color) -> Node3D:
 	var root := Node3D.new(); root.position = at; w.add_child(root)
 	kit._box(Vector3(1.2, 0.9, 1.2), _stone_mat(), at + Vector3(0, 0.45, 0))
@@ -179,6 +188,9 @@ func _ent(e: Dictionary) -> void:
 		"warp":
 			node = kit.warp(at)
 	var made := w._add_ent(e.id, e.name, at, node, e.act, e.icon, Callable(), e.get("hidden", false))
+	if e.has("ui"):   # a vendor or bench: opens a HUD window
+		var ui: String = e.ui
+		made.fn = func() -> void: w.hud.call(ui)
 	for k in ["dialog", "follow"]:
 		if e.has(k):
 			made[k] = e[k]

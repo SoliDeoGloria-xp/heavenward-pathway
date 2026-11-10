@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 (versionCode 4) — the loot loop, deeper combat, Act III
+
+- **Road gear.** Four slots (Hand, Garment, Cloak, Keepsake), rarity Clay to Radiant, drops from foes, "Wear the best". The Armor of God stays separate: given whole, never gear.
+- **Denarii, vendors, storage.** A Provisioner in the City and a Steward at the Palace buy, sell and store. Honey from the Rock restores Zeal.
+- **The armory bench.** Refine worn gear to +5 (always succeeds, never harms the piece). Cut one of nine Fruit stones from Manna and set it in your garment.
+- **Combat.** Each family of sin gives way to a virtue (damage rises with the matching attribute). Ranged foes. Status marks: Slowed (sloth, gluttony) and Doubting (doubt, envy). Apollyon throws volleys below half Health.
+- **Skill trees.** Each Calling now has six skills (four active, two passive) with prerequisites; the skill bar grows pages as needed.
+- **Act III.** The Valley of Humiliation (Apollyon) and the Valley of the Shadow of Death, where the staff is useless and All-Prayer is taught; Faithful joins at daybreak. The Calling no longer ends the game.
+- **Codex.** A bestiary with each foe's family and the virtue it gives way to, and a small daily portion (read a passage, overcome ten foes) with no streaks.
+- **Sound.** Eight synthesized placeholder effects (hit, hurt, skill, quest, level, coin, equip, bell). Music is still silent.
+- Not in this version: portrait mode, placed scenery art beyond two backdrops, music.
+
 ## 0.2.1 (versionCode 3) — first real art
 
 - **Monsters and bosses** now use the delivered sheets (46 creatures cleaned and imported; the 17 in Acts I–II are wired in). Idle, walk, attack, hurt and death animations play from `data/sprites.json`.

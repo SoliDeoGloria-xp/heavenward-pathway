@@ -17,6 +17,8 @@ const WEARY_S := 25.0
 const DROP_CHANCE := 0.6
 const AOE_FALLBACK_RANGE := 10.0
 const BOSS_SHADOW := 0.7
+const VOLLEY_EXTRA := 3
+const VOLLEY_SPREAD := 4.0
 const PLACEHOLDER_PIXEL := 0.04
 const MOB_ATTACK_S := 0.5
 const NO_RESPAWN := -99.0
@@ -38,6 +40,7 @@ var gcd := 0.0
 var queued_skill := ""
 var slain := 0
 var used_steps := false
+var statuses := {}                # status id -> time it ends
 var buffs := {}                  # stat -> {"add": float, "until": float}
 var regen_until := 0.0           # Prayer of Rest and similar: bonus Zeal per second until this time
 var regen_rate := 0.0
@@ -50,6 +53,28 @@ func tick_cooldowns(delta: float) -> void:
 	gcd = maxf(0.0, gcd - delta)
 	for k in cd.keys():
 		cd[k] = maxf(0.0, cd[k] - delta)
+
+## Each family of sin gives way to a virtue: damage rises with the matching attribute.
+func weakness(family: String) -> float:
+	var rules: Dictionary = G.PROG["weakness"]
+	var stat: String = rules.families.get(family, "")
+	if stat == "":
+		return 1.0
+	return 1.0 + minf(float(rules.cap), float(rules.per_point) * maxi(0, int(G.stat[stat]) - G.STAT_START))
+
+## A foe's blow may leave a mark for a few seconds: sloth and gluttony slow, doubt and envy drain Zeal.
+func _afflict(m: Dictionary) -> void:
+	for id in G.PROG["status"].keys():
+		var st: Dictionary = G.PROG["status"][id]
+		if not m.family in st.families:
+			continue
+		statuses[id] = w.t + float(st.secs)
+		if st.has("zeal"):
+			G.zeal = maxf(0.0, G.zeal - float(st.zeal))
+		G.stats_changed.emit()
+
+func has_status(id: String) -> bool:
+	return w.t < float(statuses.get(id, 0.0))
 
 func buff(stat: String) -> float:
 	var b: Dictionary = buffs.get(stat, {})
@@ -114,7 +139,8 @@ func _spawn_mob(id: String, pos: Vector3) -> Dictionary:
 	var atk := (float(rules.atk_base) + float(rules.atk_per_lv) * lv) * (float(rules.greater_atk) if greater else 1.0)
 	var bars := _hp_bars(a)
 	var m := {"id": id, "name": md.name, "level": lv, "greater": greater, "drop": md.get("drop", ""), "actor": a, "hp": hp, "max": hp, "atk": atk,
-		"xp": mob_xp(md), "alive": true, "next": 0.0, "home": pos, "wander": pos, "wander_t": randf_range(1, 4),
+		"xp": mob_xp(md), "alive": true, "next": 0.0, "home": pos, "wander": pos, "wander_t": randf_range(1, 4), "family": md.family, "only": md.get("only", ""),
+		"reach": float(G.PROG["ranged_reach"]) if md.get("kind", "") == "ranged" else MOB_REACH,
 		"bg": bars[0], "fg": bars[1], "trail": bars[2], "aggro": false, "respawn": 0.0, "tele": false, "tele_pos": Vector3.ZERO, "trail_v": 1.0, "was_aggro": false}
 	mobs.append(m)
 	return m
@@ -146,7 +172,8 @@ func spawn_boss(id: String, pos: Vector3) -> Dictionary:
 		a.name_lbl.font_size = BOSS_NAME_SIZE; a.name_lbl.position.y = -0.3
 	var bars := _hp_bars(a)
 	boss = {"id": id, "name": md.name, "level": int(md.level), "greater": false, "drop": md.get("drop", ""), "actor": a, "hp": float(md.hp), "max": float(md.hp),
-		"atk": float(md.atk), "slam": float(md.slam), "xp": mob_xp(md), "muster": md.get("muster", false), "alive": true, "next": 0.0, "home": pos, "wander": pos,
+		"atk": float(md.atk), "slam": float(md.slam), "xp": mob_xp(md), "muster": md.get("muster", false), "family": md.family, "only": "", "reach": MOB_REACH,
+		"volley_below": float(md.get("volley_below", 0.0)), "alive": true, "next": 0.0, "home": pos, "wander": pos,
 		"wander_t": 99.0, "bg": bars[0], "fg": bars[1], "trail": bars[2], "aggro": true, "respawn": 0.0, "tele": false, "tele_pos": Vector3.ZERO, "trail_v": 1.0,
 		"was_aggro": true, "boss": true, "goal": Vector3.ZERO}
 	mobs.append(boss)
@@ -188,7 +215,7 @@ func _mob_tick(delta: float) -> void:
 				m.wander_t = randf_range(2, 5); m.wander = m.home + Vector3(randf_range(-3, 3), 0, randf_range(-3, 3))
 			goal = m.wander
 		var to := goal - a.position; to.y = 0
-		var stop := MOB_REACH if m.aggro else 0.2
+		var stop: float = m.reach if m.aggro else 0.2
 		if to.length() > stop:
 			var v := to.normalized() * (1.9 if m.aggro else 0.9) * delta
 			a.position += v
@@ -213,7 +240,7 @@ func _mob_tick(delta: float) -> void:
 						w.kit._float_text(p + Vector3(0, 2.2, 0), "Miss", Color("dff2ff"))
 					else:
 						var dmg := int(m.atk) + randi() % 4
-						_hurt_player(dmg)
+						_hurt_player(dmg); _afflict(m)
 		a.position.x = clampf(a.position.x, w.bounds.position.x, w.bounds.end.x)
 		a.position.z = clampf(a.position.z, w.bounds.position.y, w.bounds.end.y)
 
@@ -221,7 +248,8 @@ func _mob_tick(delta: float) -> void:
 func _hurt_player(dmg: int) -> void:
 	if w.sitting:
 		w._stand()
-	dmg = maxi(1, dmg - int(G.d.guard) - int(buff("guard")))   # Steadfastness blocks a little of every blow
+	dmg = maxi(1, dmg - int(G.d.guard) - int(buff("guard")))
+	G.sfx("hurt")   # Steadfastness blocks a little of every blow
 	G.hp = maxf(0.0, G.hp - dmg)
 	w.kit._float_text(w.player.position + Vector3(0, 2.2, 0), str(dmg), Color("ff6a6a"), false, dmg)
 	if G.hp < G.hp_max * 0.5 and w.is_combat() and G.tip_once("low_hp"):
@@ -235,12 +263,20 @@ func _hurt_player(dmg: int) -> void:
 	G.stats_changed.emit()
 
 
-func hit_mob(m: Dictionary, dmg: int, crit: bool = false, miss: bool = false) -> void:
+## via is the skill id that dealt the blow ("" for a basic attack).
+func hit_mob(m: Dictionary, dmg: int, crit: bool = false, miss: bool = false, via: String = "") -> void:
 	var a: SpriteActor = m.actor
+	if String(m.get("only", "")) != "" and via != m.only:   # some foes give way to one thing only
+		w.kit._float_text(a.position + Vector3(0, 1.6, 0), "Unharmed", Color("c8c8ff"))
+		if G.tip_once("only_" + String(m.only)):
+			G.say("%s is not harmed by that. Use %s." % [m.name, G.SKILL_INFO[m.only].name], G.WARN)
+		return
+	dmg = int(round(dmg * weakness(String(m.family))))
 	if miss:
 		w.kit._float_text(a.position + Vector3(0, 1.6, 0), "Miss", Color("dff2ff")); return
 	m.hp = maxf(0.0, m.hp - dmg)
 	m.aggro = true
+	G.sfx("hit")
 	var kill: bool = m.hp <= 0.0
 	w.kit._float_text(a.position + Vector3(0, 1.6, 0), str(dmg), Color("ffe25a") if crit else Color.WHITE, crit or kill, dmg)
 	G.zeal = minf(G.zeal_max, G.zeal + ZEAL_ON_HIT)
@@ -277,6 +313,7 @@ func _mob_down(m: Dictionary) -> void:
 	if target == m:
 		target = null
 	slain += 1
+	G.note_kill(String(m.id)); Gear.roll_drop(m)
 	G.say("You overcame the %s." % m.name, G.SYS)
 	_pay_kill(m)
 	if m.drop != "" and randf() < DROP_CHANCE:
@@ -329,11 +366,13 @@ func skill(id: String) -> void:
 		G.say("Not enough Zeal (the blue bar). It refills over time, faster while sitting.", G.WARN); return
 	var fx: Dictionary = info.fx
 	var num := G.skill_num(id)
+	if num.has("dmg"):
+		num.dmg = int(num.dmg * (1.0 + buff("power")))   # Lamp to My Feet and similar
 	var done := false
 	match String(fx.type):
 		"tend": done = _cast_tend()
-		"strike": done = _cast_strike(info, fx, int(num.dmg))
-		"aoe": done = _cast_aoe(fx, int(num.dmg))
+		"strike": done = _cast_strike(id, info, fx, int(num.dmg))
+		"aoe": done = _cast_aoe(id, fx, int(num.dmg))
 		"heal": done = _cast_heal(float(num.heal))
 		"regen": done = _cast_regen(fx, float(num.zeal))
 		"buff": done = _cast_buff(fx, float(num.add))
@@ -348,7 +387,7 @@ func _cast_tend() -> bool:
 		return false
 	return w.map.tend_lily()
 
-func _cast_strike(info: Dictionary, fx: Dictionary, dmg: int) -> bool:
+func _cast_strike(id: String, info: Dictionary, fx: Dictionary, dmg: int) -> bool:
 	var m = target if (target != null and target.alive) else _nearest_mob(maxf(AOE_FALLBACK_RANGE, float(fx.range)))
 	if m == null:
 		G.say("No target.", G.WARN); return false
@@ -367,14 +406,14 @@ func _cast_strike(info: Dictionary, fx: Dictionary, dmg: int) -> bool:
 		w.create_tween().tween_property(w.player, "position", dest, 0.09).set_ease(Tween.EASE_OUT)
 	Fx.burst(w, m.actor.position + Vector3(0, 0.8, 0), Color("fff2b0"), 22)
 	Fx.ring(w, m.actor.position, Color(1, 0.95, 0.7), 1.8, 0.4)
-	hit_mob(m, dmg + randi_range(-2, 2), true)
+	hit_mob(m, dmg + randi_range(-2, 2), true, false, id)
 	return true
 
-func _cast_aoe(fx: Dictionary, dmg: int) -> bool:
+func _cast_aoe(id: String, fx: Dictionary, dmg: int) -> bool:
 	var hit := false
 	for m in mobs:
 		if m.alive and m.actor.position.distance_to(w.player.position) <= float(fx.radius):
-			hit_mob(m, dmg + randi_range(-2, 2), false)
+			hit_mob(m, dmg + randi_range(-2, 2), false, false, id)
 			hit = true
 	if not hit:
 		G.say("No foe is close enough.", G.WARN); return false
@@ -524,6 +563,11 @@ func _boss_tick(delta: float) -> void:
 			var pos: Vector3 = tg.pos
 			Fx.telegraph(w, pos, 1.8, 1.1)
 			w.get_tree().create_timer(1.1).timeout.connect(_boss_resolve.bind(pos, 1.8, int(boss.atk), false))
+			if boss.hp < boss.max * float(boss.volley_below):   # second phase: a volley of darts around the target
+				for i in VOLLEY_EXTRA:
+					var off := pos + Vector3(randf_range(-VOLLEY_SPREAD, VOLLEY_SPREAD), 0, randf_range(-VOLLEY_SPREAD, VOLLEY_SPREAD))
+					Fx.telegraph(w, off, 1.5, 1.4)
+					w.get_tree().create_timer(1.4).timeout.connect(_boss_resolve.bind(off, 1.5, int(boss.atk), false))
 			if tg.who is Dictionary and randf() < 0.75:
 				var al2: Dictionary = tg.who
 				var side := Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized()
@@ -620,6 +664,7 @@ func _boss_down(m: Dictionary) -> void:
 	if target == m:
 		target = null
 	_pay_kill(m)
+	G.note_kill(String(m.id)); Gear.roll_drop(m)
 	if m.drop != "":
 		G.bag_add(m.drop, 1)
 	if m.muster:

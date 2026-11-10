@@ -158,6 +158,9 @@ func apply(fx: Dictionary, replay: bool = false) -> void:
 		G.bag_add(item, int(fx.give[item])); G.say("You got %s." % item, G.INFO)
 	if fx.has("manna"):
 		G.manna += float(fx.manna)
+	if fx.has("learn") and not G.has_skill(fx.learn):   # a skill the story itself teaches: free, level 1
+		G.skill_lv[fx.learn] = 1; G.recalc()
+		G.say("You learned %s. It is on your skill bar." % G.SKILL_INFO[fx.learn].name, G.INFO)
 	if fx.get("heal", false):
 		G.hp = G.hp_max; G.zeal = G.zeal_max
 	if fx.get("weary", false):

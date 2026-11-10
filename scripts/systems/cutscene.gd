@@ -210,6 +210,15 @@ func _fx_sleep() -> void:
 	tw.tween_method(func(v: float) -> void: w.post.set_shader_parameter("vignette", v), 0.9, 0.32, 1.0)
 	tw.tween_callback(func() -> void: w.pact.play("idle"))
 
+## Day breaks in the dark valley.
+func _fx_dawn() -> void:
+	var tw := w.create_tween().set_parallel(true)
+	tw.tween_property(w.sun, "light_energy", 0.7, 3.0)
+	tw.tween_property(w.sun, "light_color", Color("ffe0b0"), 3.0)
+	tw.tween_property(w.env, "ambient_light_energy", 0.42, 3.0)
+	w.post.set_shader_parameter("tint", Vector3(1.04, 1.0, 0.92))
+	w.post.set_shader_parameter("saturation", 0.95)
+
 func _fx_armor() -> void:
 	w.pact.flash(Color("dfe9ff"), 0.9); Fx.dome(w, _here()); G.haptic_pattern("level")
 

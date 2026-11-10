@@ -212,7 +212,7 @@ func _build_combat(L: bool) -> void:
 		skill_btns.append(b); hud_nodes.append(b)
 	page_btn = TouchBtn.new(76, "res://assets/ui/btn_small.png", "page", "1/2")
 	page_btn.caption_size = 16; page_btn.kind = "utility"
-	page_btn.pressed.connect(func(): page = 1 - page; _apply_page())
+	page_btn.pressed.connect(func() -> void: page = (page + 1) % G.bar_pages(world.map_id == "eden").size(); _apply_page())
 	root.add_child(page_btn); _corner(page_btn, side, false, cx + 236, cy + 276); hud_nodes.append(page_btn); combat_nodes.append(page_btn)
 	auto_btn = TouchBtn.new(92, "res://assets/ui/btn_small.png", "auto", "Auto")
 	auto_btn.tex_on = G.tex("res://assets/ui/btn_auto_on.png"); auto_btn.caption_size = 17; auto_btn.kind = "utility"; auto_btn.state_text = "OFF"
@@ -253,7 +253,7 @@ func _apply_page() -> void:
 	for i in 4:
 		var b: TouchBtn = skill_btns[i]
 		b.cd_frac = 0.0; b.cd_text = ""; b.cost = ""
-		if page == 1 and ids.is_empty():
+		if page > 0 and ids.is_empty():
 			b.kind = "empty"; b.set_icon("lock"); b.caption = "Calling"; b.disabled = false
 		elif i < ids.size():
 			var info: Dictionary = G.SKILL_INFO[ids[i]]
@@ -262,12 +262,12 @@ func _apply_page() -> void:
 		else:
 			b.kind = "empty"; b.set_icon(""); b.caption = "+ Skill" if G.skill_pts > 0 else "Empty"; b.disabled = false
 		b.queue_redraw()
-	page_btn.caption = "%d/2" % (page + 1); page_btn.queue_redraw()
+	page_btn.caption = "%d/%d" % [page + 1, G.bar_pages(world.map_id == "eden").size()]; page_btn.queue_redraw()
 
 func _skill_pressed(i: int) -> void:
 	var ids := bar_skills()
-	if page == 1 and ids.is_empty():
-		G.say("Page 2 holds your Calling's skills. You take up a Calling at the Palace Beautiful (Base Level 10 and Job Level 10).", G.WARN)
+	if page > 0 and ids.is_empty():
+		G.say("The last page holds your Calling's skills. You take up a Calling at the Palace Beautiful (Base Level 10 and Job Level 10).", G.WARN)
 		return
 	if i >= ids.size():
 		open_sheet("skills")   # an empty slot leads straight to where skills are learned
@@ -295,6 +295,9 @@ func refresh() -> void:
 	for c in status_row.get_children():
 		status_row.remove_child(c)   # removed at once: several refreshes in one frame must not stack chips
 		c.queue_free()
+	for id in G.PROG["status"].keys():
+		if world.combat.has_status(id):
+			status_row.add_child(_chip(String(G.PROG["status"][id].name), Color("5a5a8a")))
 	if G.burden:
 		status_row.add_child(_chip("Burden", Color("8a6438")))
 	if G.weary:
@@ -475,7 +478,7 @@ func open_more() -> void:
 	var w := UIKit.window("Menu", Vector2(720, 0))
 	var grid := GridContainer.new(); grid.columns = 5; grid.add_theme_constant_override("h_separation", 12); grid.add_theme_constant_override("v_separation", 12)
 	var items := [["status", "Status", "status"], ["skills", "Skills", "skills"], ["bag", "Satchel", "bag"], ["equip", "Equipment", "equip"], ["way", "The Way", "quest"],
-		["guide", "Guide", "guide"], ["waymark", "Waymark", "scroll"], ["chat", "Messages", "talk"], ["settings", "Settings", "settings"]]
+		["codex", "Codex", "library"], ["guide", "Guide", "guide"], ["waymark", "Waymark", "scroll"], ["chat", "Messages", "talk"], ["settings", "Settings", "settings"]]
 	if G.ONLINE:
 		items.insert(items.size() - 1, ["", "Friends", "friends"])
 	more_tiles.clear()
@@ -556,6 +559,7 @@ func open_sheet(tab: String) -> void:
 	match tab:
 		"bag": _sheet_bag(body)
 		"equip": _sheet_equip(body)
+		"codex": GearUI.codex(self, body)
 		"skills": _sheet_skills(body)
 		"status": _sheet_status(body)
 		"way": _sheet_way(body)
@@ -575,19 +579,22 @@ func _sheet_bag(b: VBoxContainer) -> void:
 	var keys := []
 	for k in G.bag.keys():
 		if int(G.bag[k]) > 0: keys.append(k)
-	var icons := {"Bread of Provision": "bread", "Garden Fig": "fig", "Parchment Roll": "scroll"}
+	var uses: Dictionary = G.data("items").consumables
 	for i in 18:
 		var p := PanelContainer.new(); p.custom_minimum_size = Vector2(96, 96)
 		p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 4))
 		if i < keys.size():
 			var vb := VBoxContainer.new(); vb.alignment = BoxContainer.ALIGNMENT_CENTER
-			vb.add_child(UIKit.icon_rect(icons.get(keys[i], "scroll"), 52))
+			vb.add_child(UIKit.icon_rect(uses[keys[i]].icon if uses.has(keys[i]) else "scroll", 52))
 			var l := UIKit.label("%s ×%d" % [keys[i].split(" ")[0], G.bag[keys[i]]], 14, UIKit.INK, true); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vb.add_child(l); p.add_child(vb)
-			p.tooltip_text = "%s · Clay ○ · %s" % [keys[i], "Restores health." if keys[i] != "Parchment Roll" else "“Fly from the wrath to come.”"]
+			if uses.has(keys[i]):   # tap to eat or drink
+				var item: String = keys[i]
+				var tap := Button.new(); tap.flat = true; tap.focus_mode = Control.FOCUS_NONE; p.add_child(tap)
+				tap.pressed.connect(func() -> void: world.use_item(item); open_sheet("bag"))
 		grid.add_child(p)
 	b.add_child(grid)
-	b.add_child(UIKit.label("18 of 60 slots shown · Weight %d / 800 · Denarii 0" % _weight(), 17, UIKit.SUB))
+	b.add_child(UIKit.label("Denarii %d · Manna %s · tap food or drink to use it. Gear is under More → Equipment." % [G.denarii, str(snappedf(G.manna, 0.1))], 17, UIKit.SUB, false, true))
 	b.add_child(UIKit.label("Tip: long-press the quick-item button to switch between Bread and Figs.", 17, UIKit.SUB, false, true))
 
 func _weight() -> int:
@@ -596,20 +603,13 @@ func _weight() -> int:
 	return w
 
 func _sheet_equip(b: VBoxContainer) -> void:
-	b.add_child(UIKit.label("Equipment", 26, UIKit.BLUE_INK, true))
-	var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 20)
-	var slots := VBoxContainer.new(); slots.add_theme_constant_override("separation", 8)
-	for s in ["Head (upper): —", "Head (mid): —", "Body: %s" % ("New Garment ○" if G.flags.has("sealed") else "Pilgrim's rags ○"), "Hand: Walking staff ○",
-		"Armor of God: %s" % ("the whole armor (+%d guard)" % int(G.PROG["armor_guard"]) if G.armor else "—"), "Fruit socket: — (crafted only)"]:
-		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 10)); p.custom_minimum_size = Vector2(330, 0)
-		p.add_child(UIKit.label(s, 18)); slots.add_child(p)
-	h.add_child(slots)
-	var at := AtlasTexture.new(); at.atlas = G.player_sheet; at.region = Rect2(0, 0, 32, 48)
-	var tr := TextureRect.new(); tr.texture = at; tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; tr.custom_minimum_size = Vector2(160, 240)
-	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	h.add_child(tr)
-	b.add_child(h)
-	b.add_child(UIKit.label("The whole Armor of God is given at the Palace Beautiful armory, the same for every pilgrim. It is never sold, refined or levelled.", 17, UIKit.SUB, false, true))
+	GearUI.sheet(self, b)
+
+func shop() -> void:
+	GearUI.shop(self)
+
+func bench() -> void:
+	GearUI.bench(self)
 
 func _sheet_skills(b: VBoxContainer) -> void:
 	var head := HBoxContainer.new()
@@ -640,6 +640,8 @@ func _sheet_skills(b: VBoxContainer) -> void:
 			nums += "\nNext level: " + G.skill_num(id, lv + 1).text
 		elif lv == 0:
 			nums = "When learned: " + G.skill_num(id, 1).text + "  " + nums
+		if info.has("req") and int(G.skill_lv.get(info.req.skill, 0)) < int(info.req.lv):
+			nums += "\nNeeds %s at level %d." % [G.SKILL_INFO[info.req.skill].name, int(info.req.lv)]
 		if info.get("eden", false):
 			nums += "\nOnly in Eden: it is a non-combat skill for tending the garden."
 		v.add_child(UIKit.label(nums, 17, UIKit.INK, false, true))

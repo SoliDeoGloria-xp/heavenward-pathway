@@ -73,8 +73,10 @@ def main() -> int:
         if s.get("job") != "pilgrim" and s.get("job") not in jobs.get("jobs", {}):
             err(f"skill {sid}: unknown job {s.get('job')}")
     for jid, j in jobs.get("jobs", {}).items():
-        if len(j.get("skills", [])) != 3 or any(s not in skills["skills"] for s in j["skills"]):
-            err(f"job {jid}: needs exactly 3 known skills")
+        if len(j.get("skills", [])) < 3 or any(s not in skills["skills"] for s in j["skills"]):
+            err(f"job {jid}: needs at least 3 known skills")
+        if skills["skills"][j["skills"][0]]["kind"] != "active":
+            err(f"job {jid}: its first skill is lent for the Calling trial and must be active")
     if len(jobs.get("jobs", {})) != 6:
         err("jobs.json: the first job change offers exactly six jobs")
     sprites = load("sprites")
@@ -86,8 +88,29 @@ def main() -> int:
         elif not (ROOT / sheet["tex"].replace("res://", "")).exists():
             err(f"mob {mid}: sheet file missing: {sheet['tex']}")
     for sid, s in skills.get("skills", {}).items():
+        req = s.get("req", {}).get("skill")
+        if req and req not in skills["skills"]:
+            err(f"skill {sid}: requires unknown skill {req}")
+        if s.get("fx", {}).get("type") == "passive" and "stat" not in s["fx"]:
+            err(f"skill {sid}: a passive needs fx.stat")
         if not (ROOT / "assets" / "icons" / f"{s.get('icon')}.png").exists():
             err(f"skill {sid}: icon file missing: {s.get('icon')}")
+
+    # ---- road gear: never a piece of the Armor of God, icons exist, the shop sells known things
+    items = load("items")
+    armor_words = ("belt", "breastplate", "shoe", "shield", "helmet", "sword")
+    for gid, g in items.get("gear", {}).items():
+        if any(wd in g["name"].lower() for wd in armor_words):
+            err(f"gear {gid}: '{g['name']}' names a piece of the Armor of God, which is never road gear")
+        if g["slot"] not in items["slots"] or not (ROOT / "assets" / "icons" / f"{g['icon']}.png").exists():
+            err(f"gear {gid}: unknown slot or missing icon")
+    for sid_ in items.get("shop", []):
+        if sid_ not in items["gear"] and sid_ not in items["consumables"]:
+            err(f"shop sells unknown item {sid_}")
+    if len(items.get("stones", {})) != 9:
+        err("items.json: there are nine Fruit stones (Galatians 5:22-23)")
+    check_text("items stone_note", items.get("stone_note", ""))
+    pilgrim_acts = {a for a in acts.get("order", []) if acts["acts"][a].get("pilgrim")}
 
     # ---- maps
     budget = {a: [0, 0] for a in acts.get("order", [])}
@@ -150,20 +173,20 @@ def main() -> int:
                 pool = [s for s in d.get("spawns", []) if s.get("at", "") in ("", o["id"])]
                 if sum(s["count"] for s in pool) < o["count"] and not any(not mobs[s["mob"]].get("greater") for s in pool):
                     err(f"{ow}: not enough foes spawn to finish (softlock)")
-                if pool:
+                if pool and d["act"] in pilgrim_acts:
                     kill_xp += round(o["count"] * sum(mob_xp(s["mob"]) * s["count"] for s in pool) / sum(s["count"] for s in pool))
             if o.get("type") == "path" and "kills" in o:
                 pool = [s for s in d.get("spawns", []) if s.get("at", "") in ("", o["id"])]
-                kill_xp += round(o["kills"] * sum(mob_xp(s["mob"]) * s["count"] for s in pool) / max(1, sum(s["count"] for s in pool)))
+                kill_xp += 0 if d["act"] not in pilgrim_acts else round(o["kills"] * sum(mob_xp(s["mob"]) * s["count"] for s in pool) / max(1, sum(s["count"] for s in pool)))
             if o.get("type") == "boss" or (o.get("type") == "script" and mid_ == "lions"):
                 boss = mobs.get(o.get("mob", "grim"))
                 if not boss or not boss.get("boss"):
                     err(f"{ow}: unknown boss {o.get('mob')}"); continue
                 total = xp[0] + int(boss.get("xp_bonus", 0))
                 lo, hi = rules["boss"]
-                if not lo <= total <= hi:
+                if d["act"] in pilgrim_acts and not lo <= total <= hi:
                     err(f"{ow}: boss XP {total} is outside {lo}-{hi}")
-                kill_xp += int(boss.get("xp_bonus", 0))
+                kill_xp += int(boss.get("xp_bonus", 0)) if d["act"] in pilgrim_acts else 0
             if o.get("id") in spawn_ats:
                 spawn_ats.discard(o["id"])
         for s in d.get("spawns", []):
@@ -181,7 +204,8 @@ def main() -> int:
         plan = acts["acts"][a]
         if budget[a] != [plan["base"], plan["job"]]:
             err(f"act {a}: objectives pay {budget[a]} but the design budget is [{plan['base']}, {plan['job']}]")
-        total[0] += budget[a][0]; total[1] += budget[a][1]
+        if a in pilgrim_acts:
+            total[0] += budget[a][0]; total[1] += budget[a][1]
     want = [sum(prog.get("base_cost", [])), sum(prog.get("job_cost", []))]
     if total != want:
         err(f"total quest XP {total} must equal the Base 10 / Job 10 thresholds {want}")

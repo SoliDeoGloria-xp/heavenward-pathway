@@ -6,7 +6,9 @@
   "interpreter",
   "cross",
   "hill",
-  "palace"
+  "palace",
+  "humiliation",
+  "shadow"
  ],
  "acts": {
   "eden": {
@@ -15,7 +17,8 @@
    "base": 330,
    "job": 35,
    "end_base": 5,
-   "end_job": 2
+   "end_job": 2,
+   "pilgrim": true
   },
   "city": {
    "name": "City of Destruction + Evangelist",
@@ -23,7 +26,8 @@
    "base": 240,
    "job": 70,
    "end_base": 6,
-   "end_job": 4
+   "end_job": 4,
+   "pilgrim": true
   },
   "slough": {
    "name": "Slough + Worldly Wiseman + Wicket Gate",
@@ -31,7 +35,8 @@
    "base": 200,
    "job": 60,
    "end_base": 7,
-   "end_job": 5
+   "end_job": 5,
+   "pilgrim": true
   },
   "interpreter": {
    "name": "Interpreter's House",
@@ -39,7 +44,8 @@
    "base": 200,
    "job": 40,
    "end_base": 7,
-   "end_job": 5
+   "end_job": 5,
+   "pilgrim": true
   },
   "cross": {
    "name": "The Cross",
@@ -47,7 +53,8 @@
    "base": 150,
    "job": 30,
    "end_base": 8,
-   "end_job": 6
+   "end_job": 6,
+   "pilgrim": true
   },
   "hill": {
    "name": "Hill Difficulty",
@@ -55,7 +62,8 @@
    "base": 470,
    "job": 230,
    "end_base": 9,
-   "end_job": 8
+   "end_job": 8,
+   "pilgrim": true
   },
   "palace": {
    "name": "Palace Beautiful, Calling trial, Lions' Path, Giant Grim",
@@ -63,7 +71,26 @@
    "base": 620,
    "job": 390,
    "end_base": 10,
-   "end_job": 10
+   "end_job": 10,
+   "pilgrim": true
+  },
+  "humiliation": {
+   "name": "Valley of Humiliation (Apollyon)",
+   "minutes": 30,
+   "base": 700,
+   "job": 300,
+   "end_base": 10,
+   "end_job": 3,
+   "pilgrim": false
+  },
+  "shadow": {
+   "name": "Valley of the Shadow of Death (Faithful joins)",
+   "minutes": 30,
+   "base": 700,
+   "job": 300,
+   "end_base": 11,
+   "end_job": 5,
+   "pilgrim": false
   }
  }
 }

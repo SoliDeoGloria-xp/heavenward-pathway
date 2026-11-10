@@ -58,7 +58,7 @@ func build() -> void:
 	w.kit._solid_box(Vector3(2.6, 2, 0.4), board.position + Vector3(0, 1, 0))
 	w._add_ent("board", "Muster Board", board.position, board, "Muster", "friends", func() -> void: G.say("The Muster Board. Nothing is posted for you just now.", G.SYS))
 	# doors: armory and reading room
-	w._add_ent("armory", "The Armory", Vector3(-6, 0, -9.2), null, "Enter", "equip", func(): G.say("The armory: here every pilgrim is given the whole armour of God, the same for all [BSB: Ephesians 6:13]", G.NPC))
+	w._add_ent("armory", "The Armory", Vector3(-6, 0, -9.2), null, "Enter", "equip", _use_armory)
 	w._add_ent("reading", "Reading Room", Vector3(6, 0, -9.2), null, "Enter", "library", func(): G.say("Reading Together rooms: friends read one passage side by side. On the Lord's Day they are quiet and reward-free.", G.NPC))
 	# the porter
 	var watchful := w.kit.standee("valiant", "Watchful the Porter", Color("ffe9a0")); watchful.position = Vector3(2.6, 0, 6.5)
@@ -110,3 +110,10 @@ func _act_hearth() -> void:
 	G.hp = G.hp_max; G.zeal = G.zeal_max; G.weary = false
 	G.say("You rest in the House, among the pilgrims. Health and Zeal restored.", G.INFO)
 	G.stats_changed.emit()
+
+## After the Armor of God is given, the armory's bench refines road gear and cuts Fruit stones.
+func _use_armory() -> void:
+	if G.armor:
+		w.hud.bench()
+	else:
+		G.say("The armory. The family of the House will bring you here in time.", G.SYS)

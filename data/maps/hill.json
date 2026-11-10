@@ -202,6 +202,15 @@
    "color": "#ffe9b0",
    "e": 2.4,
    "range": 8
+  },
+  {
+   "t": "billboard",
+   "at": [
+    29.5,
+    -7
+   ],
+   "art": "palace_beautiful",
+   "h": 9
   }
  ],
  "ents": [

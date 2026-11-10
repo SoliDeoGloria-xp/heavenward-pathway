@@ -98,6 +98,16 @@ var act_xp := {}                # act id -> [base, job] quest XP earned there
 var cur_act := "eden"
 var played_ms := 0              # play time carried across saves
 var time_scale := 1.0           # 1 in play; the autotest runs faster
+## Road gear and economy (see scripts/systems/gear.gd). All saved.
+var gear: Array = []            # [{uid, id, rarity, plus}]
+var gear_uid := 0
+var equipped := {}              # slot -> uid
+var storage: Array = []
+var denarii := 0
+var stones := {}                # Fruit stone id -> count
+var fruit_stone := ""           # the stone set in the garment
+var bestiary := {}              # mob id -> foes overcome
+var daily := {}                 # {"day": "YYYY-MM-DD", "kills": n, "read": bool, "claimed": bool}
 var _data_cache := {}
 var _overrides := {}            # placeholder path -> verified art path (data/asset_overrides.json)
 
@@ -154,14 +164,34 @@ func reset() -> void:
 	stat_pts = 0; skill_pts = 0; skill_lv = {}; tips_seen = {}
 	job_id = PILGRIM; trial_job = ""; armor = false; flags = {}; map_state = {}; cur_map = "eden"; lamb_name = ""
 	ledger = {"quest": [0, 0], "mob": [0, 0]}; act_xp = {}; cur_act = "eden"; played_ms = 0
+	gear = []; gear_uid = 0; equipped = {}; storage = []; denarii = 0; stones = {}; fruit_stone = ""; bestiary = {}; daily = {}
+	Gear.equip(int(Gear.add("wooden_staff").uid))
 	_sheet_cache = {}; player_sheet = null
 	recalc(); hp = hp_max; zeal = zeal_max
 
 # ------------------------------------------------------------------ derived numbers
 ## Every stat has one visible job, so the Status window can show "before -> after".
 func calc_for(s: Dictionary, base_lv: int) -> Dictionary:
-	# Armor of God and Steady Footing both add a flat guard (numbers in progression.json).
-	var guard_bonus := (int(PROG.get("armor_guard", 0)) if armor else 0) + int(skill_lv.get("steady", 0))
+	# Flat additions: the Armor of God, road gear with its Fruit stone, and passive skills.
+	var add := Gear.totals()
+	add["guard"] = float(add.get("guard", 0.0)) + (float(PROG.get("armor_guard", 0)) if armor else 0.0)
+	for id in skill_lv.keys():
+		var fx: Dictionary = SKILL_INFO[id].fx
+		if fx.type == "passive" and skill_open(id):
+			add[fx.stat] = float(add.get(fx.stat, 0.0)) + float(fx.per_lv) * int(skill_lv[id])
+	var out := _base_numbers(s, base_lv)
+	for k in ["hp", "zeal", "atk", "guard", "crit", "regen", "power"]:
+		out[k] += add.get(k, 0.0)
+	out.miss = maxf(0.0, out.miss + float(add.get("miss", 0.0)))
+	out.interval = maxf(MIN_INTERVAL, out.interval / (1.0 + float(add.get("haste", 0.0))))
+	for k in ["hp", "zeal", "atk", "guard"]:
+		out[k] = int(out[k])
+	return out
+
+const MIN_INTERVAL := 0.5
+
+## Numbers from attributes and Base Level alone.
+func _base_numbers(s: Dictionary, base_lv: int) -> Dictionary:
 	return {
 		"hp": 80 + 14 * (base_lv - 1) + 12 * int(s.ste),
 		"zeal": 28 + 5 * (base_lv - 1) + 6 * int(s.wis),
@@ -169,7 +199,7 @@ func calc_for(s: Dictionary, base_lv: int) -> Dictionary:
 		"interval": maxf(0.6, 1.2 - 0.04 * int(s.dil)),
 		"miss": maxf(0.0, 0.11 - 0.012 * int(s.sob)),
 		"crit": 0.06 + 0.015 * int(s.hop),
-		"guard": int(s.ste) / 3 + guard_bonus,
+		"guard": int(s.ste) / 3,
 		"regen": 1.0 + 0.15 * int(s.hop),
 		"power": 1.0 + 0.05 * (int(s.wis) - STAT_START)}
 
@@ -199,6 +229,9 @@ func learn_skill(id: String) -> bool:
 	var info: Dictionary = SKILL_INFO[id]
 	if skill_pts <= 0 or int(skill_lv.get(id, 0)) >= int(info.max):
 		return false
+	if info.has("req") and int(skill_lv.get(info.req.skill, 0)) < int(info.req.lv):
+		say("%s needs %s at level %d first." % [info.name, SKILL_INFO[info.req.skill].name, int(info.req.lv)], WARN)
+		return false
 	skill_lv[id] = int(skill_lv.get(id, 0)) + 1; skill_pts -= 1
 	recalc()
 	say("%s is now level %d." % [info.name, skill_lv[id]], INFO)
@@ -215,18 +248,55 @@ func skill_open(id: String) -> bool:
 		return false
 	return not info.has("needs") or flags.has(info.needs)
 
-## Skills on a bar page: page 0 = Pilgrim skills, page 1 = the Calling's skills (or the one lent for a trial).
-func page_skills(page: int, in_eden: bool) -> Array:
-	var out: Array = []
+const BAR_SLOTS := 4
+
+## The skill bar's pages: Pilgrim skills four to a page, then one page for the Calling's skills
+## (or the single skill lent for the Calling trial).
+func bar_pages(in_eden: bool) -> Array:
+	var mine: Array = []; var calling: Array = []
 	for id in SKILL_ORDER:
 		var info: Dictionary = SKILL_INFO[id]
-		var mine: bool = info.job == PILGRIM if page == 0 else (info.job == job_id and job_id != PILGRIM)
-		var lent: bool = page == 1 and trial_job != "" and JOBS[trial_job].skills[0] == id
 		if info.kind != "active" or bool(info.get("eden", false)) != in_eden:
 			continue
-		if (mine and has_skill(id)) or lent:
-			out.append(id)
-	return out
+		if info.job == PILGRIM and has_skill(id):
+			mine.append(id)
+		elif (info.job == job_id and has_skill(id)) or (trial_job != "" and JOBS[trial_job].skills[0] == id):
+			calling.append(id)
+	var pages: Array = []
+	for i in range(0, maxi(mine.size(), 1), BAR_SLOTS):
+		pages.append(mine.slice(i, i + BAR_SLOTS))
+	pages.append(calling)
+	return pages
+
+func page_skills(page: int, in_eden: bool) -> Array:
+	var pages := bar_pages(in_eden)
+	return pages[page] if page < pages.size() else []
+
+# ------------------------------------------------------------------ daily portion and codex
+func today() -> String:
+	return Time.get_date_string_from_system()
+
+## Three small things a day; no streaks, nothing lost by missing one.
+func daily_state() -> Dictionary:
+	if daily.get("day", "") != today():
+		daily = {"day": today(), "kills": 0, "read": false, "claimed": false}
+	return daily
+
+func daily_done() -> bool:
+	var st := daily_state()
+	return int(st.kills) >= int(data("items").daily.kills) and bool(st.read)
+
+func daily_claim() -> void:
+	var st := daily_state()
+	if daily_done() and not st.claimed:
+		st.claimed = true
+		manna += float(data("items").daily.reward_manna); denarii += int(data("items").daily.reward_denarii)
+		say("Daily portion received: Manna +%d, Denarii +%d." % [int(data("items").daily.reward_manna), int(data("items").daily.reward_denarii)], INFO)
+		sfx("coin"); stats_changed.emit()
+
+func note_kill(mob_id: String) -> void:
+	bestiary[mob_id] = int(bestiary.get(mob_id, 0)) + 1
+	daily_state().kills = int(daily_state().kills) + 1
 
 ## Skill numbers at a level (what the Skills window shows and combat uses). Shapes come from the skill's "fx".
 func skill_num(id: String, lv: int = -1) -> Dictionary:
@@ -249,7 +319,7 @@ func skill_num(id: String, lv: int = -1) -> Dictionary:
 			var add: float = float(fx.add) + per
 			return {"add": add, "text": String(fx.text) % [add * float(fx.get("show_mult", 1.0)), int(fx.secs)]}
 		"passive":
-			return {"text": String(fx.text) % int(per)}
+			return {"text": String(fx.text) % int(round(per * float(fx.get("show_mult", 1.0))))}
 	return {"text": String(fx.get("text", ""))}
 
 func tip_once(id: String) -> bool:
@@ -410,8 +480,9 @@ func lords_day() -> bool:
 # ------------------------------------------------------------------ save / continue (one local slot)
 const SAVED := ["pname", "hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "manna", "bag", "weary", "burden", "kos", "snaps",
 	"stat", "stat_pts", "skill_lv", "skill_pts", "guide", "tips_seen", "minor", "marks", "secrets", "house_rested",
-	"job_id", "armor", "flags", "map_state", "cur_map", "lamb_name", "ledger", "act_xp", "cur_act"]
-const SAVED_INTS := ["hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "kos", "snaps", "stat_pts", "skill_pts", "marks"]
+	"job_id", "armor", "flags", "map_state", "cur_map", "lamb_name", "ledger", "act_xp", "cur_act",
+	"gear", "gear_uid", "equipped", "storage", "denarii", "stones", "fruit_stone", "bestiary", "daily"]
+const SAVED_INTS := ["hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "kos", "snaps", "stat_pts", "skill_pts", "marks", "gear_uid", "denarii"]
 
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
@@ -437,6 +508,9 @@ func load_game() -> bool:
 	for k in stat.keys(): stat[k] = int(stat[k])            # JSON numbers load as floats
 	for k in skill_lv.keys(): skill_lv[k] = int(skill_lv[k])
 	for k in bag.keys(): bag[k] = int(bag[k])
+	for k in equipped.keys(): equipped[k] = int(equipped[k])
+	for it in gear + storage:
+		for k in ["uid", "rarity", "plus"]: it[k] = int(it[k])
 	played_ms = int(d0.get("played_ms", 0)); start_ms = Time.get_ticks_msec()
 	base_cap = cap_for(int(PROG["pilgrim_base_cap"]))
 	recalc(); hp = hp_max; zeal = zeal_max
