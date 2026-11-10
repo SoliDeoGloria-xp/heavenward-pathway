@@ -166,7 +166,7 @@ func _ent(e: Dictionary) -> void:
 	match String(e.kind):
 		"npc":
 			var color := Color(String(e.get("color", "#9fd8ff")))
-			var actor := kit._pilgrim_actor(e.look, e.name, color, false)
+			var actor: SpriteActor = kit.standee(String(e.standee), e.name, color) if e.has("standee") else kit._pilgrim_actor(e.look, e.name, color, false)
 			actor.position = at
 			if e.get("glow", false):
 				actor.set_tint(Color(1.5, 1.45, 1.2))

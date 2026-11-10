@@ -1,0 +1,2279 @@
+{
+ "apollyon": {
+  "tex": "res://assets/sprites/mobs/apollyon.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   166,
+   166
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "beast_worldliness": {
+  "tex": "res://assets/sprites/mobs/beast_worldliness.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   108,
+   163
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "chained_lions": {
+  "tex": "res://assets/sprites/mobs/chained_lions.png",
+  "hframes": 7,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   157,
+   163
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "attack": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+   ],
+   "hurt": [
+    21,
+    22
+   ],
+   "die": [
+    23,
+    24
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "diabolus_mansoul": {
+  "tex": "res://assets/sprites/mobs/diabolus_mansoul.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   217,
+   143
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "dragon_persecution": {
+  "tex": "res://assets/sprites/mobs/dragon_persecution.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   123,
+   170
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "envy_common": {
+  "tex": "res://assets/sprites/mobs/envy_common.png",
+  "hframes": 4,
+  "vframes": 1,
+  "height": 72,
+  "cell": [
+   41,
+   74
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "attack": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "hurt": [
+    0
+   ],
+   "die": [
+    0
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": [
+   "move",
+   "attack",
+   "hit_death"
+  ]
+ },
+ "envy_elite": {
+  "tex": "res://assets/sprites/mobs/envy_elite.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 84,
+  "cell": [
+   178,
+   103
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "envy_greater": {
+  "tex": "res://assets/sprites/mobs/envy_greater.png",
+  "hframes": 4,
+  "vframes": 4,
+  "height": 96,
+  "cell": [
+   117,
+   119
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    4,
+    5,
+    6,
+    7
+   ],
+   "attack": [
+    8,
+    9,
+    10,
+    11
+   ],
+   "hurt": [
+    12,
+    13
+   ],
+   "die": [
+    14,
+    15
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "envy_rare": {
+  "tex": "res://assets/sprites/mobs/envy_rare.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 78,
+  "cell": [
+   82,
+   87
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "formalist_hypocrisy": {
+  "tex": "res://assets/sprites/mobs/formalist_hypocrisy.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   115,
+   145
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "giant_despair": {
+  "tex": "res://assets/sprites/mobs/giant_despair.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   129,
+   160
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "giant_grim": {
+  "tex": "res://assets/sprites/mobs/giant_grim.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   136,
+   148
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "giant_maul": {
+  "tex": "res://assets/sprites/mobs/giant_maul.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   142,
+   160
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "giant_slaygood": {
+  "tex": "res://assets/sprites/mobs/giant_slaygood.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   145,
+   193
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "gluttony_common": {
+  "tex": "res://assets/sprites/mobs/gluttony_common.png",
+  "hframes": 4,
+  "vframes": 1,
+  "height": 72,
+  "cell": [
+   60,
+   75
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "attack": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "hurt": [
+    0
+   ],
+   "die": [
+    0
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": [
+   "move",
+   "attack",
+   "hit_death"
+  ]
+ },
+ "gluttony_elite": {
+  "tex": "res://assets/sprites/mobs/gluttony_elite.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 84,
+  "cell": [
+   81,
+   93
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "gluttony_greater": {
+  "tex": "res://assets/sprites/mobs/gluttony_greater.png",
+  "hframes": 4,
+  "vframes": 4,
+  "height": 96,
+  "cell": [
+   126,
+   107
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    4,
+    5,
+    6,
+    7
+   ],
+   "attack": [
+    8,
+    9,
+    10,
+    11
+   ],
+   "hurt": [
+    12,
+    13
+   ],
+   "die": [
+    14,
+    15
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "gluttony_rare": {
+  "tex": "res://assets/sprites/mobs/gluttony_rare.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 78,
+  "cell": [
+   74,
+   95
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "great_red_dragon": {
+  "tex": "res://assets/sprites/mobs/great_red_dragon.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   321,
+   138
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "attack": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "greed_common": {
+  "tex": "res://assets/sprites/mobs/greed_common.png",
+  "hframes": 7,
+  "vframes": 4,
+  "height": 72,
+  "cell": [
+   77,
+   83
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "attack": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+   ],
+   "hurt": [
+    21,
+    22
+   ],
+   "die": [
+    23,
+    24,
+    25,
+    26,
+    27
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "greed_elite": {
+  "tex": "res://assets/sprites/mobs/greed_elite.png",
+  "hframes": 4,
+  "vframes": 4,
+  "height": 84,
+  "cell": [
+   120,
+   104
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    4,
+    5,
+    6,
+    7
+   ],
+   "attack": [
+    8,
+    9,
+    10,
+    11
+   ],
+   "hurt": [
+    12,
+    13
+   ],
+   "die": [
+    14,
+    15
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "greed_greater": {
+  "tex": "res://assets/sprites/mobs/greed_greater.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 96,
+  "cell": [
+   89,
+   123
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "greed_rare": {
+  "tex": "res://assets/sprites/mobs/greed_rare.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 78,
+  "cell": [
+   88,
+   129
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "legion_hypocrisy": {
+  "tex": "res://assets/sprites/mobs/legion_hypocrisy.png",
+  "hframes": 7,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   105,
+   148
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "attack": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+   ],
+   "hurt": [
+    21,
+    22
+   ],
+   "die": [
+    23,
+    24
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "lust_common": {
+  "tex": "res://assets/sprites/mobs/lust_common.png",
+  "hframes": 4,
+  "vframes": 4,
+  "height": 72,
+  "cell": [
+   91,
+   77
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    4,
+    5,
+    6,
+    7
+   ],
+   "attack": [
+    8,
+    9,
+    10,
+    11
+   ],
+   "hurt": [
+    12,
+    13
+   ],
+   "die": [
+    14,
+    15
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "lust_elite": {
+  "tex": "res://assets/sprites/mobs/lust_elite.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 84,
+  "cell": [
+   85,
+   106
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "lust_greater": {
+  "tex": "res://assets/sprites/mobs/lust_greater.png",
+  "hframes": 4,
+  "vframes": 4,
+  "height": 96,
+  "cell": [
+   86,
+   106
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    4,
+    5,
+    6,
+    7
+   ],
+   "attack": [
+    8,
+    9,
+    10,
+    11
+   ],
+   "hurt": [
+    12,
+    13
+   ],
+   "die": [
+    14,
+    15
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "lust_rare": {
+  "tex": "res://assets/sprites/mobs/lust_rare.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 78,
+  "cell": [
+   70,
+   102
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "madam_bubble": {
+  "tex": "res://assets/sprites/mobs/madam_bubble.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   126,
+   147
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "pride_common": {
+  "tex": "res://assets/sprites/mobs/pride_common.png",
+  "hframes": 7,
+  "vframes": 4,
+  "height": 72,
+  "cell": [
+   76,
+   77
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "attack": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+   ],
+   "hurt": [
+    21,
+    22
+   ],
+   "die": [
+    23,
+    24,
+    25,
+    26,
+    27
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "pride_elite": {
+  "tex": "res://assets/sprites/mobs/pride_elite.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 84,
+  "cell": [
+   109,
+   91
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "pride_greater": {
+  "tex": "res://assets/sprites/mobs/pride_greater.png",
+  "hframes": 7,
+  "vframes": 4,
+  "height": 96,
+  "cell": [
+   118,
+   98
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "attack": [
+    14,
+    15,
+    16,
+    17,
+    18
+   ],
+   "hurt": [
+    21,
+    22
+   ],
+   "die": [
+    23,
+    24,
+    25,
+    26,
+    27
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "pride_rare": {
+  "tex": "res://assets/sprites/mobs/pride_rare.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 78,
+  "cell": [
+   96,
+   88
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "pride_wanderer": {
+  "tex": "res://assets/sprites/mobs/pride_wanderer.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   113,
+   140
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "prince_air": {
+  "tex": "res://assets/sprites/mobs/prince_air.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   203,
+   147
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "simple_sloth_presumption": {
+  "tex": "res://assets/sprites/mobs/simple_sloth_presumption.png",
+  "hframes": 5,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   251,
+   138
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "attack": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "hurt": [
+    15,
+    16
+   ],
+   "die": [
+    17,
+    18
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "sloth_common": {
+  "tex": "res://assets/sprites/mobs/sloth_common.png",
+  "hframes": 7,
+  "vframes": 4,
+  "height": 72,
+  "cell": [
+   93,
+   88
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "attack": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+   ],
+   "hurt": [
+    21,
+    22
+   ],
+   "die": [
+    23,
+    24,
+    25,
+    26,
+    27
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "sloth_elite": {
+  "tex": "res://assets/sprites/mobs/sloth_elite.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 84,
+  "cell": [
+   76,
+   94
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "sloth_greater": {
+  "tex": "res://assets/sprites/mobs/sloth_greater.png",
+  "hframes": 8,
+  "vframes": 4,
+  "height": 84,
+  "cell": [
+   257,
+   94
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "attack": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "hurt": [
+    24,
+    25
+   ],
+   "die": [
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "sloth_rare": {
+  "tex": "res://assets/sprites/mobs/sloth_rare.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 78,
+  "cell": [
+   89,
+   94
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "stronghold_unbelief": {
+  "tex": "res://assets/sprites/mobs/stronghold_unbelief.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   126,
+   150
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "throne_pride": {
+  "tex": "res://assets/sprites/mobs/throne_pride.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 136,
+  "cell": [
+   99,
+   146
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "wrath_common": {
+  "tex": "res://assets/sprites/mobs/wrath_common.png",
+  "hframes": 4,
+  "vframes": 1,
+  "height": 72,
+  "cell": [
+   53,
+   74
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "attack": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "hurt": [
+    0
+   ],
+   "die": [
+    0
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": [
+   "move",
+   "attack",
+   "hit_death"
+  ]
+ },
+ "wrath_elite": {
+  "tex": "res://assets/sprites/mobs/wrath_elite.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 84,
+  "cell": [
+   86,
+   98
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "wrath_greater": {
+  "tex": "res://assets/sprites/mobs/wrath_greater.png",
+  "hframes": 5,
+  "vframes": 4,
+  "height": 96,
+  "cell": [
+   121,
+   112
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    5,
+    6,
+    7,
+    8
+   ],
+   "attack": [
+    10,
+    11,
+    12,
+    13,
+    14
+   ],
+   "hurt": [
+    15,
+    16
+   ],
+   "die": [
+    17,
+    18
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ },
+ "wrath_rare": {
+  "tex": "res://assets/sprites/mobs/wrath_rare.png",
+  "hframes": 6,
+  "vframes": 4,
+  "height": 78,
+  "cell": [
+   95,
+   114
+  ],
+  "anims": {
+   "idle": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "walk": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "attack": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+   ],
+   "hurt": [
+    18,
+    19
+   ],
+   "die": [
+    20,
+    21
+   ]
+  },
+  "fps": {
+   "idle": 4.0,
+   "walk": 8.0,
+   "attack": 9.0,
+   "hurt": 8.0,
+   "die": 7.0
+  },
+  "missing": []
+ }
+}

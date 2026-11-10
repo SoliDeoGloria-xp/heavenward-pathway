@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 (versionCode 3) — first real art
+
+- **Monsters and bosses** now use the delivered sheets (46 creatures cleaned and imported; the 17 in Acts I–II are wired in). Idle, walk, attack, hurt and death animations play from `data/sprites.json`.
+- **Skill icons**: 20 skills use the P1 icons. **NPCs**: the Interpreter, Goodwill, Help and Watchful use P1 standees.
+- New tools: `tools/import_sheets.py` (animation sheets) and `tools/import_art.py` (icons, standees, props). Both remove the painted checkerboard, crop, and fit without stretching.
+- Fixed: status chips could stack when several things changed in one frame.
+
 ## 0.2.0 (versionCode 2) — Acts I–II, single-player
 
 **Story.** The road is now playable from Eden to the first Calling: City of Destruction (extended), the Slough of Despond and Wicket Gate, the Interpreter's House, the Cross, the Hill Difficulty, Palace Beautiful with the Calling trial, the Lions' Path and the Muster against Giant Grim. The "skip ahead" story cards are gone. Six Dreamer's Pages and the lamb's bell carry the personal thread.

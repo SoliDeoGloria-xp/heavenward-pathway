@@ -61,8 +61,7 @@ func build() -> void:
 	w._add_ent("armory", "The Armory", Vector3(-6, 0, -9.2), null, "Enter", "equip", func(): G.say("The armory: here every pilgrim is given the whole armour of God, the same for all [BSB: Ephesians 6:13]", G.NPC))
 	w._add_ent("reading", "Reading Room", Vector3(6, 0, -9.2), null, "Enter", "library", func(): G.say("Reading Together rooms: friends read one passage side by side. On the Lord's Day they are quiet and reward-free.", G.NPC))
 	# the porter
-	var watchful := w.kit._sprite_npc("res://assets/sprites/npc_evangelist.png", 2, 5, true, Vector3(2.6, 0, 6.5), "Watchful the Porter", Color("ffe9a0"))
-	watchful.set_tint(Color(1.05, 0.95, 0.8))
+	var watchful := w.kit.standee("valiant", "Watchful the Porter", Color("ffe9a0")); watchful.position = Vector3(2.6, 0, 6.5)
 	w._add_ent("watchful", "Watchful", watchful.position, watchful, "Talk", "talk", Callable())
 	# lamps, trees, a fountain
 	for lp in [Vector3(-3, 0, 4.5), Vector3(3, 0, 4.5), Vector3(-12, 0, 2), Vector3(12, 0, 2)]:

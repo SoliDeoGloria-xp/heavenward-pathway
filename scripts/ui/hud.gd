@@ -293,6 +293,7 @@ func refresh() -> void:
 	exp_bar.value = G.base_pct() * 1000.0
 	exp_txt.text = "EXP %d%%  ·  Job %d%%  ·  Manna %s" % [int(G.base_pct() * 100.0), int(G.job_pct() * 100.0), str(snappedf(G.manna, 0.1))]
 	for c in status_row.get_children():
+		status_row.remove_child(c)   # removed at once: several refreshes in one frame must not stack chips
 		c.queue_free()
 	if G.burden:
 		status_row.add_child(_chip("Burden", Color("8a6438")))

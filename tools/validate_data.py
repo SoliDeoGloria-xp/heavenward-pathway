@@ -77,8 +77,17 @@ def main() -> int:
             err(f"job {jid}: needs exactly 3 known skills")
     if len(jobs.get("jobs", {})) != 6:
         err("jobs.json: the first job change offers exactly six jobs")
+    sprites = load("sprites")
     for mid, m in mobs.items():
         check_name(f"mob {mid}", m.get("name", ""))
+        sheet = sprites.get(m.get("sprite", ""))
+        if sheet is None or "size" not in m:
+            err(f"mob {mid}: needs a sprite listed in sprites.json and a size")
+        elif not (ROOT / sheet["tex"].replace("res://", "")).exists():
+            err(f"mob {mid}: sheet file missing: {sheet['tex']}")
+    for sid, s in skills.get("skills", {}).items():
+        if not (ROOT / "assets" / "icons" / f"{s.get('icon')}.png").exists():
+            err(f"skill {sid}: icon file missing: {s.get('icon')}")
 
     # ---- maps
     budget = {a: [0, 0] for a in acts.get("order", [])}

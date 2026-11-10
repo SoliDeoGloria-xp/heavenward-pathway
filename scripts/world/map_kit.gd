@@ -3,6 +3,8 @@ extends RefCounted
 ## Map-building primitives and world feedback (float text, sparkles, drops, ambience).
 
 var w: World
+const STANDEE_HEIGHT := 1.75       # world units
+const STANDEE_PX := 96.0
 var bobbers: Array = []          # nodes that float gently (tableau orbs)
 var spinners: Array = []         # [node, radians per second]
 
@@ -421,3 +423,10 @@ func warp(at: Vector3) -> Node3D:
 	Fx.particles(n, at + Vector3(0, 0.2, 0), {"amount": 24, "life": 2.2, "one_shot": false, "explode": 0.0, "sphere": 1.2, "vmin": 0.8, "vmax": 1.6, "spread": 8.0,
 		"gravity": Vector3.ZERO, "color": Color("fff0c0"), "size": 0.14, "local": true})
 	return n
+
+## A standing character drawn as one picture (assets/sprites/npc/<id>.png, 96x96, feet at the bottom).
+func standee(id: String, display_name: String, name_color: Color) -> SpriteActor:
+	var a := SpriteActor.new(); w.add_child(a)
+	a.setup({"tex": G.tex("res://assets/sprites/npc/%s.png" % id), "hframes": 1, "vframes": 1, "pixel": STANDEE_HEIGHT / STANDEE_PX, "rows": false,
+		"anims": {"idle": [0], "walk": [0]}, "fps": {"idle": 1.0}}, display_name, name_color)
+	return a

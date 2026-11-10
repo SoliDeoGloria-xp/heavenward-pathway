@@ -115,7 +115,7 @@ Built from the code-side items in the 100-improvement review.
 
 ## Art and audio
 
-Placeholders come from `tools/gen_assets.py` and keep the game runnable. Verified art replaces them through `data/asset_overrides.json`: unzip a pack to `assets/p1/` and run `python3 tools/check_assets.py`. The contract and everything still to be drawn are in `ASSET_REREQUEST.md`. Audio files dropped into `assets/audio/music/` and `assets/audio/sfx/` play without code changes.
+Placeholders come from `tools/gen_assets.py` and keep the game runnable. Delivered art is cleaned by `tools/import_sheets.py` (monster and boss animation sheets → `assets/sprites/mobs/` and `data/sprites.json`) and `tools/import_art.py` (icons, standing NPCs, props); a monster uses a sheet by naming it in `data/mobs.json` (`sprite`, and `size` in world units). Verified art replaces them through `data/asset_overrides.json`: unzip a pack to `assets/p1/` and run `python3 tools/check_assets.py`. The contract and everything still to be drawn are in `ASSET_REREQUEST.md`. Audio files dropped into `assets/audio/music/` and `assets/audio/sfx/` play without code changes.
 
 Scripture is cited as `[BSB: Book ch:v]`. `python3 tools/pull_bsb.py` fills `data/scripture.json` with the public-domain BSB text of the cited passages so Word Study can show them.
 
@@ -145,7 +145,7 @@ scripts/systems/      combat, quests (objective runner), lessons (coach), cutsce
 scripts/world/        map_kit (geometry primitives and feedback)
 scripts/maps/         data_map (builds a map from JSON) and the four hand-built maps
 scripts/ui/           hud, coach, joystick, touch buttons, UIKit
-tools/                validate_data.py, check_assets.py, pull_bsb.py, gen_assets.py
+tools/                validate_data.py, import_sheets.py, import_art.py, check_assets.py, pull_bsb.py, gen_assets.py
 ```
 
 See also `CHANGELOG.md`, `DECISIONS.md`, `PLAYTEST.md`, `PLAY_CONSOLE.md`, `ASSET_REREQUEST.md`.

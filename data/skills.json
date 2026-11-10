@@ -77,7 +77,7 @@
   },
   "rest_prayer": {
    "name": "Prayer of Rest",
-   "icon": "library",
+   "icon": "fruit_patience",
    "max": 3,
    "zeal": 0,
    "cd": 30.0,
@@ -114,7 +114,7 @@
   },
   "steady": {
    "name": "Steady Footing",
-   "icon": "sit",
+   "icon": "fortitude",
    "max": 3,
    "zeal": 0,
    "cd": 0.0,
@@ -130,7 +130,7 @@
   },
   "shield_faith": {
    "name": "Shield of Faith",
-   "icon": "refuge",
+   "icon": "shield_of_faith",
    "max": 5,
    "zeal": 12,
    "cd": 14.0,
@@ -149,7 +149,7 @@
   },
   "good_fight": {
    "name": "Good Fight",
-   "icon": "steps",
+   "icon": "valiant_strike",
    "max": 5,
    "zeal": 14,
    "cd": 7.0,
@@ -166,7 +166,7 @@
   },
   "stand_firm": {
    "name": "Stand Firm",
-   "icon": "staff",
+   "icon": "bronze_sword",
    "max": 5,
    "zeal": 18,
    "cd": 12.0,
@@ -182,7 +182,7 @@
   },
   "arrow_truth": {
    "name": "Arrow of Truth",
-   "icon": "eye",
+   "icon": "arrow_of_truth",
    "max": 5,
    "zeal": 10,
    "cd": 5.0,
@@ -199,7 +199,7 @@
   },
   "keep_watch": {
    "name": "Keep Watch",
-   "icon": "eye",
+   "icon": "hope_rising",
    "max": 5,
    "zeal": 12,
    "cd": 18.0,
@@ -218,7 +218,7 @@
   },
   "sound_alarm": {
    "name": "Sound the Alarm",
-   "icon": "talk",
+   "icon": "zeal_flame",
    "max": 5,
    "zeal": 18,
    "cd": 12.0,
@@ -234,7 +234,7 @@
   },
   "edge_word": {
    "name": "Edge of the Word",
-   "icon": "scroll",
+   "icon": "edge_of_the_word",
    "max": 5,
    "zeal": 12,
    "cd": 5.0,
@@ -251,7 +251,7 @@
   },
   "lamp_feet": {
    "name": "Lamp to My Feet",
-   "icon": "library",
+   "icon": "hope_light",
    "max": 5,
    "zeal": 14,
    "cd": 20.0,
@@ -270,7 +270,7 @@
   },
   "rightly_divide": {
    "name": "Rightly Divide",
-   "icon": "page",
+   "icon": "wisdom_book",
    "max": 5,
    "zeal": 20,
    "cd": 12.0,
@@ -286,7 +286,7 @@
   },
   "still_waters": {
    "name": "Still Waters",
-   "icon": "refuge",
+   "icon": "prayer_aura",
    "max": 5,
    "zeal": 14,
    "cd": 8.0,
@@ -301,7 +301,7 @@
   },
   "rod_staff": {
    "name": "Rod and Staff",
-   "icon": "staff",
+   "icon": "shepherd_staff",
    "max": 5,
    "zeal": 12,
    "cd": 16.0,
@@ -320,7 +320,7 @@
   },
   "seek_lost": {
    "name": "Seek the Lost",
-   "icon": "hand",
+   "icon": "wicket_gate_glow",
    "max": 5,
    "zeal": 12,
    "cd": 6.0,
@@ -337,7 +337,7 @@
   },
   "daily_bread": {
    "name": "Daily Bread",
-   "icon": "bread",
+   "icon": "steward_care",
    "max": 5,
    "zeal": 12,
    "cd": 10.0,
@@ -352,7 +352,7 @@
   },
   "faithful_little": {
    "name": "Faithful in Little",
-   "icon": "bag",
+   "icon": "honey_from_the_rock",
    "max": 5,
    "zeal": 0,
    "cd": 25.0,
@@ -368,7 +368,7 @@
   },
   "well_done": {
    "name": "Well Done",
-   "icon": "hand",
+   "icon": "diligence",
    "max": 5,
    "zeal": 14,
    "cd": 18.0,
@@ -387,7 +387,7 @@
   },
   "press_on": {
    "name": "Press On",
-   "icon": "steps",
+   "icon": "light_step",
    "max": 5,
    "zeal": 10,
    "cd": 5.0,
@@ -404,7 +404,7 @@
   },
   "run_endurance": {
    "name": "Run with Endurance",
-   "icon": "warp",
+   "icon": "boots",
    "max": 5,
    "zeal": 12,
    "cd": 18.0,
@@ -423,7 +423,7 @@
   },
   "narrow_way": {
    "name": "Narrow Way",
-   "icon": "quest",
+   "icon": "wayfarer_compass",
    "max": 5,
    "zeal": 18,
    "cd": 12.0,

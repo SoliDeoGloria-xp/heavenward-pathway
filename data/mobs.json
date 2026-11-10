@@ -3,154 +3,153 @@
   "name": "Slothling",
   "level": 1,
   "tint": "#ffffff",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
+  "sprite": "sloth_common",
   "family": "sloth",
-  "drop": "Bread of Provision"
+  "drop": "Bread of Provision",
+  "size": 1.25
  },
  "whelp": {
   "name": "Idle Whelp",
   "level": 2,
-  "tint": "#d8c8a0",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
+  "tint": "#e8dcc0",
+  "sprite": "sloth_common",
   "family": "sloth",
-  "drop": "Bread of Provision"
+  "drop": "Bread of Provision",
+  "size": 1.1
  },
  "scoffling": {
   "name": "Scoffling",
   "level": 3,
-  "tint": "#c8a8d8",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
-  "family": "pride"
+  "tint": "#ffffff",
+  "sprite": "pride_common",
+  "family": "pride",
+  "size": 1.3
  },
  "mire_sloth": {
   "name": "Mire Sloth",
   "level": 4,
-  "tint": "#8a9a6a",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
+  "tint": "#ffffff",
+  "sprite": "sloth_elite",
   "family": "sloth",
-  "drop": "Bread of Provision"
+  "drop": "Bread of Provision",
+  "size": 1.45
  },
  "glutton_grub": {
   "name": "Glutton Grub",
   "level": 5,
-  "tint": "#d8a070",
-  "pixel": 0.044,
-  "sprite": "mob_slothling",
+  "tint": "#ffffff",
+  "sprite": "gluttony_elite",
   "family": "gluttony",
-  "drop": "Bread of Provision"
+  "drop": "Bread of Provision",
+  "size": 1.4
  },
  "despondling": {
   "name": "Despondling",
   "level": 6,
-  "tint": "#7a86a8",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
-  "family": "doubt"
+  "tint": "#ffffff",
+  "sprite": "sloth_rare",
+  "family": "doubt",
+  "size": 1.4
  },
  "stumbler": {
   "name": "Stumbler",
   "level": 7,
-  "tint": "#b89a7a",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
+  "tint": "#e0d0c0",
+  "sprite": "sloth_elite",
   "family": "sloth",
-  "drop": "Bronze Buckle"
+  "drop": "Bronze Buckle",
+  "size": 1.5
  },
  "loiterer": {
   "name": "Loiterer",
   "level": 8,
-  "tint": "#9aa87a",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
+  "tint": "#d8e0c8",
+  "sprite": "sloth_rare",
   "family": "sloth",
-  "drop": "Bronze Buckle"
+  "drop": "Bronze Buckle",
+  "size": 1.5
  },
  "pretender": {
   "name": "Pretender",
   "level": 9,
-  "tint": "#d8d0a0",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
+  "tint": "#ffffff",
+  "sprite": "pride_elite",
   "family": "pride",
-  "drop": "Bronze Buckle"
+  "drop": "Bronze Buckle",
+  "size": 1.55
  },
  "simple": {
   "name": "Simple",
   "level": 8,
-  "tint": "#c8c8b0",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
-  "family": "sloth"
+  "tint": "#e8e8d8",
+  "sprite": "pride_common",
+  "family": "sloth",
+  "size": 1.5
  },
  "sloth": {
   "name": "Sloth",
   "level": 8,
-  "tint": "#8a9a8a",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
-  "family": "sloth"
+  "tint": "#ffffff",
+  "sprite": "sloth_greater",
+  "family": "sloth",
+  "size": 1.7
  },
  "doubt": {
   "name": "Doubt",
   "level": 8,
-  "tint": "#6a7aa8",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
+  "tint": "#ffffff",
+  "sprite": "envy_greater",
   "family": "doubt",
-  "greater": true
+  "greater": true,
+  "size": 1.5
  },
  "mistrust": {
   "name": "Shade of Mistrust",
   "level": 9,
-  "tint": "#8a7a9a",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
-  "family": "doubt"
+  "tint": "#ffffff",
+  "sprite": "lust_rare",
+  "family": "doubt",
+  "size": 1.5
  },
  "timorous": {
   "name": "Shade of Timorousness",
   "level": 10,
-  "tint": "#a8a8c8",
-  "pixel": 0.04,
-  "sprite": "mob_slothling",
-  "family": "doubt"
+  "tint": "#d8e0ff",
+  "sprite": "lust_rare",
+  "family": "doubt",
+  "size": 1.6
  },
  "formalist": {
   "name": "Formalist and Hypocrisy",
   "level": 9,
-  "tint": "#d8c890",
-  "pixel": 0.075,
-  "sprite": "mob_slothling",
+  "tint": "#ffffff",
+  "sprite": "formalist_hypocrisy",
   "family": "pride",
   "boss": true,
   "hp": 900,
   "atk": 13,
   "slam": 18,
-  "xp_bonus": 30
+  "xp_bonus": 30,
+  "size": 3.0
  },
  "presumption": {
   "name": "Presumption",
   "level": 8,
-  "tint": "#c89070",
-  "pixel": 0.075,
-  "sprite": "mob_slothling",
+  "tint": "#ffffff",
+  "sprite": "simple_sloth_presumption",
   "family": "pride",
   "boss": true,
   "hp": 800,
   "atk": 12,
   "slam": 17,
-  "xp_bonus": 30
+  "xp_bonus": 30,
+  "size": 2.8
  },
  "grim": {
   "name": "Giant Grim",
   "level": 10,
-  "tint": "#c79994",
-  "pixel": 0.088,
-  "sprite": "mob_slothling",
+  "tint": "#ffffff",
+  "sprite": "giant_grim",
   "family": "wrath",
   "boss": true,
   "hp": 1100,
@@ -158,6 +157,7 @@
   "slam": 20,
   "xp_bonus": 20,
   "muster": true,
-  "drop": "Grim's Broken Chain"
+  "drop": "Grim's Broken Chain",
+  "size": 3.6
  }
 }

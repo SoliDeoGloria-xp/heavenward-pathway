@@ -313,7 +313,8 @@
    ],
    "act": "Talk",
    "icon": "talk",
-   "hidden": true
+   "hidden": true,
+   "standee": "shepherd"
   },
   {
    "id": "wiseman",
@@ -347,7 +348,8 @@
    ],
    "act": "Talk",
    "icon": "talk",
-   "hidden": true
+   "hidden": true,
+   "standee": "steward"
   },
   {
    "id": "knock",

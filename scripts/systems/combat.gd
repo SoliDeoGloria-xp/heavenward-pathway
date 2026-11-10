@@ -16,10 +16,12 @@ const ZEAL_ON_HIT := 3.0
 const WEARY_S := 25.0
 const DROP_CHANCE := 0.6
 const AOE_FALLBACK_RANGE := 10.0
-const BOSS_SHADOW := 2.2
+const BOSS_SHADOW := 0.7
+const PLACEHOLDER_PIXEL := 0.04
+const MOB_ATTACK_S := 0.5
 const NO_RESPAWN := -99.0
 const BOSS_NAME_SIZE := 36
-const MOB_SHEET := {"hframes": 7, "vframes": 1, "rows": false, "anims": {"idle": [0, 1], "walk": [2, 3], "hurt": [4], "die": [5, 6]}, "fps": {"idle": 2.0, "walk": 4.0, "die": 3.0}}
+const MOB_SHEET := {"hframes": 7, "vframes": 1, "rows": false, "anims": {"idle": [0, 1], "walk": [2, 3], "attack": [2, 3], "hurt": [4], "die": [5, 6]}, "fps": {"idle": 2.0, "walk": 4.0, "die": 3.0}}
 
 var w: World
 var mobs: Array = []             # {id, name, level, actor, hp, max, atk, xp, alive, home, aggro, ...}
@@ -86,10 +88,18 @@ func spawn_group(objective_id: String) -> void:
 		for i in int(sp.count):
 			_spawn_mob(String(sp.mob), Vector3(rng.randf_range(a[0], a[0] + a[2]), 0, rng.randf_range(a[1], a[1] + a[3])))
 
-func _mob_actor(md: Dictionary, pixel: float, pos: Vector3, shadow: float = 1.0) -> SpriteActor:
+## Sheets imported by tools/import_sheets.py are described in data/sprites.json; a mob's "size"
+## is its standing height in world units. The old generated placeholder sheet is the fallback.
+func _mob_actor(md: Dictionary, scale: float, pos: Vector3, shadow: float = 1.0) -> SpriteActor:
 	var a := SpriteActor.new(); w.add_child(a); a.position = pos
+	var sheet: Dictionary = G.data("sprites").get(md.sprite, {})
 	var cfg := MOB_SHEET.duplicate(true)
-	cfg["tex"] = G.tex("res://assets/sprites/%s.png" % md.sprite); cfg["pixel"] = pixel; cfg["shadow"] = shadow
+	if sheet.is_empty():
+		cfg["tex"] = G.tex("res://assets/sprites/mob_slothling.png"); cfg["pixel"] = PLACEHOLDER_PIXEL * scale
+	else:
+		cfg = {"tex": G.tex(sheet.tex), "hframes": int(sheet.hframes), "vframes": int(sheet.vframes), "rows": false, "anims": sheet.anims, "fps": sheet.fps,
+			"pixel": float(md.size) * scale / float(sheet.height)}
+	cfg["shadow"] = shadow * float(md.get("size", 1.0))
 	a.setup(cfg, md.name, Color("ffe0e0"))
 	a.set_tint(Color(String(md.tint)) * G.sprite_tint)
 	return a
@@ -99,7 +109,7 @@ func _spawn_mob(id: String, pos: Vector3) -> Dictionary:
 	var rules: Dictionary = G.PROG["mob"]
 	var greater: bool = md.get("greater", false)
 	var lv := int(md.level)
-	var a := _mob_actor(md, float(md.pixel) * (float(rules.greater_scale) if greater else 1.0), pos)
+	var a := _mob_actor(md, float(rules.greater_scale) if greater else 1.0, pos)
 	var hp := (float(rules.hp_base) + float(rules.hp_per_lv) * lv) * (float(rules.greater_hp) if greater else 1.0)
 	var atk := (float(rules.atk_base) + float(rules.atk_per_lv) * lv) * (float(rules.greater_atk) if greater else 1.0)
 	var bars := _hp_bars(a)
@@ -131,7 +141,7 @@ func _hp_bars(a: SpriteActor) -> Array:
 ## A field boss or the Muster boss: one large foe with telegraphed blows and a periodic slam.
 func spawn_boss(id: String, pos: Vector3) -> Dictionary:
 	var md: Dictionary = G.MOBS[id]
-	var a := _mob_actor(md, float(md.pixel), pos, BOSS_SHADOW)
+	var a := _mob_actor(md, 1.0, pos, BOSS_SHADOW)
 	if a.name_lbl:
 		a.name_lbl.font_size = BOSS_NAME_SIZE; a.name_lbl.position.y = -0.3
 	var bars := _hp_bars(a)
@@ -196,7 +206,7 @@ func _mob_tick(delta: float) -> void:
 					Fx.telegraph(w, p, 1.1, TELEGRAPH_S)
 				if w.t > m.next:
 					m.next = w.t + MOB_SWING_S; m.tele = false
-					a.play_once("walk", 0.3); a.squash(0.12)
+					a.play_once("attack", MOB_ATTACK_S); a.squash(0.12)
 					var tp: Vector3 = m.get("tele_pos", p)
 					var still_in: bool = Vector2(p.x - tp.x, p.z - tp.z).length() < 1.25
 					if not still_in or randf() < 0.12:
@@ -524,7 +534,7 @@ func _boss_resolve(c: Vector3, r: float, dmg: int, slam: bool) -> void:
 	if boss == null or not boss.alive or w.ending:
 		return
 	var a: SpriteActor = boss.actor
-	a.play_once("walk", 0.3); a.squash(0.16 if slam else 0.1)
+	a.play_once("attack", MOB_ATTACK_S); a.squash(0.16 if slam else 0.1)
 	Fx.dust(w, c, Color(0.75, 0.68, 0.55, 0.7), 14 if slam else 6)
 	Fx.ring(w, c, Color(1, 0.8, 0.6), r * 0.9, 0.35)
 	w.shake(0.45 if slam else 0.22)

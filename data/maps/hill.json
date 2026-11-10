@@ -276,7 +276,8 @@
    "act": "Talk",
    "icon": "talk",
    "hidden": true,
-   "color": "#ffe9a0"
+   "color": "#ffe9a0",
+   "standee": "valiant"
   },
   {
    "id": "page",
