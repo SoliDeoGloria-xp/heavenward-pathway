@@ -13,22 +13,23 @@ var turn := 0.0
 
 func _ready() -> void:
 	UIKit.full_rect(self); theme = G.theme
-	var bg := Glade.new(); UIKit.full_rect(bg); add_child(bg)
-	var root := HBoxContainer.new(); UIKit.full_rect(root)
+	var bg := Glade.new(); add_child(UIKit.pixelate(bg))
+	var root := BoxContainer.new(); root.vertical = G.portrait; UIKit.full_rect(root)
 	root.add_theme_constant_override("separation", 30)
-	root.offset_left = 50; root.offset_right = -50; root.offset_top = 40; root.offset_bottom = -40
+	var edge := 16.0 if G.portrait else 50.0
+	root.offset_left = edge; root.offset_right = -edge; root.offset_top = 40; root.offset_bottom = -40
 	add_child(root)
 	# --- left: stage
 	var lw := UIKit.window("Make character", Vector2(520, 0))
 	lw.root.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var lb: VBoxContainer = lw.body
 	var stage := PanelContainer.new()
-	stage.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/parchment.png", 10, 6))
+	stage.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/parchment.png", 5, 6))
 	stage.custom_minimum_size = Vector2(0, 330)
 	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	atlas = AtlasTexture.new()
 	preview = TextureRect.new(); preview.texture = atlas
-	preview.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	stage.add_child(preview)
@@ -84,8 +85,8 @@ func _swatches() -> void:
 	for i in G.ROBES.size():
 		var b := Button.new(); b.custom_minimum_size = Vector2(62, 62); b.focus_mode = Control.FOCUS_NONE
 		var s := StyleBoxFlat.new(); s.bg_color = G.ROBES[i]
-		s.set_corner_radius_all(10); s.set_border_width_all(5 if i == G.robe_col else 2)
-		s.border_color = Color("1d2b52") if i == G.robe_col else Color("b7c2d9")
+		s.set_corner_radius_all(0); s.set_border_width_all(5 if i == G.robe_col else 2)
+		s.border_color = Color("1f2a52") if i == G.robe_col else Color("9fd3e8")
 		for st in ["normal", "hover", "pressed"]:
 			b.add_theme_stylebox_override(st, s)
 		var idx := i
@@ -114,7 +115,7 @@ func _process(delta: float) -> void:
 func _make() -> void:
 	var err := G.name_ok(name_edit.text)
 	if err != "":
-		msg.text = err; msg.add_theme_color_override("font_color", Color("a8342a")); return
+		msg.text = err; msg.add_theme_color_override("font_color", Color("b33a35")); return
 	G.pname = name_edit.text.strip_edges()
 	G.reset()
 	G.goto("story", {"id": "dream"})
@@ -127,7 +128,7 @@ class Glade extends Control:
 		var w := size.x; var h := size.y
 		for i in 40:
 			var f := float(i) / 39.0
-			draw_rect(Rect2(0, h * f, w, h / 39.0 + 1), Color("e8f2d2").lerp(Color("6f9e58"), f))
+			draw_rect(Rect2(0, h * f, w, h / 39.0 + 1), Color("f4efe4").lerp(Color("4f8a45"), f))
 		for i in 9:
 			draw_circle(Vector2(w * (0.05 + i * 0.12), h * 0.12 + (i % 2) * 40), 120, Color(0.35, 0.6, 0.3, 0.25))
 
@@ -142,12 +143,12 @@ class Hexagon extends Control:
 			var a := -PI * 0.5 + i * PI / 3.0
 			outer.append(c + Vector2(cos(a), sin(a)) * r)
 			inner.append(c + Vector2(cos(a), sin(a)) * r * 0.25)
-		draw_colored_polygon(outer, Color("f4f7fc"))
-		outer.append(outer[0]); draw_polyline(outer, Color("5c6e98"), 2.0, true)
+		draw_colored_polygon(outer, Color("f4efe4"))
+		outer.append(outer[0]); draw_polyline(outer, Color("625e68"), 2.0, true)
 		for i in 3:
 			draw_line(outer[i], outer[i + 3], Color(0.36, 0.43, 0.6, 0.3), 1.0)
 		draw_colored_polygon(inner, Color(0.31, 0.47, 0.72, 0.6))
 		for i in 6:
 			var a := -PI * 0.5 + i * PI / 3.0
 			var p := c + Vector2(cos(a), sin(a)) * (r + 22) - Vector2(18, -7)
-			draw_string(G.font_ui_bold, p, NAMES[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("1d2b52"))
+			draw_string(G.font_ui_bold, p, NAMES[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("1f2a52"))

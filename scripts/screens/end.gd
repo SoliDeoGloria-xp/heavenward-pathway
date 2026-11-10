@@ -5,7 +5,7 @@ const NEXT := "Next: Vanity Fair, where Faithful will be tried. The road goes on
 
 func _ready() -> void:
 	UIKit.full_rect(self); theme = G.theme
-	var art: Control = load("res://scripts/screens/title.gd").KeyArt.new(); UIKit.full_rect(art); add_child(art)
+	var art: Control = load("res://scripts/screens/title.gd").KeyArt.new(); add_child(UIKit.pixelate(art))
 	var cc := CenterContainer.new(); UIKit.full_rect(cc); add_child(cc)
 	var w := UIKit.window("Two pilgrims on the road · end of this chapter", Vector2(860, 0))
 	var b: VBoxContainer = w.body
@@ -19,7 +19,7 @@ func _ready() -> void:
 		["Dreamer's Pages", "%d / %d" % [Quests.pages_found(), G.data("acts").order.size() - 1]], ["Secrets found", str(secrets)], ["Manna", str(snappedf(G.manna, 0.1))],
 		["Rests (KO)", str(G.kos)], ["Fellowship Marks", str(G.marks)], ["Snapshots", str(G.snaps)]]
 	for kv in rows:
-		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 10)); p.custom_minimum_size = Vector2(264, 0)
+		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/card.png", 4, 10)); p.custom_minimum_size = Vector2(264, 0)
 		var h := HBoxContainer.new(); var l := UIKit.label(kv[0], 20); l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h.add_child(l); h.add_child(UIKit.label(kv[1], 20, UIKit.INK, true)); p.add_child(h); grid.add_child(p)
 	b.add_child(grid)
@@ -30,5 +30,5 @@ func _ready() -> void:
 		G.map_state.erase("palace"); G.goto("world", {"map": "palace"}), 260, true))
 	row.add_child(UIKit.button("Title", func() -> void: G.goto("title"), 160))
 	b.add_child(row)
-	b.add_child(UIKit.label("Placeholder art; music and sound play when audio files are added. Scripture is cited as [BSB: reference]. Bunyan quotations are public domain (1678).", 16, UIKit.SUB, false, true))
+	b.add_child(UIKit.label("Music is arranged from public-domain hymn tunes. Scripture is cited as [BSB: reference]. Bunyan quotations are public domain (1678).", 16, UIKit.SUB, false, true))
 	cc.add_child(w.root)

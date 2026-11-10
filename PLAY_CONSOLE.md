@@ -4,9 +4,9 @@
 
 1. Repo → **Settings → Secrets and variables → Actions**. If you have not already, add `HPO_KEY_PASSPHRASE` (12+ characters). Keep it somewhere safe: it unlocks the upload key stored encrypted at `signing/upload.keystore.enc`.
 2. **Actions → Android release (Play Console AAB) → Run workflow**.
-   - `version_code`: must be higher than every earlier upload. This build is **5**. Add 1 each time.
-   - `version_name`: `0.4.0`.
-3. When it finishes, open **Releases**. A **draft** release holds `hpo-0.4.0-code5.aab`. Download it. (If the file name ends in `THROWAWAY-KEY`, the secret was missing: do not upload that one.)
+   - `version_code`: must be higher than every earlier upload. This build is **6**. Add 1 each time.
+   - `version_name`: `0.5.0`.
+3. When it finishes, open **Releases**. A **draft** release holds `hpo-0.5.0-code6.aab`. Download it. (If the file name ends in `THROWAWAY-KEY`, the secret was missing: do not upload that one.)
 4. The log line "manifest SDK levels" must show `targetSdkVersion 36`.
 
 ## 2. Play Console, first time only
@@ -31,7 +31,7 @@
 ## 3. Internal testing release
 
 1. **Testing → Internal testing → Testers**: create an email list, add yourself and testers, save. Copy the **opt-in link**.
-2. **Create new release** → upload the `.aab` → release name `0.4.0 (5)` → notes, for example: "Acts I–II: Eden to the first Calling. Single-player, saves on device."
+2. **Create new release** → upload the `.aab` → release name `0.5.0 (6)` → notes, for example: "Acts I–II: Eden to the first Calling. Single-player, saves on device."
 3. **Review release → Start rollout to Internal testing**.
 4. Each tester opens the opt-in link on their phone, accepts, then installs from the Play Store. Updates arrive like any app.
 

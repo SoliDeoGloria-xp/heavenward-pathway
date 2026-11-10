@@ -40,20 +40,20 @@ func _ready() -> void:
 	catcher = Control.new(); catcher.visible = false; catcher.mouse_filter = Control.MOUSE_FILTER_STOP
 	catcher.gui_input.connect(_dim_input); add_child(catcher)
 	ring = Panel.new(); ring.mouse_filter = Control.MOUSE_FILTER_IGNORE; ring.visible = false
-	var rs := StyleBoxFlat.new(); rs.bg_color = Color(1, 1, 1, 0); rs.set_border_width_all(5); rs.border_color = Color("ffd34e")
-	rs.set_corner_radius_all(18); rs.shadow_color = Color(1, 0.85, 0.3, 0.5); rs.shadow_size = 10
+	var rs := StyleBoxFlat.new(); rs.bg_color = Color(1, 1, 1, 0); rs.set_border_width_all(5); rs.border_color = Color("fbe58a")
+	rs.set_corner_radius_all(0); rs.shadow_color = Color(1, 0.85, 0.3, 0.5); rs.shadow_size = 10
 	ring.add_theme_stylebox_override("panel", rs); add_child(ring)
-	hand = UIKit.outlined("▼", 56, Color("ffd34e")); hand.add_theme_color_override("font_outline_color", Color("4a2c00"))
+	hand = UIKit.outlined("▼", 56, Color("fbe58a")); hand.add_theme_color_override("font_outline_color", Color("3d2a25"))
 	hand.add_theme_constant_override("outline_size", 12); hand.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hand.size = Vector2(72, 64); hand.mouse_filter = Control.MOUSE_FILTER_IGNORE; hand.visible = false; add_child(hand)
 	bubble = PanelContainer.new(); bubble.theme = G.theme; bubble.visible = false
-	bubble.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/window.png", 12, 14))
+	bubble.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/window.png", 8, 14))
 	var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 12); bubble.add_child(h)
 	var face := TextureRect.new(); face.texture = UIKit.face(MapKit.folk_sheet(MapKit.DREAMER_LOOK)); face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; face.custom_minimum_size = Vector2(92, 115); face.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(face)
 	var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 6); v.custom_minimum_size = Vector2(500, 0); h.add_child(v)
-	name_lbl = UIKit.label("The Dreamer", 19, Color("1d4fb8"), true); v.add_child(name_lbl)
+	name_lbl = UIKit.label("The Dreamer", 19, Color("2f4f8f"), true); v.add_child(name_lbl)
 	text_lbl = UIKit.label("", 22, UIKit.INK, false, true); text_lbl.custom_minimum_size = Vector2(500, 0); v.add_child(text_lbl)
 	btn_row = HBoxContainer.new(); btn_row.alignment = BoxContainer.ALIGNMENT_END; btn_row.add_theme_constant_override("separation", 8); v.add_child(btn_row)
 	skip_btn = UIKit.button("Skip tips", _skip_all, 130); skip_btn.custom_minimum_size.y = 48; skip_btn.add_theme_font_size_override("font_size", 18)

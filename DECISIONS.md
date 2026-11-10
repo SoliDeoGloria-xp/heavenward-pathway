@@ -2,6 +2,54 @@
 
 Made while building, where the brief and the design doc left room. Each can be changed in data.
 
+## Art bible (0.5.0)
+
+One rule set for every picture in the game. It is code, not a wish: `tools/artkit.py` holds it, the import tools apply it, `tools/conform.py --check` fails CI when a picture breaks it.
+
+**Palette: 32 colours, no others.** `ink` #1a1622 · `slate` #3d3a48 · `iron` #625e68 · `stone` #918a7e · `ash` #c4bdac · `bone` #f4efe4 · `umber` #3d2a25 · `bark` #6b4530 · `oak` #9a6a3f · `sand` #c79a5e · `wheat` #e8cf9a · `tan` #e0a67a · `blush` #f6d3ae · `pine` #1f3a33 · `moss` #35583a · `olive` #6f7a3a · `leaf` #4f8a45 · `grass` #8cb84f · `lime` #cfe08a · `deep` #1f2a52 · `royal` #2f4f8f · `sky` #4f8fc7 · `mist` #9fd3e8 · `plum` #2d2442 · `violet` #57407a · `lilac` #9a7cc4 · `wine` #6a1f2a · `crimson` #b33a35 · `ember` #e0704a · `brass` #b8862e · `gold` #e8b83e · `glow` #fbe58a.
+They are grouped into shading ramps (dark to light) in `artkit.RAMP`: stone, wood, leaf, dry, water, night, dusk, fire, gold, cloth, skin, sandstone. A tint in map data now chooses a drawn variant (dark cobble, mire water); nothing is recoloured at run time except the map's single light tint, which multiplies sprites and props alike.
+
+**Outline.** The outermost ring of every silhouette is `ink`, one pixel, drawn inside the shape. Where two parts of a drawn prop meet, the darker side drops one step: a soft inner line.
+
+**Light.** From the upper left, toward the viewer. Drawn props and UI frames are lit that way. Imported art cannot be relit, so it gets a mild ramp (7% brighter at the upper left of each pose, 7% darker at the lower right).
+
+**Alpha.** On or off. A fading pose is drawn as a Bayer dissolve. The exceptions are light effects in `assets/fx` (glows, shafts, motes: they are light, not objects) and the shadow.
+
+**Shadow.** One blob for everything: an ink ellipse, 0.62 as deep as it is wide, in two flat steps of transparency, as wide as the body above it. The sun casts no other shadows.
+
+**Scale: 48 sprite pixels per world unit, for everything** (`G.PX_PER_UNIT`). Ground tiles are 64 px and span 64/48 units, so a ground pixel is the size of a sprite pixel.
+
+| Thing | World units | Sprite pixels |
+|---|---|---|
+| Pilgrim, NPC | 1.75 | 84 (in a 64×96 cell) |
+| Small foe (common) | 1.25 | 60 |
+| Medium foe (rare, elite) | 1.5 | 72 |
+| Large foe (greater) | 2.0 | 96 |
+| Boss | 3.5 | 168 |
+| Low prop (crate, rock, bush) | about 1 | about 48 |
+| Post (lamp, banner, pillar) | 2.5 to 4.2 | 120 to 200 |
+| Tree | 4 to 5 | 200 to 230 |
+| Building | 5.6 to 10 | 270 to 480 |
+
+A foe the game draws taller than its tier (`size` in `data/mobs.json`, times 1.35 for Greater) gets a sheet that tall, so no sprite is stretched past the scale. Far skylines are the one scaled layer: they are distant.
+
+**Anchor.** Feet on the bottom edge of the cell, body centred. Props stand on their bottom edge.
+
+**Timing.** An action lasts the same time for every sprite, however many frames were drawn: idle 1.2 s, walk 0.64 s, attack 0.42 s, hurt 0.28 s, die 0.7 s, cast 0.5 s (`SpriteActor.ACTION_S`). Attack, hurt, die and cast play once and hold. A single-frame idle breathes (1.4%, 2.4 s).
+
+**Interface.** Frames are 9-slice pictures from `tools/gen_ui.py` in the same palette: gold on parchment for windows, gold on umber for the HUD's dark boxes. Text colours are palette colours. Portraits are the speaker's own sprite, enlarged. Drawn backdrops (title, story, creation) are rendered at a quarter size and mapped onto the palette.
+
+**Added in 0.5.0**
+
+- **Pixel art is the style.** The delivered sheets are pixel art already; the smooth 3D shapes, flat vector portraits and glassy blue interface were the odd ones out, so they changed, not the sprites.
+- **The delivered "tiles" are scenes, not seamless tiles** (a grove, a crystal rock, a wall, a fountain). They are used as props. Seamless ground tiles are drawn by `tools/gen_world.py`.
+- **The delivered interface frames have ornaments on their edges**, which stretch badly, so the game's frames are drawn in the same gold-on-brown manner and the delivered ones are not used.
+- **Walls, steps, bridge decks and Eden's plateaus stay solid shapes** with palette tiles on them. A billboard cannot enclose a room or be walked on.
+- **Other pilgrims wear the delivered pilgrim art with re-dyed robes** (a palette swap). The Dreamer is the delivered elder, grey-haired, in a brown robe.
+- **Banners carry a plain four-point star.** No figure and no emblem of office is drawn on them. The Cross stands empty; the Interpreter's picture shows the grave man of Bunyan's text, a human minister.
+- **Portrait play.** The canvas is 1280×720 held sideways and 720×1280 held upright, so buttons keep their size. Supersedes "Landscape only" below.
+- **Touch targets** are 56 units or more (the smallest is the 56-unit tab row); on a 1080-wide phone a unit is 1.5 px. Not yet measured on a device.
+
 **Added in 0.4.0**
 
 - **The player is a delivered picture, not a paper-doll.** Only a front pose exists per pilgrim, so every facing shows the front (mirrored left and right) and the actions are generated. Character creation offers two looks instead of hair and robe colours.
@@ -36,7 +84,7 @@ Made while building, where the brief and the design doc left room. Each can be c
 10. **The Calling trial** lends the first skill of the job you pick for one fight against a Doubt; the final choice at the ceremony is free.
 11. **A resting pilgrim is not noticed by foes** (they do not start a fight with someone sitting), so the rest lesson works in a field.
 12. **Lord's Day Mode is mandatory on Sundays** (device time) with a tester bypass while `G.DEV_UNLOCK` is true. Set it to false for public launch.
-13. **Landscape only.** The HUD is built for landscape and the project locks sensor-landscape; portrait (1080×1920) is not supported.
+13. ~~Landscape only.~~ Superseded in 0.5.0: both orientations are laid out.
 14. **Save model**: one slot. Hand-scripted Eden restarts from its beginning on Continue; every later map resumes at its saved objective.
 15. **Gear, refinement and drops** beyond keepsake items (Bronze Buckle, Grim's Broken Chain) are not built; the doc's Bronze/Silver gear and +5 refinement need the equipment system first.
 16. **Scripture text is not embedded.** Dialogue paraphrases and cites `[BSB: ref]`; `tools/pull_bsb.py` fetches the cited passages for Word Study.

@@ -649,7 +649,7 @@ def tile(name: str, ramp: str, base: float, seed: int, kind: str = "grain", spre
             second = np.where(closer, best, np.minimum(second, d)); who = np.where(closer, i, who); best = np.where(closer, d, best)
         gap = second - best
         sh = base + ((who * 37 % 7) - 3) * 0.03 + (n2 - 0.5) * 0.06
-        sh = np.where(gap < 1.6, base - 0.3, sh)
+        sh = np.where(gap < 1.6, base - (0.2 if base > 0.65 else 0.3), sh)
         sh = np.where((gap >= 1.6) & (gap < 3.0) & (Y + X < T * 2), sh + 0.08, sh)
     elif kind == "plank":
         sh = base + (((Y // 8) * 5 % 3) - 1) * 0.06 + (noise(T, T, 2, seed, wrap=True) - 0.5) * 0.12
@@ -686,10 +686,10 @@ def tiles() -> None:
     tile("marsh", "leaf", 0.26, 4, "grass", 0.44); tile("grass_night", "dusk", 0.40, 5, "grass", 0.3)
     tile("dirt", "wood", 0.60, 6, "grain", 0.34); tile("dirt_dark", "wood", 0.34, 7, "grain", 0.34); tile("pit", "dark", 0.22, 8, "rock", 0.3)
     tile("sand", "dry", 0.9, 9, "grain", 0.2); tile("rock", "stone", 0.42, 10, "rock", 0.4); tile("rock_dark", "dark", 0.42, 11, "rock", 0.3)
-    tile("cobble", "stone", 0.62, 12, "cobble"); tile("cobble_dark", "stone", 0.40, 13, "cobble"); tile("cobble_warm", "sandstone", 0.68, 14, "cobble")
+    tile("cobble", "stone", 0.62, 12, "cobble"); tile("cobble_dark", "stone", 0.40, 13, "cobble"); tile("cobble_warm", "sandstone", 0.78, 14, "cobble")
     tile("plank", "wood", 0.56, 15, "plank"); tile("wall", "stone", 0.60, 16, "brick"); tile("wall_dark", "stone", 0.38, 17, "brick")
     tile("roof", "cloth_red", 0.50, 18, "roof"); tile("water", "water", 0.52, 19, "water"); tile("water_dark", "night", 0.45, 20, "water"); tile("mire", "dusk", 0.42, 25, "water")
-    tile("carpet", "cloth_red", 0.3, 24, "carpet")
+    tile("carpet", "cloth_red", 0.12, 24, "carpet")
     tile("bark", "wood", 0.42, 21, "bark"); tile("leaves", "leaf", 0.55, 22, "leaves", 0.4); tile("snow", "water", 0.94, 23, "grain", 0.16)
     # the mask that mixes two ground tiles into patches (see MapKit.ground)
     m = noise(128, 128, 32, 99, wrap=True) * 0.7 + noise(128, 128, 8, 98, wrap=True) * 0.3

@@ -8,7 +8,7 @@ const LIST_HEIGHT := 400.0
 const ROW_BTN := 120
 
 static func _row(text: String, sub: String, buttons: Array, icon: String = "") -> PanelContainer:
-	var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 8))
+	var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/card.png", 4, 8))
 	var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 8)
 	if icon != "":
 		h.add_child(UIKit.icon_rect(icon, 44))

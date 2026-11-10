@@ -3,14 +3,18 @@ extends RefCounted
 ## RO-style UI kit built from the generated 9-slice textures. Every window, button and gauge
 ## comes from here so the art can be swapped in one place.
 
-const BLUE_INK := Color("1d2b52")
-const INK := Color("1b1d26")
-const SUB := Color("4a5472")
-const GOLD := Color("b8933e")
+## Interface colours are palette colours (tools/artkit.py); frames come from tools/gen_ui.py.
+const BLUE_INK := Color("1f2a52")    # deep: headings on parchment
+const INK := Color("1a1622")         # ink: body text on parchment
+const SUB := Color("625e68")         # iron: secondary text
+const GOLD := Color("b8862e")        # brass
+const LIGHT := Color("f4efe4")       # bone: text on dark panels
+const GLOW := Color("fbe58a")        # glow: headings on dark panels
 
 ## Smallest touch target (48 dp on a 160 dpi baseline; the 720-high canvas maps 1 unit to about 1 dp on phones).
 const MIN_TOUCH := 48.0
 
+## A 9-slice frame: the corners (margin px) keep their size, the edges and centre stretch.
 static func sb(path: String, margin: int, pad: int = 8) -> StyleBoxTexture:
 	var s := StyleBoxTexture.new()
 	s.texture = G.tex(path)
@@ -24,10 +28,10 @@ static func make_theme() -> Theme:
 	var t := Theme.new()
 	t.default_font = G.font_ui
 	t.default_font_size = 22
-	t.set_stylebox("panel", "PanelContainer", sb("res://assets/ui/window.png", 12, 14))
-	t.set_stylebox("panel", "Panel", sb("res://assets/ui/window.png", 12, 14))
-	var b := sb("res://assets/ui/btn.png", 10, 14)
-	var bp := sb("res://assets/ui/btn_pressed.png", 10, 14)
+	t.set_stylebox("panel", "PanelContainer", sb("res://assets/ui/window.png", 8, 14))
+	t.set_stylebox("panel", "Panel", sb("res://assets/ui/window.png", 8, 14))
+	var b := sb("res://assets/ui/btn.png", 5, 14)
+	var bp := sb("res://assets/ui/btn_pressed.png", 5, 14)
 	t.set_stylebox("normal", "Button", b)
 	t.set_stylebox("hover", "Button", b)
 	t.set_stylebox("pressed", "Button", bp)
@@ -36,19 +40,22 @@ static func make_theme() -> Theme:
 	t.set_color("font_color", "Button", BLUE_INK)
 	t.set_color("font_hover_color", "Button", BLUE_INK)
 	t.set_color("font_pressed_color", "Button", BLUE_INK)
-	t.set_color("font_disabled_color", "Button", Color(0.45, 0.48, 0.58))
+	t.set_color("font_disabled_color", "Button", SUB)
 	t.set_font("font", "Button", G.font_ui_bold)
 	t.set_font_size("font_size", "Button", 22)
 	t.set_color("font_color", "Label", INK)
-	var le := sb("res://assets/ui/slot.png", 8, 12)
+	for st in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+		t.set_stylebox(st, "CheckButton", sb("res://assets/ui/card.png", 4, 12))
+	t.set_stylebox("focus", "CheckButton", StyleBoxEmpty.new())
+	var le := sb("res://assets/ui/slot.png", 5, 12)
 	t.set_stylebox("normal", "LineEdit", le)
 	t.set_stylebox("focus", "LineEdit", le)
-	t.set_color("font_color", "LineEdit", INK)
-	t.set_color("font_placeholder_color", "LineEdit", Color(0.5, 0.52, 0.6))
-	t.set_color("caret_color", "LineEdit", BLUE_INK)
+	t.set_color("font_color", "LineEdit", LIGHT)
+	t.set_color("font_placeholder_color", "LineEdit", Color("c79a5e"))
+	t.set_color("caret_color", "LineEdit", GLOW)
 	t.set_font_size("font_size", "LineEdit", 24)
-	t.set_stylebox("panel", "TooltipPanel", sb("res://assets/ui/window.png", 12, 10))
-	var sc := StyleBoxFlat.new(); sc.bg_color = Color(0.36, 0.43, 0.6, 0.6); sc.corner_radius_top_left = 4; sc.corner_radius_bottom_left = 4; sc.corner_radius_top_right = 4; sc.corner_radius_bottom_right = 4
+	t.set_stylebox("panel", "TooltipPanel", sb("res://assets/ui/window.png", 8, 10))
+	var sc := StyleBoxFlat.new(); sc.bg_color = GOLD; sc.set_border_width_all(1); sc.border_color = INK
 	t.set_stylebox("grabber", "VScrollBar", sc)
 	t.set_stylebox("grabber_highlight", "VScrollBar", sc)
 	t.set_stylebox("grabber_pressed", "VScrollBar", sc)
@@ -65,8 +72,8 @@ static func window(title: String = "", min_size: Vector2 = Vector2.ZERO) -> Dict
 	p.add_child(v)
 	if title != "":
 		var tp := PanelContainer.new()
-		tp.add_theme_stylebox_override("panel", sb("res://assets/ui/title.png", 9, 10))
-		var tl := label(title, 22, BLUE_INK, true)
+		tp.add_theme_stylebox_override("panel", sb("res://assets/ui/title.png", 6, 10))
+		var tl := label(title, 22, GLOW, true)
 		tp.add_child(tl)
 		v.add_child(tp)
 	var body := VBoxContainer.new()
@@ -102,7 +109,7 @@ static func button(text: String, cb: Callable, min_w: float = 0.0, gold: bool = 
 	b.focus_mode = Control.FOCUS_NONE
 	b.pressed.connect(func() -> void: G.sfx("tap"))
 	if gold:
-		var g := sb("res://assets/ui/btn_gold.png", 10, 14)
+		var g := sb("res://assets/ui/btn_gold.png", 5, 14)
 		b.add_theme_stylebox_override("normal", g); b.add_theme_stylebox_override("hover", g)
 	b.pressed.connect(cb)
 	press_feel(b)
@@ -161,7 +168,7 @@ static func gauge(fill: String, w: float, h: float) -> TextureProgressBar:
 	g.texture_under = G.tex("res://assets/ui/gauge_bg.png")
 	g.texture_progress = G.tex("res://assets/ui/gauge_%s.png" % fill)
 	g.nine_patch_stretch = true
-	g.stretch_margin_left = 3; g.stretch_margin_right = 3; g.stretch_margin_top = 3; g.stretch_margin_bottom = 3
+	g.stretch_margin_left = 2; g.stretch_margin_right = 2; g.stretch_margin_top = 3; g.stretch_margin_bottom = 3
 	g.custom_minimum_size = Vector2(w, h)
 	g.max_value = 1000
 	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -169,10 +176,47 @@ static func gauge(fill: String, w: float, h: float) -> TextureProgressBar:
 
 static func parchment(text: String) -> PanelContainer:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", sb("res://assets/ui/parchment.png", 10, 14))
-	var l := label(text, 21, Color("4a3a20"), false, true)
+	p.add_theme_stylebox_override("panel", sb("res://assets/ui/parchment.png", 5, 14))
+	var l := label(text, 21, Color("3d2a25"), false, true)
 	p.add_child(l)
 	return p
 
 static func full_rect(c: Control) -> void:
 	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+## Drawn backdrops (title, story, creation) are rendered small and mapped onto the 32-colour
+## palette with an ordered dither, so they are pixel art like everything else on screen.
+const PIXEL := 4
+static var _pal_shader: Shader
+
+static func pixelate(art: Control) -> SubViewportContainer:
+	if _pal_shader == null:
+		_pal_shader = Shader.new()
+		_pal_shader.code = """shader_type canvas_item;
+uniform sampler2D pal : filter_nearest;
+uniform float dither = 0.09;
+const float BAYER[16] = float[](0.0, 8.0, 2.0, 10.0, 12.0, 4.0, 14.0, 6.0, 3.0, 11.0, 1.0, 9.0, 15.0, 7.0, 13.0, 5.0);
+void fragment() {
+	vec3 c = texture(TEXTURE, UV).rgb;
+	ivec2 p = ivec2(UV / TEXTURE_PIXEL_SIZE);
+	c += (BAYER[(p.y % 4) * 4 + (p.x % 4)] / 16.0 - 0.47) * dither;
+	float best = 1e9; vec3 pick = c;
+	for (int i = 0; i < 32; i++) {
+		vec3 q = texelFetch(pal, ivec2(i, 0), 0).rgb;
+		vec3 d = c - q;
+		float dist = dot(d * vec3(0.9, 1.2, 0.8), d);
+		if (dist < best) { best = dist; pick = q; }
+	}
+	COLOR = vec4(pick, 1.0);
+}"""
+	var box := SubViewportContainer.new(); full_rect(box)
+	box.stretch = true; box.stretch_shrink = PIXEL; box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var m := ShaderMaterial.new(); m.shader = _pal_shader; m.set_shader_parameter("pal", G.tex("res://assets/ui/palette.png")); box.material = m
+	var vp := SubViewport.new(); vp.transparent_bg = false; vp.size_2d_override_stretch = true; vp.disable_3d = true
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	box.add_child(vp)
+	full_rect(art); vp.add_child(art)
+	var fit := func() -> void: vp.size_2d_override = Vector2i(box.size)
+	box.resized.connect(fit); box.ready.connect(fit)
+	return box

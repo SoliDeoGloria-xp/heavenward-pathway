@@ -75,28 +75,18 @@ func _draw() -> void:
 	var dim := 0.5 if disabled else 1.0
 	if pulse and not disabled:
 		var a := 0.35 + 0.35 * sin(_t * 5.0)
-		draw_arc(c, rr.size.x * 0.5 + 6 + 4 * sin(_t * 5.0), 0, TAU, 48, Color(1, 0.88, 0.4, a), 6.0, true)
+		draw_arc(c, rr.size.x * 0.5 + 6 + 4 * sin(_t * 5.0), 0, TAU, 48, Color(0.984, 0.898, 0.541, a), 6.0, false)
 	match kind:
 		"empty":
-			# dashed ring: an open slot, clearly not a button you can use yet
-			var rad := rr.size.x * 0.40
-			draw_circle(c, rad, Color(0.08, 0.1, 0.18, 0.28))
-			for i in 16:
-				var a0 := TAU * i / 16.0
-				draw_arc(c, rad, a0, a0 + TAU / 32.0, 4, Color(1, 1, 1, 0.55), 2.5, true)
+			# a faint socket: an open slot, clearly not a button you can use yet
+			draw_texture_rect(G.tex("res://assets/ui/btn_skill.png"), Rect2(c - rr.size * 0.4, rr.size * 0.8), false, Color(1, 1, 1, 0.28))
 		"utility":
 			var sq := Rect2(rr.position + rr.size * 0.08, rr.size * 0.84)
-			var sb := StyleBoxFlat.new(); sb.bg_color = Color(0.13, 0.17, 0.28, 0.82) if not on else Color(0.2, 0.42, 0.24, 0.92)
-			sb.set_corner_radius_all(int(sq.size.x * 0.24)); sb.set_border_width_all(3)
-			sb.border_color = Color(0.78, 0.84, 0.98, 0.9) if not on else Color(0.62, 1.0, 0.62)
-			draw_style_box(sb, sq)
+			draw_style_box(UIKit.sb("res://assets/ui/tab_on.png" if on else "res://assets/ui/dark.png", 5, 0), sq)
 		_:
 			var t := tex_on if (on and tex_on) else tex_normal
 			if t:
 				draw_texture_rect(t, rr, false, Color(1, 1, 1, 0.55 if disabled else 1.0))
-			# coloured rim: gold = main action, blue = skill
-			var rim := Color("f2c14e") if kind == "primary" else Color("7fb2ff")
-			draw_arc(c, rr.size.x * 0.47, 0, TAU, 48, Color(rim.r, rim.g, rim.b, 0.95 * dim), 4.0 if kind == "primary" else 3.0, true)
 	if icon:
 		var isz := rr.size * (0.46 if kind != "utility" else 0.5)
 		var ip := rr.position + (rr.size - isz) * Vector2(0.5, 0.40 if (caption != "" and kind != "skill") else 0.44)
@@ -108,7 +98,7 @@ func _draw() -> void:
 		if kind == "skill" or kind == "empty":
 			# name pill below the disc, always readable over the map
 			var pill := Rect2(Vector2(c.x - tw * 0.5 - 8, rr.end.y - cs * 0.55), Vector2(tw + 16, cs + 8))
-			var ps := StyleBoxFlat.new(); ps.bg_color = Color(0.06, 0.08, 0.16, 0.86 if kind == "skill" else 0.5); ps.set_corner_radius_all(8)
+			var ps := StyleBoxFlat.new(); ps.bg_color = Color(0.06, 0.08, 0.16, 0.86 if kind == "skill" else 0.5); ps.set_corner_radius_all(0)
 			draw_style_box(ps, pill)
 			pos = Vector2(pill.position.x + 8, pill.position.y + cs)
 		else:
@@ -117,13 +107,13 @@ func _draw() -> void:
 		draw_string(f, pos, caption, HORIZONTAL_ALIGNMENT_LEFT, -1, cs, Color(1, 1, 1, 0.75 if (disabled or kind == "empty") else 1.0))
 	if cost != "" and kind == "skill":
 		var cr := Rect2(rr.position + Vector2(-2, -2), Vector2(f.get_string_size(cost, 0, -1, 16).x + 12, 24))
-		var cb := StyleBoxFlat.new(); cb.bg_color = Color("2a5bd7"); cb.set_corner_radius_all(10); cb.set_border_width_all(2); cb.border_color = Color.WHITE
+		var cb := StyleBoxFlat.new(); cb.bg_color = Color("2f4f8f"); cb.set_corner_radius_all(0); cb.set_border_width_all(2); cb.border_color = Color.WHITE
 		draw_style_box(cb, cr)
 		draw_string(f, cr.position + Vector2(6, 18), cost, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
 	if state_text != "":
 		var sw := f.get_string_size(state_text, 0, -1, 15).x + 12
 		var sr := Rect2(Vector2(c.x - sw * 0.5, rr.position.y - 6), Vector2(sw, 22))
-		var ss := StyleBoxFlat.new(); ss.bg_color = Color("2f9a45") if on else Color(0.3, 0.32, 0.4); ss.set_corner_radius_all(9)
+		var ss := StyleBoxFlat.new(); ss.bg_color = Color("4f8a45") if on else Color(0.3, 0.32, 0.4); ss.set_corner_radius_all(0)
 		draw_style_box(ss, sr)
 		draw_string(f, sr.position + Vector2(6, 17), state_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
 	if cd_frac > 0.0:
@@ -142,7 +132,7 @@ func _draw() -> void:
 	if badge != "":
 		var bw := f.get_string_size(badge, HORIZONTAL_ALIGNMENT_CENTER, -1, 18).x + 14
 		var br := Rect2(rr.position + Vector2(rr.size.x - bw + 6, -6), Vector2(bw, 26))
-		var bs := StyleBoxFlat.new(); bs.bg_color = Color("d23a2a") if badge.begins_with("+") else Color(0.12, 0.15, 0.28, 0.92); bs.set_corner_radius_all(12)
+		var bs := StyleBoxFlat.new(); bs.bg_color = Color("b33a35") if badge.begins_with("+") else Color(0.12, 0.15, 0.28, 0.92); bs.set_corner_radius_all(0)
 		draw_style_box(bs, br)
 		draw_string(f, br.position + Vector2(7, 20), badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color.WHITE)
 	if _flash > 0.0:

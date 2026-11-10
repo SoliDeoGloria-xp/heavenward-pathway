@@ -69,8 +69,7 @@
   {
    "who": "Evangelist",
    "text": "Wherefore dost thou cry?",
-   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
-   "portrait": "res://assets/portraits/evangelist.png"
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
   },
   {
    "who": "$player",
@@ -79,8 +78,7 @@
   {
    "who": "Evangelist",
    "text": "If this be thy condition, why standest thou still?",
-   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
-   "portrait": "res://assets/portraits/evangelist.png"
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
   },
   {
    "who": "$player",
@@ -90,8 +88,7 @@
   {
    "who": "Evangelist",
    "text": "He gives you a parchment roll. Written within is a warning to flee from the wrath to come.",
-   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain · [BSB: Matthew 3:7]",
-   "portrait": "res://assets/portraits/evangelist.png"
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain · [BSB: Matthew 3:7]"
   },
   {
    "who": "Evangelist",
@@ -101,8 +98,7 @@
     {
      "t": "No."
     }
-   ],
-   "portrait": "res://assets/portraits/evangelist.png"
+   ]
   },
   {
    "who": "Evangelist",
@@ -112,14 +108,12 @@
     {
      "t": "I think I do."
     }
-   ],
-   "portrait": "res://assets/portraits/evangelist.png"
+   ]
   },
   {
    "who": "Evangelist",
    "text": "Keep that light in your eye, and go up directly thereto: so shalt thou see the gate; at which, when thou knockest, it shall be told thee what thou shalt do.",
-   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
-   "portrait": "res://assets/portraits/evangelist.png"
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
   }
  ],
  "city.obstinate": [
@@ -265,15 +259,13 @@
    "who": "Evangelist",
    "text": "Did I not point you to the gate? No one is counted righteous by the works of the law. Legality cannot free you; he is himself in bondage.",
    "src": "[BSB: Galatians 2:16]",
-   "if": "ww_detour",
-   "portrait": "res://assets/portraits/evangelist.png"
+   "if": "ww_detour"
   },
   {
    "who": "Evangelist",
    "text": "Yet the gate still stands open to you. Go back to the way, and do not turn aside again.",
    "src": "After John Bunyan, The Pilgrim's Progress (1678)",
-   "if": "ww_detour",
-   "portrait": "res://assets/portraits/evangelist.png"
+   "if": "ww_detour"
   },
   {
    "who": "The Dreamer",

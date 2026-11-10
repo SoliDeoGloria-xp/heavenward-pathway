@@ -58,6 +58,7 @@ func _ready() -> void:
 	_build()
 	G.log_added.connect(_on_log)
 	G.stats_changed.connect(refresh)
+	G.orientation_changed.connect(_rebuild)
 	_on_log("", Color.WHITE)
 	coach = Coach.new(); coach.hud = self; add_child(coach)
 
@@ -68,7 +69,7 @@ func _build() -> void:
 	var tl := TapLayer.new(); UIKit.full_rect(tl); tl.hud = self; root.add_child(tl)
 	# joystick zone: lower-left (or lower-right when left-handed)
 	joy = FloatingJoystick.new()
-	joy.anchor_left = 0.0 if L else 0.55; joy.anchor_right = 0.45 if L else 1.0; joy.anchor_top = 0.3; joy.anchor_bottom = 1.0
+	joy.anchor_left = 0.0 if L else 0.55; joy.anchor_right = 0.45 if L else 1.0; joy.anchor_top = 0.55 if G.portrait else 0.3; joy.anchor_bottom = 1.0
 	joy.offset_bottom = -54
 	joy.tapped.connect(func(p): world.tap(p))
 	root.add_child(joy); hud_nodes.append(joy)
@@ -81,7 +82,7 @@ func _build() -> void:
 	banner_box = VBoxContainer.new(); banner_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	banner_box.position = Vector2(-400, 150); banner_box.size = Vector2(800, 120); banner_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	banner_box.modulate.a = 0.0; root.add_child(banner_box)
-	toast_lbl = UIKit.outlined("", 22, Color("ffe27a"))
+	toast_lbl = UIKit.outlined("", 22, Color("fbe58a"))
 	toast_lbl.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	# sits between the name plate and the menu buttons so long quest text never covers either
 	toast_lbl.position = Vector2(-TOAST_W * 0.5 + (50.0 if not G.settings.left_handed else -50.0), 92); toast_lbl.size = Vector2(TOAST_W, 80)
@@ -106,12 +107,11 @@ func _corner(c: Control, left: bool, top: bool, x: float, y: float) -> void:
 
 func _build_plate(L: bool) -> void:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/plate.png", 14, 10))
+	p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/plate.png", 8, 10))
 	p.custom_minimum_size = Vector2(390, 0)
 	var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 10); p.add_child(h)
 	var face := PanelContainer.new(); face.custom_minimum_size = Vector2(78, 78)
-	var fs := StyleBoxFlat.new(); fs.bg_color = Color("e8eefa"); fs.set_corner_radius_all(39); fs.set_border_width_all(3); fs.border_color = Color("5c6e98")
-	face.add_theme_stylebox_override("panel", fs)
+	face.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 5, 4))
 	var at := AtlasTexture.new(); at.atlas = G.player_sheet if G.player_sheet else G.build_player_sheet(); at.region = G.PLAYER_FACE
 	var ft := TextureRect.new(); ft.texture = at; ft.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	ft.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ft.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -143,10 +143,10 @@ func _build_plate(L: bool) -> void:
 
 func _build_quest(L: bool) -> void:
 	quest_box = PanelContainer.new()
-	quest_box.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/chip.png", 10, 12))
+	quest_box.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/dark.png", 5, 12))
 	quest_box.custom_minimum_size = Vector2(390, 0)
 	var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 2)
-	var t := UIKit.outlined("▸ %s  ·  tap to walk there" % str(world.info("layer")), 18, Color("ffd36a"))
+	var t := UIKit.outlined("▸ %s  ·  tap to walk there" % str(world.info("layer")), 18, Color("fbe58a"))
 	v.add_child(t)
 	quest_lbl = UIKit.outlined("", 21, Color.WHITE); quest_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	quest_lbl.custom_minimum_size = Vector2(360, 0)
@@ -171,18 +171,24 @@ func _build_minimap(L: bool) -> void:
 	more_btn = TouchBtn.new(88, "res://assets/ui/btn_small.png", "menu", "More")
 	more_btn.caption_size = 17; more_btn.kind = "utility"
 	more_btn.pressed.connect(open_more)
-	root.add_child(more_btn); _corner(more_btn, not L, true, 226, 14); hud_nodes.append(more_btn)
+	root.add_child(more_btn); hud_nodes.append(more_btn)
+	# held upright there is no room beside the minimap: the two buttons sit under it
+	if G.portrait: _corner(more_btn, not L, true, 126, 250)
+	else: _corner(more_btn, not L, true, 226, 14)
 	snap_btn = TouchBtn.new(88, "res://assets/ui/btn_small.png", "camera", "Snap")
 	snap_btn.caption_size = 17; snap_btn.kind = "utility"
 	snap_btn.pressed.connect(enter_snapshot)
-	root.add_child(snap_btn); _corner(snap_btn, not L, true, 226, 106); hud_nodes.append(snap_btn)
+	root.add_child(snap_btn); hud_nodes.append(snap_btn)
+	if G.portrait: _corner(snap_btn, not L, true, 26, 250)
+	else: _corner(snap_btn, not L, true, 226, 106)
 
 func _build_chat(L: bool) -> void:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/chip.png", 10, 10))
-	p.custom_minimum_size = Vector2(470, 64)
+	p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/dark.png", 5, 10))
+	var chat_w := 340.0 if G.portrait else 470.0
+	p.custom_minimum_size = Vector2(chat_w, 64)
 	chat_lbl = RichTextLabel.new(); chat_lbl.bbcode_enabled = true; chat_lbl.fit_content = true; chat_lbl.scroll_active = false
-	chat_lbl.custom_minimum_size = Vector2(450, 50); chat_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chat_lbl.custom_minimum_size = Vector2(chat_w - 20, 50); chat_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	chat_lbl.add_theme_font_size_override("normal_font_size", 19)
 	chat_lbl.add_theme_font_override("normal_font", G.font_ui_bold)
 	chat_lbl.add_theme_constant_override("outline_size", 4)
@@ -191,7 +197,8 @@ func _build_chat(L: bool) -> void:
 	p.gui_input.connect(func(e): if _is_tap(e): open_chat())
 	chat_box = p
 	root.add_child(p)
-	_corner(p, L, false, 16, 22)
+	if G.portrait: _corner(p, L, true, 16, 350)     # upright: under the quest, clear of the thumbs
+	else: _corner(p, L, false, 16, 22)
 	hud_nodes.append(p)
 
 func _build_combat(L: bool) -> void:
@@ -218,22 +225,22 @@ func _build_combat(L: bool) -> void:
 	auto_btn.tex_on = G.tex("res://assets/ui/btn_auto_on.png"); auto_btn.caption_size = 17; auto_btn.kind = "utility"; auto_btn.state_text = "OFF"
 	auto_btn.pressed.connect(func():
 		auto_btn.on = not auto_btn.on; auto_btn.state_text = "ON" if auto_btn.on else "OFF"; auto_btn.queue_redraw(); world.set_auto(auto_btn.on))
-	root.add_child(auto_btn); _corner(auto_btn, side, false, cx + 336, cy + 4); hud_nodes.append(auto_btn); combat_nodes.append(auto_btn)
+	root.add_child(auto_btn); _corner(auto_btn, side, false, cx + (4.0 if G.portrait else 336.0), cy + (372.0 if G.portrait else 4.0)); hud_nodes.append(auto_btn); combat_nodes.append(auto_btn)
 	item_btn = TouchBtn.new(92, "res://assets/ui/btn_small.png", "bread", "Item")
 	item_btn.caption_size = 17; item_btn.kind = "utility"
 	item_btn.pressed.connect(func(): world.use_item(quick_item))
 	item_btn.long_pressed.connect(func():
 		quick_item = "Garden Fig" if quick_item == "Bread of Provision" else "Bread of Provision"
 		item_btn.set_icon("fig" if quick_item == "Garden Fig" else "bread"); G.say("Quick item: %s" % quick_item, G.SYS); refresh())
-	root.add_child(item_btn); _corner(item_btn, side, false, cx + 306, cy + 116); hud_nodes.append(item_btn)
+	root.add_child(item_btn); _corner(item_btn, side, false, cx + (104.0 if G.portrait else 306.0), cy + (372.0 if G.portrait else 116.0)); hud_nodes.append(item_btn)
 	sit_btn = TouchBtn.new(80, "res://assets/ui/btn_small.png", "sit", "Sit")
 	sit_btn.caption_size = 16; sit_btn.kind = "utility"
 	sit_btn.pressed.connect(func(): world.toggle_sit())
-	root.add_child(sit_btn); _corner(sit_btn, side, false, cx + 436, cy + 8); hud_nodes.append(sit_btn)
+	root.add_child(sit_btn); _corner(sit_btn, side, false, cx + (210.0 if G.portrait else 436.0), cy + (378.0 if G.portrait else 8.0)); hud_nodes.append(sit_btn)
 	act_btn = TouchBtn.new(132, "res://assets/ui/btn_attack.png", "talk", "Act")
 	act_btn.caption_size = 22; act_btn.kind = "primary"
 	act_btn.pressed.connect(func(): world.act_pressed())
-	root.add_child(act_btn); _corner(act_btn, side, false, cx + 356, cy + 262)
+	root.add_child(act_btn); _corner(act_btn, side, false, cx + (330.0 if G.portrait else 356.0), cy + (30.0 if G.portrait else 262.0))
 	_apply_page()
 
 ## Skills usable on this map, in bar order. Eden-only skills show only in Eden.
@@ -298,13 +305,13 @@ func refresh() -> void:
 		c.queue_free()
 	for id in G.PROG["status"].keys():
 		if world.combat.has_status(id):
-			status_row.add_child(_chip(String(G.PROG["status"][id].name), Color("5a5a8a")))
+			status_row.add_child(_chip(String(G.PROG["status"][id].name), Color("625e68")))
 	if G.burden:
-		status_row.add_child(_chip("Burden", Color("8a6438")))
+		status_row.add_child(_chip("Burden", Color("9a6a3f")))
 	if G.weary:
-		status_row.add_child(_chip("Weariness", Color("5c6e98")))
+		status_row.add_child(_chip("Weariness", Color("625e68")))
 	if world and world.sitting:
-		status_row.add_child(_chip("Resting", Color("2f7a3a")))
+		status_row.add_child(_chip("Resting", Color("4f8a45")))
 	if world != null and world.cinema:
 		return
 	var combat: bool = world != null and world.is_combat()
@@ -336,7 +343,7 @@ func refresh() -> void:
 
 func _chip(t: String, c: Color) -> Control:
 	var p := PanelContainer.new()
-	var s := StyleBoxFlat.new(); s.bg_color = c; s.set_corner_radius_all(6); s.content_margin_left = 8; s.content_margin_right = 8; s.content_margin_top = 1; s.content_margin_bottom = 1
+	var s := StyleBoxFlat.new(); s.bg_color = c; s.set_corner_radius_all(0); s.content_margin_left = 8; s.content_margin_right = 8; s.content_margin_top = 1; s.content_margin_bottom = 1
 	p.add_theme_stylebox_override("panel", s)
 	p.add_child(UIKit.label(t, 14, Color.WHITE, true))
 	return p
@@ -398,8 +405,8 @@ func banner(title: String, sub: String) -> void:
 		return
 	for c in banner_box.get_children():
 		c.queue_free()
-	var t := UIKit.outlined(title, 64, Color("fff1c8"), G.font_title)
-	t.add_theme_color_override("font_outline_color", Color("4a2c00")); t.add_theme_constant_override("outline_size", 12)
+	var t := UIKit.outlined(title, 64, Color("f4efe4"), G.font_title)
+	t.add_theme_color_override("font_outline_color", Color("3d2a25")); t.add_theme_constant_override("outline_size", 12)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var s := UIKit.outlined(sub, 24, Color.WHITE); s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	banner_box.add_child(t); banner_box.add_child(s)
@@ -420,7 +427,7 @@ func set_quest(text: String) -> void:
 
 func _stamp() -> void:
 	## Wax-seal "step complete" stamp on the tracker plus a pulse.
-	var st := UIKit.outlined("✓ Step complete", 24, Color("ffd36a"))
+	var st := UIKit.outlined("✓ Step complete", 24, Color("fbe58a"))
 	st.position = quest_box.position + Vector2(8, quest_box.size.y + 2)   # under the tracker, clear of the name plate
 	st.pivot_offset = Vector2(110, 16); st.scale = Vector2(1.5, 1.5); st.rotation = -0.04; st.modulate.a = 0.0
 	root.add_child(st)
@@ -474,13 +481,16 @@ func overlay_open() -> bool:
 
 func _center(c: Control) -> void:
 	var cc := CenterContainer.new(); UIKit.full_rect(cc); cc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var room := get_viewport().get_visible_rect().size.x - 24.0      # a window never spills off a narrow screen
+	if c.custom_minimum_size.x > room:
+		c.custom_minimum_size.x = room
 	cc.add_child(c); overlay.add_child(cc)
 	UIKit.pop_in(c)
 
 func open_more() -> void:
 	_dim()
-	var w := UIKit.window("Menu", Vector2(720, 0))
-	var grid := GridContainer.new(); grid.columns = 5; grid.add_theme_constant_override("h_separation", 12); grid.add_theme_constant_override("v_separation", 12)
+	var w := UIKit.window("Menu", Vector2(600 if G.portrait else 720, 0))
+	var grid := GridContainer.new(); grid.columns = 4 if G.portrait else 5; grid.add_theme_constant_override("h_separation", 12); grid.add_theme_constant_override("v_separation", 12)
 	var items := [["status", "Status", "status"], ["skills", "Skills", "skills"], ["bag", "Satchel", "bag"], ["equip", "Equipment", "equip"], ["way", "The Way", "quest"],
 		["codex", "Codex", "library"], ["guide", "Guide", "guide"], ["waymark", "Waymark", "scroll"], ["chat", "Messages", "talk"], ["settings", "Settings", "settings"]]
 	if G.ONLINE:
@@ -492,7 +502,7 @@ func open_more() -> void:
 		var pts := G.stat_pts if it[0] == "status" else (G.skill_pts if it[0] == "skills" else 0)
 		if pts > 0:
 			var bd := UIKit.outlined("+%d" % pts, 20, Color.WHITE)
-			var bs := StyleBoxFlat.new(); bs.bg_color = Color("d23a2a"); bs.set_corner_radius_all(12); bs.content_margin_left = 8; bs.content_margin_right = 8
+			var bs := StyleBoxFlat.new(); bs.bg_color = Color("b33a35"); bs.set_corner_radius_all(0); bs.content_margin_left = 8; bs.content_margin_right = 8
 			var bp := PanelContainer.new(); bp.add_theme_stylebox_override("panel", bs); bp.add_child(bd); bp.position = Vector2(84, -6); bp.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			b.add_child(bp)
 		var v := VBoxContainer.new(); v.alignment = BoxContainer.ALIGNMENT_CENTER; UIKit.full_rect(v); v.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -540,9 +550,9 @@ func _open_sfx() -> void:
 func open_sheet(tab: String) -> void:
 	_dim()
 	var sheet := PanelContainer.new()
-	sheet.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/window.png", 12, 16))
+	sheet.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/window.png", 8, 16))
 	sheet.anchor_left = 1; sheet.anchor_right = 1; sheet.anchor_top = 0; sheet.anchor_bottom = 1
-	sheet.offset_left = -700; sheet.offset_right = -8; sheet.offset_top = 8; sheet.offset_bottom = -8
+	sheet.offset_left = -minf(700.0, get_viewport().get_visible_rect().size.x - 8.0); sheet.offset_right = -8; sheet.offset_top = 8; sheet.offset_bottom = -8
 	sheet.mouse_filter = Control.MOUSE_FILTER_STOP
 	overlay.add_child(sheet)
 	var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 10); sheet.add_child(v)
@@ -553,7 +563,7 @@ func open_sheet(tab: String) -> void:
 		var b := UIKit.button(t[1], func(): open_sheet(key), 0)
 		b.custom_minimum_size = Vector2(0, 56); b.add_theme_font_size_override("font_size", 20)
 		if key == tab:
-			b.add_theme_stylebox_override("normal", UIKit.sb("res://assets/ui/btn_gold.png", 10, 12))
+			b.add_theme_stylebox_override("normal", UIKit.sb("res://assets/ui/btn_gold.png", 5, 12))
 		tabs.add_child(b)
 	var close := UIKit.button("✕", clear_overlay, 56)
 	tabs.add_child(close)
@@ -589,7 +599,7 @@ func _sheet_bag(b: VBoxContainer) -> void:
 	var uses: Dictionary = G.data("items").consumables
 	for i in 18:
 		var p := PanelContainer.new(); p.custom_minimum_size = Vector2(96, 96)
-		p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 4))
+		p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 5, 4))
 		if i < keys.size():
 			var vb := VBoxContainer.new(); vb.alignment = BoxContainer.ALIGNMENT_CENTER
 			vb.add_child(UIKit.icon_rect(uses[keys[i]].icon if uses.has(keys[i]) else "scroll", 52))
@@ -628,7 +638,7 @@ func _sheet_skills(b: VBoxContainer) -> void:
 			continue
 		var info: Dictionary = G.SKILL_INFO[id]
 		var lv := int(G.skill_lv.get(id, 0))
-		var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 12))
+		var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/card.png", 4, 12))
 		var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 12)
 		var ic := UIKit.icon_rect(info.icon, 64)
 		if lv == 0:
@@ -637,7 +647,7 @@ func _sheet_skills(b: VBoxContainer) -> void:
 		var v := VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.add_theme_constant_override("separation", 2)
 		var nm := HBoxContainer.new()
 		nm.add_child(UIKit.label(info.name, 22, UIKit.INK, true))
-		nm.add_child(UIKit.label("   Lv %d / %d" % [lv, info.max], 19, Color("2a5bd7") if lv > 0 else UIKit.SUB, true))
+		nm.add_child(UIKit.label("   Lv %d / %d" % [lv, info.max], 19, Color("2f4f8f") if lv > 0 else UIKit.SUB, true))
 		v.add_child(nm)
 		v.add_child(UIKit.label(info.does, 17, UIKit.SUB, false, true))
 		var nums := "Zeal %d · recharges in %d s" % [info.zeal, int(info.cd)] if info.kind == "active" else "Passive"
@@ -664,7 +674,7 @@ func _sheet_skills(b: VBoxContainer) -> void:
 		h.add_child(bt)
 		card.add_child(h); b.add_child(card)
 	if G.job_id == G.PILGRIM:
-		var lock := PanelContainer.new(); lock.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 12))
+		var lock := PanelContainer.new(); lock.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/card.png", 4, 12))
 		var lh := HBoxContainer.new(); lh.add_theme_constant_override("separation", 12)
 		lh.add_child(UIKit.icon_rect("lock", 56))
 		var ll := UIKit.label("More skills open as the road teaches them. Calling skills (skill bar page 2) open when you take up a Calling at the Palace Beautiful.", 17, UIKit.SUB, false, true)
@@ -673,7 +683,7 @@ func _sheet_skills(b: VBoxContainer) -> void:
 
 func _points_chip(label: String, n: int) -> Control:
 	var p := PanelContainer.new()
-	var st := StyleBoxFlat.new(); st.bg_color = Color("d23a2a") if n > 0 else Color(0.36, 0.43, 0.6); st.set_corner_radius_all(10)
+	var st := StyleBoxFlat.new(); st.bg_color = Color("b33a35") if n > 0 else Color(0.36, 0.43, 0.6); st.set_corner_radius_all(0)
 	st.content_margin_left = 12; st.content_margin_right = 12; st.content_margin_top = 4; st.content_margin_bottom = 4
 	p.add_theme_stylebox_override("panel", st)
 	p.add_child(UIKit.label("%s: %d" % [label, n], 20, Color.WHITE, true))
@@ -703,7 +713,7 @@ func _sheet_status(b: VBoxContainer) -> void:
 		grid.add_child(plus)
 		var nxt := G.stat.duplicate(); nxt[k] = int(nxt[k]) + 1
 		var after: Dictionary = G.calc_for(nxt, G.lvl)
-		var eff := UIKit.label(_stat_delta(k, dd, after), 17, Color("2f7a3a"), true, true)
+		var eff := UIKit.label(_stat_delta(k, dd, after), 17, Color("4f8a45"), true, true)
 		eff.custom_minimum_size = Vector2(250, 0); eff.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(eff)
 	b.add_child(grid)
@@ -745,7 +755,7 @@ func _sheet_guide(b: VBoxContainer) -> void:
 	b.add_child(UIKit.label("Pilgrim's Guide", 26, UIKit.BLUE_INK, true))
 	b.add_child(UIKit.label("Short answers to the questions every new pilgrim asks.", 18, UIKit.SUB))
 	for g in GUIDE:
-		var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 12))
+		var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/card.png", 4, 12))
 		var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 4)
 		v.add_child(UIKit.label(g[0], 22, UIKit.INK, true))
 		v.add_child(UIKit.label(g[1], 18, UIKit.SUB, false, true))
@@ -764,7 +774,7 @@ func _sheet_way(b: VBoxContainer) -> void:
 		var done: bool = i < world.quests.obj_idx
 		var cur: bool = i == world.quests.obj_idx
 		var txt: String = ("✓  " if done else ("▸  " if cur else "·  ")) + (o.text if i <= world.quests.obj_idx else "???")
-		var l := UIKit.label(txt, 20, Color("b85a00") if cur else (Color("8a93a8") if done else Color("aab0c0")), cur)
+		var l := UIKit.label(txt, 20, Color("9a6a3f") if cur else (Color("918a7e") if done else Color("c4bdac")), cur)
 		b.add_child(l)
 	b.add_child(UIKit.label("Dreamer's Pages: %d of %d   ·   Calling: %s" % [Quests.pages_found(), G.data("acts").order.size() - 1, G.job_name()], 18, UIKit.SUB, true))
 	if world.quests.obj_idx < world.quests.objectives.size():
@@ -807,10 +817,9 @@ func _slider_row(key: String, text: String, low: float) -> HBoxContainer:
 
 func _rebuild() -> void:
 	clear_overlay()
-	for c in root.get_children():
-		c.queue_free()
+	for c in root.get_children():       # removed at once and rebuilt in the same frame, so the world never sees a missing HUD
+		root.remove_child(c); c.queue_free()
 	skill_btns.clear(); hud_nodes.clear(); combat_nodes.clear()
-	await get_tree().process_frame
 	_build(); refresh(); set_quest(world.quests.objectives[world.quests.obj_idx].text if world.quests.obj_idx < world.quests.objectives.size() else "")
 	_on_log("", Color.WHITE)
 
@@ -859,7 +868,7 @@ func _dialog_window(who: String, text: String, src: String, portrait: String) ->
 	w.root.anchor_left = 0; w.root.anchor_right = 1; w.root.anchor_top = 1; w.root.anchor_bottom = 1
 	w.root.offset_left = 24 + ins.x; w.root.offset_right = -24 - ins.z; w.root.offset_top = -250 - ins.w; w.root.offset_bottom = -22 - ins.w
 	var top := HBoxContainer.new()
-	var nm := UIKit.label(who, 24, Color("1d4fb8") if not is_player else Color("2f7a3a"), true); nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var nm := UIKit.label(who, 24, Color("2f4f8f") if not is_player else Color("4f8a45"), true); nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(nm)
 	w.body.add_child(top)
 	_dlg_lbl = UIKit.label(text, 27, UIKit.INK, false, true)
@@ -971,11 +980,11 @@ func _word_q(qs: Array, qi: int, picked: int, done: Callable) -> void:
 		if picked != -1:
 			b.disabled = true
 			if i == q.a:
-				b.add_theme_stylebox_override("disabled", UIKit.sb("res://assets/ui/btn_gold.png", 10, 14))
+				b.add_theme_stylebox_override("disabled", UIKit.sb("res://assets/ui/btn_gold.png", 5, 14))
 		right.add_child(b)
 	if picked != -1:
 		var ok: bool = picked == q.a
-		right.add_child(UIKit.label("Well remembered." if ok else "Look again at the passage.", 20, Color("2f7a3a") if ok else Color("a8342a"), true))
+		right.add_child(UIKit.label("Well remembered." if ok else "Look again at the passage.", 20, Color("4f8a45") if ok else Color("b33a35"), true))
 		right.add_child(UIKit.button(("Next" if qi < qs.size() - 1 else "Finish") if ok else "Try again", func():
 			if not ok: _word_q(qs, qi, -1, done)
 			elif qi < qs.size() - 1: _word_q(qs, qi + 1, -1, done)
@@ -997,7 +1006,7 @@ func name_animal(done: Callable) -> void:
 	var row2 := HBoxContainer.new()
 	var le := LineEdit.new(); le.placeholder_text = "Or type a name"; le.max_length = 14; le.custom_minimum_size = Vector2(380, 56)
 	row2.add_child(le)
-	var msg := UIKit.label("", 16, Color("a8342a"))
+	var msg := UIKit.label("", 16, Color("b33a35"))
 	row2.add_child(UIKit.button("OK", func():
 		var err := G.name_ok(le.text)
 		if err != "": msg.text = err
@@ -1025,7 +1034,7 @@ func secret_card(title: String, text: String, n: int, total: int) -> void:
 	w.body.add_child(UIKit.label(title, 26, UIKit.BLUE_INK, true))
 	w.body.add_child(UIKit.label(text, 19, UIKit.INK, false, true))
 	if n >= total:
-		w.body.add_child(UIKit.label("Every secret on this map is found. A stamp is set on your map.", 17, Color("2f7a3a"), true, true))
+		w.body.add_child(UIKit.label("Every secret on this map is found. A stamp is set on your map.", 17, Color("4f8a45"), true, true))
 	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
 	row.add_child(UIKit.button("Keep walking", func(): clear_overlay(), 200, true)); w.body.add_child(row)
 	_dim(); _center(w.root)
@@ -1045,13 +1054,13 @@ func calling(trial: bool, chosen: Callable) -> void:
 
 func _calling_card(id: String, trial: bool, chosen: Callable) -> Control:
 	var job: Dictionary = G.JOBS[id]
-	var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 10)); card.custom_minimum_size = Vector2(370, 0)
+	var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/card.png", 4, 10)); card.custom_minimum_size = Vector2(370, 0)
 	var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 2)
 	var head := HBoxContainer.new(); head.add_theme_constant_override("separation", 8)
 	var swatch := ColorRect.new(); swatch.color = Color(String(job.tint)); swatch.custom_minimum_size = Vector2(18, 18); swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	head.add_child(swatch); head.add_child(UIKit.label(String(job.name), 23, UIKit.BLUE_INK, true))
 	v.add_child(head)
-	v.add_child(UIKit.label(String(job.role), 16, Color("b85a00"), true))
+	v.add_child(UIKit.label(String(job.role), 16, Color("9a6a3f"), true))
 	v.add_child(UIKit.label(String(job.blurb), 16, UIKit.INK, false, true))
 	var names: Array = job.skills.map(func(sid: String) -> String: return String(G.SKILL_INFO[sid].name))
 	v.add_child(UIKit.label("Skills: " + ", ".join(names), 16, UIKit.SUB, false, true))
@@ -1106,7 +1115,7 @@ func muster_board() -> void:
 	w.body.add_child(UIKit.label("Answer a muster for battles Bunyan gives to a company. Bring friends, or the board finds pilgrims for you; empty places fill with Stewards of the House after 60 seconds.", 17, UIKit.SUB, false, true))
 	for m in MUSTERS:
 		var md: Dictionary = m
-		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 12))
+		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/card.png", 4, 12))
 		var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 12)
 		var v := VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		v.add_child(UIKit.label(md.name, 21, UIKit.INK if md.open else UIKit.SUB, true))
@@ -1131,7 +1140,7 @@ func _muster_gathering() -> void:
 	muster_slots = [{"name": G.pname + " (you)", "role": G.job_name(), "ai": false, "look": [G.hair_style, G.hair_col, G.robe_col]}]
 	muster_slots.append_array(COMPANY)
 	for sl in muster_slots:
-		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 10))
+		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/card.png", 4, 10))
 		var h := HBoxContainer.new()
 		var l := UIKit.label(String(sl.name), 19, UIKit.INK, true); l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h.add_child(l); h.add_child(UIKit.label(String(sl.role), 17, UIKit.SUB)); p.add_child(h); w.body.add_child(p)
@@ -1168,7 +1177,7 @@ func _muster_render() -> void:
 	for c in box.get_children():
 		c.queue_free()
 	for i in 4:
-		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 10))
+		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/card.png", 4, 10))
 		var h := HBoxContainer.new()
 		if i < muster_slots.size():
 			var sl: Dictionary = muster_slots[i]
@@ -1239,9 +1248,9 @@ class BossBar extends Control:
 		var r := Rect2(Vector2(0, 22), Vector2(size.x, 18))
 		draw_rect(r.grow(3), Color(0.06, 0.04, 0.06, 0.85))
 		draw_rect(Rect2(r.position, Vector2(r.size.x * shown, r.size.y)), Color(1, 0.95, 0.85, 0.9))
-		draw_rect(Rect2(r.position, Vector2(r.size.x * frac, r.size.y)), Color("c83a2a"))
+		draw_rect(Rect2(r.position, Vector2(r.size.x * frac, r.size.y)), Color("b33a35"))
 		draw_string_outline(G.font_ui_bold, Vector2(4, 18), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 6, Color(0.05, 0.03, 0.05))
-		draw_string(G.font_ui_bold, Vector2(4, 18), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("ffd8c8"))
+		draw_string(G.font_ui_bold, Vector2(4, 18), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("f6d3ae"))
 
 # ------------------------------------------------------------------ snapshot mode
 func enter_snapshot() -> void:
@@ -1251,7 +1260,7 @@ func enter_snapshot() -> void:
 	root.add_child(snapshot_ui)
 	var cap := VBoxContainer.new(); cap.anchor_left = 0; cap.anchor_right = 1; cap.anchor_top = 1; cap.anchor_bottom = 1
 	cap.offset_top = -130; cap.offset_bottom = -30; cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var c1 := UIKit.outlined("“And I saw in my dream…”", 40, Color("fff1c8"), G.font_title); c1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var c1 := UIKit.outlined("“And I saw in my dream…”", 40, Color("f4efe4"), G.font_title); c1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var c2 := UIKit.outlined("%s  ·  %s" % [G.pname.to_upper(), str(world.info("name")).to_upper()], 18, Color.WHITE); c2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	cap.add_child(c1); cap.add_child(c2); snapshot_ui.add_child(cap)
 	var bar := HBoxContainer.new(); bar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP); bar.position = Vector2(-300, 20); bar.add_theme_constant_override("separation", 10)
@@ -1357,28 +1366,28 @@ class Minimap extends Control:
 		var w = hud.world
 		if w == null: return
 		var r := Rect2(Vector2(8, 8), size - Vector2(16, 16))
-		var sb := StyleBoxFlat.new(); sb.bg_color = w.info("mini"); sb.set_corner_radius_all(26)
+		var sb := StyleBoxFlat.new(); sb.bg_color = w.info("mini"); sb.set_corner_radius_all(0)
 		draw_style_box(sb, r)
 		var b: Rect2 = w.bounds
 		var to_map := func(p: Vector3) -> Vector2:
 			return r.position + Vector2((p.x - b.position.x) / b.size.x, (p.z - b.position.y) / b.size.y) * r.size
 		if w.map_id == "eden":
-			draw_rect(Rect2(r.position + Vector2(0, 2), Vector2(r.size.x, 8)), Color("6aaee0"))
+			draw_rect(Rect2(r.position + Vector2(0, 2), Vector2(r.size.x, 8)), Color("4f8fc7"))
 		for e in w.ents:
 			if e.hidden or e.get("kind", "") == "secret": continue
 			if e.get("kind", "") == "waymark":
-				draw_circle(to_map.call(e.pos), 3, Color("8fd0ff")); continue
-			draw_circle(to_map.call(e.pos), 5, Color("2f7ae0") if e.id in ["evangelist", "lamb", "watchful"] else Color("e0a020"))
+				draw_circle(to_map.call(e.pos), 3, Color("9fd3e8")); continue
+			draw_circle(to_map.call(e.pos), 5, Color("4f8fc7") if e.id in ["evangelist", "lamb", "watchful"] else Color("e8b83e"))
 		for o in w.folk.others:
 			if o.actor.visible: draw_circle(to_map.call(o.actor.position), 3, Color(1, 1, 1, 0.45 if o.ghost else 0.85))
 		for al in w.combat.allies:
-			draw_circle(to_map.call(al.actor.position), 4, Color("5fe06a"))
+			draw_circle(to_map.call(al.actor.position), 4, Color("8cb84f"))
 		for m in w.combat.mobs:
-			if m.alive: draw_circle(to_map.call(m.actor.position), 7 if m.get("boss", false) else 4, Color("e83b3b"))
+			if m.alive: draw_circle(to_map.call(m.actor.position), 7 if m.get("boss", false) else 4, Color("e0704a"))
 		var q = w.quests.quest_target()
 		if q != null:
 			var qp: Vector2 = to_map.call(q.pos if q is Dictionary else q)
-			draw_string(G.font_ui_bold, qp + Vector2(-6, 8), "★", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("ffd400"))
+			draw_string(G.font_ui_bold, qp + Vector2(-6, 8), "★", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("fbe58a"))
 		var pp: Vector2 = to_map.call(w.player.position)
 		var f: Vector3 = w.pact.facing
 		var ang := atan2(f.x, f.z)
@@ -1386,7 +1395,7 @@ class Minimap extends Control:
 		var rt := PackedVector2Array()
 		for v in tri: rt.append(pp + v.rotated(-ang))
 		draw_colored_polygon(rt, Color.WHITE)
-		draw_polyline(PackedVector2Array([rt[0], rt[1], rt[2], rt[0]]), Color("1d2b52"), 2.0)
+		draw_polyline(PackedVector2Array([rt[0], rt[1], rt[2], rt[0]]), Color("1f2a52"), 2.0)
 		draw_texture_rect(G.tex("res://assets/ui/minimap_frame.png"), Rect2(Vector2.ZERO, size), false)
 		var nm: String = w.info("name")
 		var tw := G.font_ui_bold.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
@@ -1410,8 +1419,8 @@ func _level_banner_show(kind: String) -> void:
 	var box := VBoxContainer.new(); box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	box.position = Vector2(-360, 140); box.size = Vector2(720, 100); box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	var t := UIKit.outlined(kind.to_upper(), 58, Color("ffe27a") if base else Color("b8e0ff"), G.font_title)
-	t.add_theme_color_override("font_outline_color", Color("5a3600") if base else Color("12305a"))
+	var t := UIKit.outlined(kind.to_upper(), 58, Color("fbe58a") if base else Color("9fd3e8"), G.font_title)
+	t.add_theme_color_override("font_outline_color", Color("6b4530") if base else Color("1f2a52"))
 	t.add_theme_constant_override("outline_size", 12)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var sub := UIKit.outlined("+2 attribute points  ·  More → Status" if base else "+2 skill points  ·  More → Skills", 24, Color.WHITE)

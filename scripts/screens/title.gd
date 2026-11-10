@@ -14,15 +14,16 @@ var t := 0.0
 func _ready() -> void:
 	UIKit.full_rect(self)
 	theme = G.theme
-	var art := KeyArt.new(); UIKit.full_rect(art); add_child(art)
+	var art := KeyArt.new(); add_child(UIKit.pixelate(art))
 	var logo_box := VBoxContainer.new()
 	logo_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	logo_box.position = Vector2(-500, 40); logo_box.size = Vector2(1000, 180)
+	var lw := 680.0 if G.portrait else 1000.0
+	logo_box.position = Vector2(-lw * 0.5, 40); logo_box.size = Vector2(lw, 180)
 	logo_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	logo_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var logo := UIKit.outlined("Heavenward Pathway Online", 78, Color("fff1c8"), G.font_title)
+	var logo := UIKit.outlined("Heavenward\nPathway Online" if G.portrait else "Heavenward Pathway Online", 78, Color("f4efe4"), G.font_title)
 	logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	logo.add_theme_color_override("font_outline_color", Color("5a3600"))
+	logo.add_theme_color_override("font_outline_color", Color("6b4530"))
 	logo.add_theme_constant_override("outline_size", 14)
 	logo.add_theme_color_override("font_shadow_color", Color(1, 0.86, 0.5, 0.45))
 	logo.add_theme_constant_override("shadow_outline_size", 28)
@@ -36,7 +37,7 @@ func _ready() -> void:
 	tap_lbl.position = Vector2(-150, -110); tap_lbl.size = Vector2(300, 50)
 	tap_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(tap_lbl)
-	var ver := UIKit.outlined("Version %s · placeholder art" % ProjectSettings.get_setting("application/config/version"), 16, Color(1, 1, 1, 0.8))
+	var ver := UIKit.outlined("Version %s" % ProjectSettings.get_setting("application/config/version"), 16, Color(1, 1, 1, 0.8))
 	ver.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 	ver.position = Vector2(-330, -36); add_child(ver)
 	panel_holder = CenterContainer.new(); UIKit.full_rect(panel_holder)
@@ -128,7 +129,7 @@ func _age_ok() -> void:
 	var age := _this_year() - year
 	if age < MIN_AGE:
 		age_msg.text = "Heavenward Pathway Online is for players 13 and older. Thank you for your interest; please come back when you are older."
-		age_msg.add_theme_color_override("font_color", Color("a8342a"))
+		age_msg.add_theme_color_override("font_color", Color("b33a35"))
 		return
 	G.minor = age < ADULT_AGE
 	for c in panel_holder.get_children():
@@ -149,7 +150,7 @@ class KeyArt extends Control:
 		tt += d; queue_redraw()
 	func _draw() -> void:
 		var w := size.x; var h := size.y
-		var sky := [Color("6e86c6"), Color("a9c3ea"), Color("f4dcb0"), Color("ffe9b8")]
+		var sky := [Color("4f8fc7"), Color("9fd3e8"), Color("f6d3ae"), Color("fbe58a")]
 		for i in 60:
 			var f := float(i) / 59.0
 			var c: Color
@@ -166,11 +167,11 @@ class KeyArt extends Control:
 			var cy := 90.0 + (i % 3) * 60.0
 			for k in 4:
 				draw_circle(Vector2(cx + k * 34.0, cy + (k % 2) * 8.0), 34.0 - (k % 2) * 6.0, Color(1, 1, 1, 0.55))
-		draw_colored_polygon(_hill(h * 0.56, 0.0, 70.0, w), Color("8fbf74"))
-		draw_colored_polygon(_hill(h * 0.64, 2.0, 50.0, w), Color("6faa58"))
-		draw_colored_polygon(_hill(h * 0.74, 4.0, 40.0, w), Color("5d9a4a"))
+		draw_colored_polygon(_hill(h * 0.56, 0.0, 70.0, w), Color("8cb84f"))
+		draw_colored_polygon(_hill(h * 0.64, 2.0, 50.0, w), Color("8cb84f"))
+		draw_colored_polygon(_hill(h * 0.74, 4.0, 40.0, w), Color("4f8a45"))
 		var path := PackedVector2Array([gate + Vector2(-6, 10), gate + Vector2(6, 10), Vector2(w * 0.66, h), Vector2(w * 0.34, h)])
-		draw_colored_polygon(path, Color("e8d6a2"))
+		draw_colored_polygon(path, Color("e8cf9a"))
 		draw_colored_polygon(PackedVector2Array([gate + Vector2(-2, 10), gate + Vector2(2, 10), Vector2(w * 0.52, h), Vector2(w * 0.48, h)]), Color(1, 1, 1, 0.25))
 		for x in [w * 0.12, w * 0.86, w * 0.24]:
 			_tree(Vector2(x, h * (0.86 if x != w * 0.24 else 0.74)), 1.0 if x != w * 0.24 else 0.7)
@@ -182,7 +183,7 @@ class KeyArt extends Control:
 		p.append(Vector2(w, size.y)); p.append(Vector2(0, size.y))
 		return p
 	func _tree(base: Vector2, s: float) -> void:
-		draw_rect(Rect2(base + Vector2(-10, -90) * s, Vector2(20, 90) * s), Color("6e4a2c"))
+		draw_rect(Rect2(base + Vector2(-10, -90) * s, Vector2(20, 90) * s), Color("6b4530"))
 		for c in [Vector2(-34, -110), Vector2(34, -110), Vector2(0, -150)]:
-			draw_circle(base + c * s, 52.0 * s, Color("3f7f34"))
-		draw_circle(base + Vector2(-12, -160) * s, 22.0 * s, Color("6fb35a"))
+			draw_circle(base + c * s, 52.0 * s, Color("4f8a45"))
+		draw_circle(base + Vector2(-12, -160) * s, 22.0 * s, Color("8cb84f"))

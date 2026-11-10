@@ -18,11 +18,26 @@ func _ready() -> void:
 	var layer := CanvasLayer.new(); layer.layer = 100; add_child(layer)
 	fader = ColorRect.new(); fader.color = Color(0, 0, 0, 0); fader.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	UIKit.full_rect(fader); layer.add_child(fader)
+	get_window().size_changed.connect(_fit); _fit()
 	autotest = OS.get_cmdline_user_args().has("--autotest")
 	show_screen("title", {})
 	if autotest:
 		var t: Node = load("res://scripts/autotest.gd").new()
 		add_child(t)
+
+## The interface is laid out on a 1280x720 canvas held sideways, or a 720x1280 canvas held upright,
+## so a button is the same size on the glass either way.
+const CANVAS := Vector2i(1280, 720)
+
+func _fit() -> void:
+	var ws := get_window().size
+	var upright := ws.y > ws.x
+	get_window().content_scale_size = Vector2i(CANVAS.y, CANVAS.x) if upright else CANVAS
+	if upright != G.portrait:
+		G.portrait = upright
+		G.orientation_changed.emit()
+		if current and current.name == "Title":      # the title is laid out once; lay it out again for the new shape
+			_swap("title", {})
 
 func show_screen(name: String, data: Dictionary) -> void:
 	var tw := create_tween()

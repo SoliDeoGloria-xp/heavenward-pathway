@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0 (versionCode 6) — one look
+
+- **An art bible, enforced by tools.** 32 colours, a one-pixel ink outline, light from the upper left, one shadow, 48 sprite pixels per world unit. See DECISIONS.md.
+- **Every sprite re-imported through it**: monsters, bosses, pilgrims, NPCs, icons and scenes. Foes are now drawn at one pixel scale (a boss used to have pixels nearly twice the size of a Slothling's).
+- **The world is drawn, not modelled.** 127 props (trees, firs, bushes, cliffs, spires, standing stones, houses, lamps, banners, crystals, mushrooms, the Cross, the tomb, the arbour) and 24 ground tiles replace the spheres, boxes and stretched textures. The delivered grove, fountain, wall and palace paintings are placed as scenery.
+- **Ground with depth**: two tiles per map broken into patches, ragged road edges, scattered tufts, flowers, pebbles and worn patches, two-layer skylines that slide past each other.
+- **Interface rebuilt** as gold-and-parchment 9-slice frames in the same palette; portraits are the speaker's own sprite.
+- **Portrait mode.** The HUD, menus and dialogue lay themselves out upright or sideways and switch when the phone turns.
+- **Animation on one clock**: walk, attack, hurt and death take the same time for every creature. Standing characters breathe.
+- **Camera** eases at a rate per second (the same on 60 and 120 Hz screens) and leans toward where you walk.
+- **Other pilgrims** use the delivered pilgrim art in re-dyed robes; the paper-doll figures are gone. Lamb, serpent and lilies redrawn.
+- **Screenshot check.** `HPO_GALLERY=1` photographs every map and screen; `tools/shot_diff.py` compares them with `tests/golden` in CI.
+- Sun shadows are off (the blob shadow is the rule), which is also cheaper on phones.
+
 ## 0.4.0 (versionCode 5) — the world, the pilgrims, music and effects
 
 - **The pilgrim is drawn art now.** The player uses the delivered pilgrim pictures (two looks at creation) and each Calling has its own look: Valiant, Watcher, Expositor, Shepherd, Steward, Wayfarer. Walk, attack, sit, rest and cast are generated from the single delivered pose. Hair and robe colour choices are gone with the old paper-doll.

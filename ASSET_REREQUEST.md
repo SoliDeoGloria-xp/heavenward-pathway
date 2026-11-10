@@ -4,15 +4,25 @@ The game always runs on the placeholders made by `tools/gen_assets.py`. Verified
 placeholder through `data/asset_overrides.json`, written by `tools/check_assets.py`. Nothing is
 stretched to fit; a file that misses the contract is listed here instead.
 
-**Status (2026-11-10).** Four zips received and processed: `HPO_Boss_Sheets`, `HPO_Monster_Sheets_Part1`, `HPO_Monster_Sheets_Part2`, `HPO_P1_RO_Assets`. Every file arrived as 1168×784 RGB with a painted checkerboard; the import tools cut them out, slice and normalise them. Raw files are not kept in the repository.
+**Status (0.5.0).** Every delivered picture is now imported through the art bible (DECISIONS.md): 32 colours, ink outline, 48 pixels per world unit. Ask the generator for art in these terms and it will drop in without a visible seam.
 
-| Batch | Result |
-|---|---|
-| Monster + boss sheets (175 files, 46 creatures) | All imported to `assets/sprites/mobs/` + `data/sprites.json`, each with a full action set. 17 are in use in Acts I–II; the rest wait for later acts |
-| P1 icons (42) | All cleaned to 64×64 in `assets/icons/`; 20 used as skill icons |
-| P1 NPC standees (11) | Cleaned to 96×96 in `assets/sprites/npc/`; Evangelist, Interpreter, Steward (Goodwill), Shepherd (Help), Valiant (Watchful) in use |
-| P1 props (15) | Cleaned to `assets/props/`, not yet placed in maps (mixed perspectives) |
-| P1 tiles (10), UI frames (11) | Not usable: see rows 2, 3, 9 below |
+### Style line to put at the front of every art prompt
+
+> 16-bit JRPG pixel art in the manner of Ragnarok Online. Crisp pixels, no anti-aliasing, no soft gradients, no glow. One-pixel dark outline (#1a1622). Light from the upper left. Limited palette of earthy browns, parchment, muted greens, slate greys, deep purples, with gold and crimson accents. Front three-quarter view. Plain flat magenta (#ff00ff) background, nothing else in the frame. Feet on the bottom edge.
+
+### What still needs new source art (the tools cannot invent it)
+
+| # | What | Why it matters | Ask for |
+|---|---|---|---|
+| A1 | **Pilgrim and Calling sheets with real directions and walk frames** | Only one front pose exists per character. Every direction shows the front; walking, striking, sitting and casting are that one picture leaned and squashed. This is the largest remaining tell | Per character: 5 rows (front, front-side, side, back-side, back) × 10 columns (idle, walk 1–4, attack 1–2, sit, fallen, cast), each frame 64×96, body 84 px tall |
+| A2 | **Drawn walk, attack and death rows** for the 24 creatures marked `generated` in `data/sprites.json` | Their motion is a lean and a squash of the idle picture | Give the generator the idle sheet as reference; 6 frames per row |
+| A3 | **Elderly Evangelist, Interpreter and the Dreamer; distinct named NPCs** (Pliable, Obstinate, Worldly Wiseman, Goodwill, Help, Watchful, the damsels of the House, Faithful) | The elders are a young face with greyed hair; road folk are the pilgrim in re-dyed robes | One standing figure each, 64×96 |
+| A4 | **Painted trees, rocks, houses, cliffs and ground tiles** | The world kit is drawn by code (`tools/gen_world.py`): clean and consistent, but plainer than the delivered grove and palace beside it | Single props on magenta; ground as true seamless 64×64 tiles |
+| A5 | **Skill and item icons for the 30 that still use drawn-by-code icons** | They were held to the palette and outline but are simple shapes | 64×64 each |
+| A6 | **A Doubt family** and a second traveller for Formalist and Hypocrisy | Doubt borrows envy and lust sheets; Bunyan has two men, the sheet shows one | As A2 |
+| A7 | **Story plates** for the dream, the Fall, the Cross and the ending | These are code-drawn scenes mapped onto the palette | 320×180 each |
+
+**Batches received (2026-11-10):** `HPO_Boss_Sheets`, `HPO_Monster_Sheets_Part1`, `HPO_Monster_Sheets_Part2`, `HPO_P1_RO_Assets` (the second copy sent was identical). 46 creature sheets, 42 icons, 11 standing figures, 25 scenes (the pack's ten "tiles" are scenes and are used as props). The 11 interface frames are not used: their edge ornaments do not stretch.
 
 To process a new chunk: `python3 tools/import_sheets.py <folder>` for animation sheets, `cd tools && python3 import_art.py <folder>` for single pictures.
 

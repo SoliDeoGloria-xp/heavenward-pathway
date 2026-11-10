@@ -62,3 +62,12 @@ Play on a phone in landscape. Note the time at each ★.
 - [ ] On a Sunday: Lord's Day panel appears; tester bypass works
 - [ ] No text under 16 pt, no clipped panels, safe areas respected on your phone's notch
 - [ ] Theology review: every dialogue scene in `data/dialogue.json`
+
+## Added in 0.5.0: the look
+
+- [ ] Hold the phone upright on any map: the HUD re-lays itself, nothing is cut off, every button is reachable with a thumb. Turn it back.
+- [ ] Open Status, Skills, Satchel, the shop and a conversation upright: text is readable and nothing spills off the edges.
+- [ ] Walk each map end to end. Note any prop that floats, sinks, hides the pilgrim or blocks the path where nothing is drawn.
+- [ ] Note any picture that looks smoother, blurrier, larger-pixelled or differently lit than the things around it.
+- [ ] Walk in a circle and turn the camera: the view should glide, never jerk. Note the device and refresh rate if it does.
+- [ ] Is the parchment interface readable in daylight? Is any text too small?

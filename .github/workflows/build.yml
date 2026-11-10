@@ -24,6 +24,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 tools/validate_data.py
+      - name: Art bible (palette, outline, hard alpha)
+        run: |
+          pip install --quiet pillow numpy scipy
+          python3 tools/conform.py --check
 
   validate:
     name: Scripts parse
@@ -57,6 +61,12 @@ jobs:
           godot --headless --import || true
           HPO_SHOTS=/tmp/shots xvfb-run -a godot --path . --rendering-driver opengl3 -- --autotest 2>&1 | grep -E "pacing|autotest\] (PASS|FAILED|marks)|FAIL|SCRIPT ERROR" | tee /tmp/run.log
           grep -q "\[autotest\] PASS" /tmp/run.log
+      # Photographs every map and screen from fixed spots and compares them with tests/golden.
+      - name: Screenshot check
+        run: |
+          apt-get install -y --no-install-recommends python3 python3-pil python3-numpy
+          HPO_GALLERY=1 HPO_SHOTS=/tmp/gallery xvfb-run -a -s "-screen 0 1600x1400x24" godot --path . --rendering-driver opengl3 -- --autotest 2>&1 | grep -E "gallery|FAIL|SCRIPT ERROR" || true
+          python3 tools/shot_diff.py /tmp/gallery
 
   web:
     name: Web export

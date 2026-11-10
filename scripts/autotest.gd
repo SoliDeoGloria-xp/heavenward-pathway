@@ -115,6 +115,8 @@ func gallery() -> void:
 	G.pname = "Steadfast"; G.lamb_name = "Meadow"; G.build_player_sheet(); G.base_cap = 10
 	G.settings.auto_battle = false; G.guide = "off"
 	await wait(1.5); await shot("ui_title")
+	get_window().size = Vector2i(720, 1280); await wait(1.0); await shot("portrait_title")
+	get_window().size = Vector2i(1280, 720); await wait(0.6)
 	for map_id in GALLERY_MAPS:
 		var w = await _gallery_world(map_id)
 		if w == null:
@@ -122,7 +124,8 @@ func gallery() -> void:
 		if map_id == "city":
 			await shot("ui_dialogue")
 		await _gallery_clear(w)
-		w.hud.coach.visible = false
+		if w.hud.coach.busy():
+			w.hud.coach._skip_all()
 		w.combat.calm_all = true
 		var b: Rect2 = w.bounds
 		var spots := [w.player.position, Vector3(b.get_center().x, 0, b.get_center().y), Vector3(b.end.x - 7.0, 0, b.get_center().y)]
@@ -146,6 +149,9 @@ func gallery() -> void:
 				await shot("portrait_hud")
 				w.hud.open_sheet("status"); await wait(0.5); await shot("portrait_sheet"); w.hud.clear_overlay()
 				w.hud.open_more(); await wait(0.4); await shot("portrait_more"); w.hud.clear_overlay()
+				w.hud.shop(); await wait(0.4); await shot("portrait_shop"); w.hud.clear_overlay()
+				w.hud.run_dialog([{"who": "Evangelist", "text": "Do you see yonder shining light? Keep that light in your eye, and go up directly thereto."}], func() -> void: pass)
+				await wait(1.2); await shot("portrait_dialogue"); w.hud.dialog_next(0); await wait(0.3); w.hud.clear_overlay()
 				get_window().size = Vector2i(1280, 720); await wait(1.0)
 	print("[autotest] gallery: ", "PASS" if failures.is_empty() else "FAILED: %s" % [failures])
 	get_tree().quit(0 if failures.is_empty() else 1)

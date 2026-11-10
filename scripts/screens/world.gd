@@ -18,6 +18,8 @@ const AUTO_HEAL_BELOW := 0.45
 const SIT_REGEN := 3.0
 const STEP_DUST_S := 0.34
 const WEARY_ON_ENTER_S := 15.0
+const LANDSCAPE_FOV := 30.0
+const PORTRAIT_FOV := 36.0
 const PLAYER_HEIGHT := 2.0          # world units for a full 96 px sheet cell (48 px per unit)
 const MAP_SCRIPT := "res://scripts/maps/%s.gd"
 
@@ -162,15 +164,35 @@ func _build_camera() -> void:
 	cam_rig.add_child(cam)
 	_place_camera(true)
 
-func _place_camera(snap: bool = false) -> void:
+## The camera eases toward the pilgrim at a rate per second (not per frame), so it moves the same on
+## a 60 Hz and a 120 Hz screen, and it leans a little toward where the pilgrim is walking.
+const CAM_FOLLOW := 8.0          # 1/s while playing
+const CAM_FOLLOW_CINEMA := 2.4   # 1/s in staged scenes
+const CAM_LEAD := 0.9            # world units of view ahead of a walking pilgrim
+const CAM_LEAD_RATE := 2.2
+const CAM_ZOOM_RATE := 3.0
+const CAM_TURN_RATE := 7.5
+var _lead := Vector3.ZERO
+
+static func ease_rate(rate: float, delta: float) -> float:
+	return 1.0 - exp(-rate * delta)
+
+func _place_camera(snap: bool = false, delta: float = 1.0 / 60.0) -> void:
 	var pitch := deg_to_rad(52.0)
 	var center: Vector3 = cam_focus if cam_focus != null else player.position
-	cam_rig.position = cam_rig.position.lerp(center, 1.0 if snap else (0.04 if cinema else 0.15))
+	var ahead := Vector3.ZERO
+	if cam_focus == null and not cinema and not G.settings.reduce_motion and player.velocity.length() > 0.5:
+		ahead = player.velocity.normalized() * CAM_LEAD
+	_lead = Vector3.ZERO if snap else _lead.lerp(ahead, ease_rate(CAM_LEAD_RATE, delta))
+	cam_rig.position = cam_rig.position.lerp(center + _lead, 1.0 if snap else ease_rate(CAM_FOLLOW_CINEMA if cinema else CAM_FOLLOW, delta))
 	var d := cam_dist * (0.94 if (is_combat() and combat.in_combat()) else 1.0)
-	_cur_dist = lerpf(_cur_dist if _cur_dist > 0.0 else d, d, 0.05)
+	_cur_dist = lerpf(_cur_dist if _cur_dist > 0.0 else d, d, ease_rate(CAM_ZOOM_RATE, delta))
 	cam.position = Vector3(0, sin(pitch) * _cur_dist, cos(pitch) * _cur_dist)
 	cam_rig.rotation.y = cam_yaw
 	cam.look_at(cam_rig.global_position + Vector3(0, 0.9, 0), Vector3.UP)
+	# held upright, the view is fitted by its width so the road ahead is not cropped to a sliver
+	cam.keep_aspect = Camera3D.KEEP_WIDTH if G.portrait else Camera3D.KEEP_HEIGHT
+	cam.fov = PORTRAIT_FOV if G.portrait else LANDSCAPE_FOV
 	# trauma-based shake (strength = trauma^2), off with Reduce Motion
 	if trauma > 0.0 and not G.settings.reduce_motion:
 		var k := trauma * trauma
@@ -392,7 +414,7 @@ func _physics_process(delta: float) -> void:
 		player.velocity = Vector3.ZERO
 		if not combat.dead and pact.anim == "walk":
 			pact.play("idle")
-		_place_camera()
+		_place_camera(false, delta)
 		return
 	_move(_wanted_direction(), delta)
 	_arrive()
@@ -412,9 +434,9 @@ func _physics_process(delta: float) -> void:
 	_regen(delta)
 	combat.fire_queued()
 	kit._ambient_tick(delta)
-	cam_yaw = lerp_angle(cam_yaw, cam_yaw_target, 0.12)
+	cam_yaw = lerp_angle(cam_yaw, cam_yaw_target, ease_rate(CAM_TURN_RATE, delta))
 	trauma = maxf(0.0, trauma - delta * 1.6)
-	_place_camera()
+	_place_camera(false, delta)
 
 ## Joystick wins, then chasing the target, then tap-to-walk.
 func _wanted_direction() -> Vector3:

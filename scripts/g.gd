@@ -6,6 +6,9 @@ extends Node
 signal log_added(text: String, color: Color)
 signal stats_changed
 signal level_up(kind: String)
+signal orientation_changed
+
+var portrait := false            # the window is taller than it is wide (set by main.gd)
 
 const SYS := Color(0.71, 0.97, 0.64)
 const INFO := Color(1.0, 0.89, 0.48)
