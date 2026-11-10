@@ -46,7 +46,7 @@ func build() -> void:
 		bm.mesh = cm; bm.material_override = w.kit._mat("res://assets/tiles/bark.png", Vector2(1, 1), true); bm.position = bp + Vector3(0, 0.5, 0); w.add_child(bm)
 		w.kit._solid_cyl(0.45, bp)
 	w.kit._walls()
-	var ev := w.kit._sprite_npc("res://assets/sprites/npc_evangelist.png", 2, 5, true, Vector3(2, 0, 2), "Evangelist", Color("9fd8ff"))
+	var ev := w.kit.standee("evangelist", "Evangelist", Color("9fd8ff")); ev.position = Vector3(2, 0, 2)
 	w._add_ent("evangelist", "Evangelist", ev.position, ev, "Talk", "talk", Callable(), true)
 	var warp := w.kit.warp(Vector3(21, 0, 0))
 	w._add_ent("warp", "A Shining Light", warp.position, warp, "Enter", "warp", Callable(), true)

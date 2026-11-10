@@ -25,6 +25,8 @@ RENAMES = {"marksman_npc": "watcher_npc", "marksman_aim": "arrow_of_truth", "vir
 SKIP_WORDS = ("_tile", "_frame", "_button", "_slot", "_bar")
 ICON, NPC, PROP_MAX, PAD = 64, 96, 384, 2
 HOLE_MIN_AREA = 120
+ELDERS = ("evangelist_npc", "interpreter_npc")   # drawn young; the story needs old men, so their hair is greyed
+HAIR_BAND = 0.42                                 # hair lies in the top part of a standing figure
 
 def clear_holes(rgba: np.ndarray) -> np.ndarray:
     """Checkerboard seen through a ring or a bow is enclosed, so the border flood misses it.
@@ -40,6 +42,20 @@ def clear_holes(rgba: np.ndarray) -> np.ndarray:
         if (v >= 248).mean() > 0.15 and (v <= 240).mean() > 0.15:
             rgba[region, 3] = 0
     return rgba
+
+def grey_hair(im: Image.Image) -> Image.Image:
+    """Turn brown hair silver: brown pixels in the head band keep their shading but lose their colour."""
+    px = np.asarray(im).astype(np.float32)
+    r, g, b, a = px[..., 0], px[..., 1], px[..., 2], px[..., 3]
+    v = px[..., :3].max(axis=2); spread = v - px[..., :3].min(axis=2)
+    band = np.zeros(a.shape, bool); band[: int(im.height * HAIR_BAND)] = True
+    skin = (r > 200) & (g > 150)                                   # light warm tones are the face
+    brown = band & (a > 0) & (r > g) & (g > b) & (spread > 35) & (v > 60) & ~skin
+    lum = 0.3 * r + 0.59 * g + 0.11 * b
+    silver = np.clip(lum * 1.25 + 70, 0, 245)
+    for ch, tint in enumerate((1.0, 1.0, 1.03)):
+        px[..., ch] = np.where(brown, np.clip(silver * tint, 0, 255), px[..., ch])
+    return Image.fromarray(px.astype(np.uint8), "RGBA")
 
 def fit(im: Image.Image, w: int, h: int, bottom: bool) -> Image.Image:
     k = min((w - PAD * 2) / im.width, (h - PAD * 2) / im.height)
@@ -63,6 +79,8 @@ def main() -> int:
         if f.parent.name == "icons":
             out, im = ROOT / "assets" / "icons" / f"{stem}.png", fit(im, ICON, ICON, False)
         elif stem.endswith("_npc"):
+            if stem in ELDERS:
+                im = grey_hair(im)
             out, im = ROOT / "assets" / "sprites" / "npc" / f"{stem[:-4]}.png", fit(im, NPC, NPC, True)
         else:
             k = min(1.0, PROP_MAX / max(im.size))

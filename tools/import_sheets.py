@@ -30,9 +30,13 @@ MAX_SHEET = 2048
 MIN_PIECE = 0.6                    # no cut may leave a piece narrower than this share of a pose
 SPLIT_WIDER_THAN = 1.7             # a run this many times the usual pose width is two poses touching
 VALLEY_DEPTH = 0.38                # ...if a column between them is nearly empty
-# Raw rows whose poses overlap too much to cut cleanly: play another row instead until re-drawn.
-REVIEW_FALLBACK = {"simple_sloth_presumption": {"walk": "idle", "attack": "idle"}, "sloth_greater": {"attack": "walk"},
-                   "great_red_dragon": {"walk": "idle", "attack": "idle"}}
+# A delivered action row is replaced by one generated from the idle poses when it is missing,
+# could not be cut into clean poses, or shows a different-looking creature than the idle row.
+MIN_LOOK_MATCH = 0.60              # colour-histogram overlap between a row's first pose and the idle pose
+MAX_POSE_WIDTH = {"move": 1.55, "attack": 2.4, "hit_death": 1.6}   # widest pose, in idle-pose widths
+# Rows judged by eye to show a different character than the idle row (the histogram cannot tell).
+FORCE_GENERATED = {"giant_grim": ("move", "attack", "hit_death"), "simple_sloth_presumption": ("move", "attack", "hit_death"),
+                   "sloth_greater": ("move", "attack", "hit_death")}
 FPS = {"idle": 4.0, "walk": 8.0, "attack": 9.0, "hurt": 8.0, "die": 7.0}
 
 def cut_out(im: Image.Image) -> np.ndarray:
@@ -116,6 +120,92 @@ def split_touching(runs: list[list[int]], cols: np.ndarray) -> list[list[int]]:
         out += [[cuts[i], cuts[i + 1]] for i in range(len(cuts) - 1)]
     return out
 
+# ------------------------------------------------------------------ actions generated from the idle poses
+def _look(im: Image.Image) -> np.ndarray:
+    a = np.asarray(im).reshape(-1, 4)
+    a = a[a[:, 3] > 0][:, :3] // 32
+    h = np.bincount(a[:, 0] * 64 + a[:, 1] * 8 + a[:, 2], minlength=512).astype(float)
+    return h / max(1.0, h.sum())
+
+def needs_generating(name: str, anim: str, rows: dict) -> bool:
+    if anim not in rows or anim in FORCE_GENERATED.get(name, ()):
+        return True
+    idle, row = rows["idle"], rows[anim]
+    idle_w = float(np.median([f.width for f in idle]))
+    if max(f.width for f in row) > idle_w * MAX_POSE_WIDTH[anim]:
+        return True
+    return float(np.minimum(_look(idle[0]), _look(row[0])).sum()) < MIN_LOOK_MATCH
+
+def _pose(im: Image.Image, dx: float = 0, dy: float = 0, lean: float = 0.0, sx: float = 1.0, sy: float = 1.0, white: float = 0.0, alpha: float = 1.0) -> Image.Image:
+    """One generated pose: the idle picture leaned (sheared from the feet), squashed, moved,
+    whitened or faded. The feet stay on the bottom edge."""
+    pad = int(im.height * 0.35) + 12
+    w, h = im.width + pad * 2, im.height + pad
+    src = Image.new("RGBA", (w, h), (0, 0, 0, 0)); src.alpha_composite(im, (pad, pad))
+    cx, foot = w / 2.0, float(h)
+    # output (x, y) -> source: undo move, squash about the feet, then shear about the feet
+    a, b = 1.0 / sx, lean / sy
+    c = cx - a * (cx + dx) - b * (foot + dy)
+    e = 1.0 / sy
+    f = foot - e * (foot + dy)
+    out = src.transform((w, h), Image.AFFINE, (a, b, c, 0.0, e, f), Image.BICUBIC)
+    px = np.asarray(out).astype(np.float32)
+    if white:
+        px[..., :3] = px[..., :3] * (1 - white) + 255 * white
+    px[..., 3] *= alpha
+    out = Image.fromarray(px.clip(0, 255).astype(np.uint8), "RGBA")
+    box = out.getchannel("A").point(lambda v: 255 if v > 8 else 0).getbbox() or (0, 0, 1, 1)
+    return out.crop((box[0], box[1], box[2], h))
+
+def _accent(im: Image.Image) -> tuple:
+    """The creature's most vivid colour, for its strike arc and its death motes."""
+    a = np.asarray(im).reshape(-1, 4).astype(np.int32)
+    a = a[a[:, 3] > 200][:, :3]
+    vivid = (a.max(axis=1) - a.min(axis=1)) * a.max(axis=1)
+    r, g, b = a[np.argsort(vivid)[-max(1, len(a) // 40):]].mean(axis=0)
+    return min(255, int(r * 0.85 + 60)), min(255, int(g * 0.85 + 60)), min(255, int(b * 0.85 + 60))
+
+def gen_move(idle: list, u: float) -> list:
+    steps = [(0, 0.05), (-2, 0.09), (-3, 0.04), (0, -0.05), (-2, -0.09), (-3, -0.04)]
+    return [_pose(idle[i % len(idle)], dy=dy * u, lean=lean) for i, (dy, lean) in enumerate(steps)]
+
+def gen_attack(idle: list, u: float) -> list:
+    base = idle[0]
+    frames = [_pose(base, dx=-4 * u, lean=-0.12), _pose(base, dx=7 * u, lean=0.20, sx=1.04), _pose(base, dx=9 * u, lean=0.24, sx=1.06),
+              _pose(base, dx=5 * u, lean=0.12), _pose(base)]
+    color = _accent(base)
+    for i, strength in ((1, 150), (2, 235), (3, 110)):       # a crescent in front of the creature as the blow lands
+        f = frames[i]
+        size = int(base.height * 0.8)
+        canvas = Image.new("RGBA", (f.width + size // 2, max(f.height, size)), (0, 0, 0, 0))
+        canvas.alpha_composite(f, (0, canvas.height - f.height))
+        arc = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+        from PIL import ImageDraw
+        d = ImageDraw.Draw(arc)
+        x0, y0 = f.width - size // 2, canvas.height - size
+        d.pieslice((x0, y0, x0 + size, y0 + size), -70, 60, fill=color + (strength,))
+        d.ellipse((x0 - size * 0.22, y0 - size * 0.05, x0 + size * 0.78, y0 + size * 1.05), fill=(0, 0, 0, 0))
+        canvas.alpha_composite(arc)
+        frames[i] = canvas
+    return frames
+
+def gen_hit_death(idle: list, u: float) -> list:
+    base = idle[0]
+    frames = [_pose(base, dx=-4 * u, lean=-0.10, white=0.6), _pose(base, dx=-2 * u, lean=-0.05, white=0.25),
+              _pose(base, sx=1.06, sy=0.8, alpha=0.92), _pose(base, sx=1.16, sy=0.55, alpha=0.7), _pose(base, sx=1.28, sy=0.3, alpha=0.4)]
+    rng = np.random.default_rng(len(base.tobytes()) % 9973)
+    w, h = max(8, int(base.width * 0.8)), max(8, int(base.height * 0.6))
+    motes = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    from PIL import ImageDraw
+    d = ImageDraw.Draw(motes)
+    color = _accent(base)
+    for _ in range(26):
+        x, y, r = rng.uniform(0, w), h - abs(rng.normal(0, h * 0.4)), rng.uniform(1, 2.6) * u
+        d.ellipse((x - r, y - r, x + r, y + r), fill=color + (int(rng.uniform(120, 230)),))
+    return frames + [motes]
+
+GENERATORS = {"move": gen_move, "attack": gen_attack, "hit_death": gen_hit_death}
+
 def tier_of(name: str, boss: bool) -> str:
     if boss:
         return "boss"
@@ -135,6 +225,12 @@ def build(name: str, files: dict[str, Path], boss: bool) -> dict:
         ref_h = frames[0].shape[0] if anim != "hit_death" else max(f.shape[0] for f in frames[:2])
         k = target / ref_h
         rows[anim] = [Image.fromarray(f, "RGBA").resize((max(1, round(f.shape[1] * k)), max(1, round(f.shape[0] * k))), Image.LANCZOS) for f in frames]
+    generated = []
+    for anim in ANIMS[1:]:
+        if needs_generating(name, anim, rows):
+            rows[anim] = GENERATORS[anim](rows["idle"], target / 72.0)
+            generated.append(anim)
+    rows = {a: rows[a] for a in ANIMS}
     cols = max(len(r) for r in rows.values())
     cw = max(f.width for r in rows.values() for f in r) + 4
     ch = max(f.height for r in rows.values() for f in r) + 2
@@ -155,14 +251,12 @@ def build(name: str, files: dict[str, Path], boss: bool) -> dict:
         else:
             anims["hurt"] = idx[:2] if len(idx) > 3 else idx[:1]
             anims["die"] = idx[2:] if len(idx) > 3 else idx[1:]
-    for anim, use in REVIEW_FALLBACK.get(name, {}).items():
-        anims[anim] = anims[use]
     for need, fallback in (("walk", "idle"), ("attack", "walk"), ("hurt", "idle"), ("die", "idle")):
         anims.setdefault(need, anims[fallback][:1] if need in ("hurt", "die") else anims[fallback])
     OUT.mkdir(parents=True, exist_ok=True)
     sheet.save(OUT / f"{name}.png", optimize=True)
     return {"tex": f"res://assets/sprites/mobs/{name}.png", "hframes": cols, "vframes": len(rows), "height": target, "cell": [cw, ch],
-            "anims": anims, "fps": FPS, "missing": [a for a in ANIMS if a not in rows]}
+            "anims": anims, "fps": FPS, "generated": generated}
 
 def main() -> int:
     table_path = ROOT / "data" / "sprites.json"
@@ -181,7 +275,7 @@ def main() -> int:
             print(f"skip {name}: no idle sheet"); continue
         table[name] = build(name, files, name in boss_ids)
         info = table[name]
-        print(f"{name:28s} {info['hframes']}x{info['vframes']} cells {info['cell'][0]}x{info['cell'][1]}" + (f"  MISSING {info['missing']}" if info["missing"] else ""))
+        print(f"{name:28s} {info['hframes']}x{info['vframes']} cells {info['cell'][0]}x{info['cell'][1]}" + (f"  generated: {', '.join(info['generated'])}" if info["generated"] else ""))
     table_path.write_text(json.dumps(dict(sorted(table.items())), indent=1) + "\n")
     return 0
 

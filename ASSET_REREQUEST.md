@@ -8,26 +8,29 @@ stretched to fit; a file that misses the contract is listed here instead.
 
 | Batch | Result |
 |---|---|
-| Monster + boss sheets (175 files, 46 creatures) | All imported to `assets/sprites/mobs/` + `data/sprites.json`. 17 are in use in Acts I–II; the rest wait for later acts |
+| Monster + boss sheets (175 files, 46 creatures) | All imported to `assets/sprites/mobs/` + `data/sprites.json`, each with a full action set. 17 are in use in Acts I–II; the rest wait for later acts |
 | P1 icons (42) | All cleaned to 64×64 in `assets/icons/`; 20 used as skill icons |
-| P1 NPC standees (11) | Cleaned to 96×96 in `assets/sprites/npc/`; Interpreter, Steward (Goodwill), Shepherd (Help), Valiant (Watchful) in use |
+| P1 NPC standees (11) | Cleaned to 96×96 in `assets/sprites/npc/`; Evangelist, Interpreter, Steward (Goodwill), Shepherd (Help), Valiant (Watchful) in use |
 | P1 props (15) | Cleaned to `assets/props/`, not yet placed in maps (mixed perspectives) |
 | P1 tiles (10), UI frames (11) | Not usable: see rows 2, 3, 9 below |
 
 To process a new chunk: `python3 tools/import_sheets.py <folder>` for animation sheets, `cd tools && python3 import_art.py <folder>` for single pictures.
 
-### Problems found in the sheets (please re-request)
+### How the sheets were completed
 
-| # | Sheet | Problem | Ask for |
-|---|---|---|---|
-| S1 | `envy_common`, `gluttony_common`, `wrath_common` | Only the idle sheet was delivered | `_move`, `_attack`, `_hit_death` |
-| S2 | `simple_sloth_presumption` (move, attack), `sloth_greater` (attack), `great_red_dragon` (move, attack) | Poses and effects overlap, so frames cannot be cut apart. The game plays another row instead | Same rows with a clear empty gap between poses |
-| S3 | `envy_elite`, `diabolus_mansoul`, `prince_air`, `gluttony_greater` | Some poses touch (wide cells); usable but may show a neighbour's edge | Clear gaps between poses |
-| S4 | Many creatures | The creature looks different from one sheet to the next (for example Giant Grim idle vs attack, Sloth Greater idle vs move) | Give the generator the idle sheet as the reference for the other three |
-| S5 | All sheets | One facing only (side or front). The game mirrors it left/right | Acceptable for monsters; say so if you want back views |
-| S6 | All sheets | Each file drawn at a different size and pixel scale; normalised by downscaling, so pixels are not crisp 1× | Fixed canvas per frame (for example 6 frames of 128×128 on a 768×128 canvas), native pixels, real alpha |
-| S7 | No sheets exist for a **Doubt** family | Doubt uses `envy_greater`; the Shades of Mistrust and Timorousness use `lust_rare` | A Doubt family (common, rare, elite, greater), or tell me which family to use |
-| S8 | `formalist_hypocrisy` | Drawn as one robed cleric with a mitre | Confirm this is the look you want for Formalist and Hypocrisy (two travellers in Bunyan) |
+Every creature now has all five actions (idle, walk, attack, hurt, death). Where a delivered row was missing, could not be cut into clean poses, or showed a different-looking creature than its idle row, `tools/import_sheets.py` **generated that action from the idle poses** (lean and bob for walking, a lunge with a strike arc, a white flash for hurt, a collapse into motes for death). `data/sprites.json` lists the generated rows per creature under `generated`. 22 of the 46 creatures have at least one generated row; Giant Grim, Presumption and the greater Sloth are fully generated from their idle look.
+
+Evangelist and the Interpreter were drawn young; their hair is turned silver by `tools/import_art.py` so they read as old men.
+
+### Still worth re-requesting (the game no longer waits on these)
+
+| # | What | Why |
+|---|---|---|
+| S1 | Hand-drawn walk, attack and death rows for the creatures listed as `generated` | Generated motion is simple; drawn frames will look better. Give the generator the idle sheet as the reference so the creature stays the same, and ask for a clear empty gap between poses |
+| S2 | A fixed canvas per frame (for example 6 frames of 128×128 on 768×128), native pixels, real alpha | Each file was drawn at its own size, so everything is normalised by downscaling and is not pixel-crisp |
+| S3 | A **Doubt** family (common, rare, elite, greater) | Doubt uses `envy_greater`; the Shades of Mistrust and Timorousness use `lust_rare` |
+| S4 | Confirm `formalist_hypocrisy` | Drawn as one robed cleric with a mitre; Bunyan has two travellers |
+| S5 | Truly elderly Evangelist and Interpreter, and distinct faces for named NPCs | Silver hair on a young face is a stopgap |
 
 ## The contract
 

@@ -4,6 +4,7 @@
 
 - **Monsters and bosses** now use the delivered sheets (46 creatures cleaned and imported; the 17 in Acts I–II are wired in). Idle, walk, attack, hurt and death animations play from `data/sprites.json`.
 - **Skill icons**: 20 skills use the P1 icons. **NPCs**: the Interpreter, Goodwill, Help and Watchful use P1 standees.
+- Every creature has a complete, consistent action set: rows that were missing, uncuttable or off-model are generated from the idle poses (listed as `generated` in `data/sprites.json`). Evangelist uses his standee, with silver hair.
 - New tools: `tools/import_sheets.py` (animation sheets) and `tools/import_art.py` (icons, standees, props). Both remove the painted checkerboard, crop, and fit without stretching.
 - Fixed: status chips could stack when several things changed in one frame.
 
