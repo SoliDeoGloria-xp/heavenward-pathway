@@ -18,15 +18,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  data:
+    name: Validate data (XP budget, exits, BSB cites, reserved names)
+    runs-on: ubuntu-22.04      # plain runner: the Godot image has no Python
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/validate_data.py
+
   validate:
-    name: Validate data and scripts
+    name: Scripts parse
+    needs: data
     runs-on: ubuntu-22.04
     container:
       image: barichello/godot-ci:4.3
     steps:
       - uses: actions/checkout@v4
-      - name: Data validator (XP budget, exits, BSB cites, reserved names)
-        run: python3 tools/validate_data.py
       - name: Scripts parse
         run: |
           godot --headless --import 2>&1 | tee /tmp/import.log
