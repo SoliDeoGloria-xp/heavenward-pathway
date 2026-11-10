@@ -1,53 +1,58 @@
-# Heavenward Pathway Online: first-session demo
+# Heavenward Pathway Online
 
-A playable demo of the opening of *Heavenward Pathway Online* (HPO), a Reformed, allegorical, Ragnarok-style mobile MMORPG after John Bunyan.
+*Heavenward Pathway Online* (HPO) is a Reformed, allegorical, Ragnarok-style mobile RPG after John Bunyan's *The Pilgrim's Progress*. This build is **single-player and offline**: it plays from the title screen to the first Calling (job change), Acts I and II of the story.
 
-- **Look:** classic Ragnarok Online, with 2D pixel sprites on a lit 3D map, a fixed three-quarter camera and RO-style windows.
-- **Controls:** Ragnarok M / Origin style for phones, with a floating joystick, an Attack button with a skill arc, and Auto.
-- **Engine:** Godot 4.3, using the Compatibility renderer so it runs on Android and in mobile browsers.
-- **Status:** offline single-player demo. Placeholder art, no audio.
+- **Look:** classic Ragnarok Online, with 2D pixel sprites on a lit 3D map and a fixed three-quarter camera.
+- **Controls:** Ragnarok M / Origin style for phones (landscape): floating joystick, Attack with a skill arc, Auto.
+- **Engine:** Godot 4.3, Compatibility renderer (Android and mobile browsers).
+- **Status:** the whole road is playable. Art is placeholder, audio is silent until files are added (see `ASSET_REREQUEST.md`).
 
 ## Play it
 
 | Where | How |
 | --- | --- |
 | Phone browser | Open the GitHub Pages link (Settings → Pages) in landscape. Every push to `main` rebuilds it. |
-| Android phone | Actions → latest **Build demo** run → download **hpo-android-debug-apk** → install the APK (allow "install unknown apps"). |
-| Play Console (internal testing) | Run **Android release (Play Console AAB)** manually after adding the signing secrets (see below), then upload the `.aab`. |
+| Android phone | Releases → the **debug-latest** draft → download `hpo-debug.apk` and install it. |
+| Play Console (internal testing) | Follow `PLAY_CONSOLE.md`. |
 | Desktop | Open the folder in Godot 4.3 and press Play. A mouse works as touch. |
 
-## What the demo covers
+## The road (about 2 h 20 min to the first Calling)
 
-1. Title, then an age gate (13+), then the one-world screen (no server choice).
-2. Make Character: an 8-direction turntable, hair style and colour, robe colour, and the six-attribute hexagon. Divine names are blocked.
-3. **The Bunyan dream opening** as a conversation: the Dreamer speaks to you over a painted scene, and you choose your replies.
-4. **Eden Isle, the Prologue** (the Dreamer's vision, no combat, about 10 to 15 minutes). The Dreamer walks beside you and teaches one thing at a time:
-   - walking (joystick and tap-to-walk), then a short tour of the screen (portrait plate, quest box, map, More, messages)
-   - the Act button (tend the vine), then **levels** (Base vs Job) and the experience bar
-   - **attributes**: spend your first 2 points in Status, with a live "what this point changes" preview and free resets
-   - the Satchel and quick-item button (figs)
-   - **skills**: learn Tend and Keep with a skill point, see it appear on the skill bar, and use it on three drooping lilies (Zeal cost, recharge)
-   - naming the lamb, then Word Study at the stone tablet and what **Manna** is
-   - Base Level is capped at 5 here.
-5. **The Fall** plays out in the garden: the light dims, the serpent appears, leaves fall, and cherubim with a flaming sword guard the way east, while the Dreamer narrates (BSB references). The man and woman are not shown; God is never shown or voiced.
-6. **The City of Destruction**: you wake under the burden and talk with the Dreamer, then learn to fight:
-   - Attack, then learn **First Steps** (and Take Refuge) with your skill points and use it
-   - tips for red telegraph circles, low health (Take Refuge or Bread), Auto and Sit, shown once each
-   - drops, Base and Job level-ups, and the KO/rest flow: Weariness, 5% Manna spoilage, no XP loss.
-7. **Evangelist**: Bunyan's public-domain lines with a portrait cut-in, then the parchment roll. Snapshot mode unlocks, and you follow the shining light to the warp.
-8. **Onward**: story cards skip ahead to the end of Act II (Slough, Wicket Gate, Interpreter, the Cross, Hill Difficulty).
-9. **Palace Beautiful, the first House**: a shared hub with other pilgrims (simulated offline) who wander, sit and chat. Speak with Watchful, rest at the hearth (required once before Act III), raise a Waymark, then answer the Muster Board.
-10. **Muster: Giant Grim at the Lions' Gate**: the queue fills with two pilgrims and an AI Steward, then a party boss fight with telegraphed strikes, a wide slam, enrage at 50%, a defender, a healer and Fellowship Marks.
+| Act | Map(s) | Set piece | Coach teaches | Quest XP (Base/Job) |
+| --- | --- | --- | --- | --- |
+| Prologue | Eden Isle | The Fall, played in the garden | The whole HUD, attributes, first skill, Manna | 330 / 35 |
+| 1 | City of Destruction | First fight; Evangelist's roll | Fighting, First Steps, Auto, rest and Weariness | 240 / 70 |
+| 2 | Slough of Despond, Wicket Gate | Worldly Wiseman's detour (a real choice) | Bad ground and stepping stones, Take Refuge | 200 / 60 |
+| 3 | Interpreter's House | Five tableaux | Word Study, Prayer of Rest | 200 / 40 |
+| 4 | The Cross | The burden falls | Status changes, Steady Footing | 150 / 30 |
+| 5 | Hill Difficulty | Two field bosses; the Arbour and the lost roll | Buffs (Watchful Eye), boss telegraphs | 470 / 230 |
+| 6 | Palace Beautiful, the Yard, Lions' Path, Lions' Gate | Calling trial; Muster against Giant Grim with AI companions | Armor of God, companions, the Calling | 620 / 390 |
+| | | | **Total** | **2,210 / 855 = Base 10 / Job 10** |
 
-## World model (GDD v0.3, "Solo Journey, Shared House")
+Quest XP alone reaches Base 10 and Job 10. Monster XP (3 + level; Greater ×4) is extra, about 20% on top, so a player who skips optional objectives (Obstinate, the six Dreamer's Pages) can make it up by fighting. At the end you choose one of six Callings (Valiant, Watcher, Expositor, Shepherd, Steward, Wayfarer), each with three skills and its own robe colour.
 
-- **The Way is solo** (with story companions or invited friends). It holds the story, secrets and side paths.
-  - **Secrets:** 2 per map, glinting only when you are close, counted by the ✦ next to the minimap and hidden from the minimap.
-  - **Waymarks:** set phrases or BSB references that other pilgrims leave (Menu → Waymark), with Thanks.
-  - **Passing pilgrims:** faint figures of other players walking the same road.
-- **Houses are shared hubs**: Palace Beautiful in this demo; Mansoul and Beulah later. **Wilds are shared fields** (not in this demo).
-- **Musters** are queued party and alliance fights, launched from the Muster Board. Empty places fill with AI Stewards after 60 s (6 s in the demo).
-- Design doc: https://claude.ai/artifact/KUodVXBBgkqdsSDX59gLfR
+The game saves by itself to one slot on the device (at every map and objective); the title screen offers **Continue**. On the Lord's Day (device time) the game offers only quiet reading.
+
+## Adding a chapter (data, not code)
+
+1. Copy a file in `data/maps/` and edit it: `look` (palette), `props` (geometry from the kit in `scripts/maps/data_map.gd`), `ents` (characters, spots, pages), `spawns`, `zones` (bad ground), `objectives` and `side` (optional objectives). Each objective has a `type` (`zone`, `path`, `talk`, `interact`, `choice`, `kill`, `boss`, `check`, `travel`, `exit`), its `xp` as `[base, job]`, and optional `on_start` / `on_done` effects (`show`, `hide`, `give`, `flag`, `say`, `burden`, `weary`, `heal`, `dialog`, `branch`).
+2. Write its scenes in `data/dialogue.json`. A line may carry `fx` or `cam` for staging (`scripts/systems/cutscene.gd`), `choices`, and `if` / `unless` flags.
+3. Add coach tips in `data/lessons.json`, monsters in `data/mobs.json`, and the act's budget in `data/acts.json`.
+4. Point the previous map's `exit` objective at the new map.
+5. Run `python3 tools/validate_data.py`, then the autotest. The bot plays any data map without new test code.
+
+Only a place that needs hand-built geometry gets a script in `scripts/maps/<id>.gd` (Eden, the City, the Palace and the Lions' Gate have one).
+
+## Testing
+
+```
+python3 tools/validate_data.py                     # XP budgets, exits, BSB cites, reserved names, references
+godot --headless --path . --import                  # once
+HPO_SHOTS=/tmp/shots xvfb-run -a godot --path . --rendering-driver opengl3 -- --autotest
+HPO_FROM=hill HPO_SHOTS=/tmp/shots xvfb-run -a godot --path . --rendering-driver opengl3 -- --autotest   # start the bot at one map
+```
+
+The autotest plays from the title to the Calling, saves screenshots, prints one `[pacing]` line per act, checks Save/Continue mid-map, and fails unless quest XP is exactly 2,210 / 855.
 
 ## Feel and effects (polish pass 1)
 
@@ -108,22 +113,11 @@ Built from the code-side items in the 100-improvement review.
 - **Camera:** pinch to zoom; two-finger swipe to rotate in 45° steps. On desktop, use the mouse wheel to zoom and right-click to rotate.
 - **Settings:** auto-loot, damage numbers, reduce motion, left-handed (mirrored) HUD, HUD opacity.
 
-## Replacing the placeholder art
+## Art and audio
 
-`tools/gen_assets.py` draws all current art. Commissioned art can replace any file if it keeps the same name and layout.
+Placeholders come from `tools/gen_assets.py` and keep the game runnable. Verified art replaces them through `data/asset_overrides.json`: unzip a pack to `assets/p1/` and run `python3 tools/check_assets.py`. The contract and everything still to be drawn are in `ASSET_REREQUEST.md`. Audio files dropped into `assets/audio/music/` and `assets/audio/sfx/` play without code changes.
 
-| File(s) | Layout |
-| --- | --- |
-| `assets/sprites/pilgrim_body.png`, `pilgrim_robe.png` (greyscale, tinted in game), `pilgrim_hair_0..2.png` (greyscale), `pilgrim_staff.png` | 32×48 frames, 10 columns × 5 rows. Rows (directions): S, SW, W, NW, N. East-facing directions are mirrored. Columns: idle, walk×4, attack×2, sit, rest (KO), cast |
-| `assets/sprites/mob_slothling.png` | 40×36 frames ×7: idle×2, move×2, hurt, die×2 |
-| `assets/sprites/npc_evangelist.png` | 32×48 frames, 2 columns × 5 rows |
-| `assets/sprites/npc_lamb.png` | 34×28 frames ×2 |
-| `assets/portraits/*.png` | NPC dialog cut-ins, about 256×320 |
-| `assets/ui/*.png` | 9-slice UI kit (windows, buttons, gauges, round HUD buttons, joystick, minimap frame) |
-| `assets/icons/*.png` | 64×64 item, skill and menu icons |
-| `assets/tiles/*.png` | Seamless 64×64 ground and wall textures |
-
-The sprite sheet should be drawn at 2× and keep hard pixels. Import settings are lossless with no mipmaps; see `project.godot`.
+Scripture is cited as `[BSB: Book ch:v]`. `python3 tools/pull_bsb.py` fills `data/scripture.json` with the public-domain BSB text of the cited passages so Word Study can show them.
 
 ## Android signing for the Play Store
 
@@ -143,13 +137,15 @@ The sprite sheet should be drawn at 2× and keep hard pixels. Import settings ar
 ## Project layout
 
 ```
-main.tscn / scripts/main.gd   screen manager (title, create, story, world, end)
-scripts/g.gd                  global state, fonts, theme, paper-doll compositing
-scripts/screens/*.gd          title, create, story, world (3D maps, combat), end
-scripts/ui/*.gd               HUD, UI kit, multi-touch buttons, floating joystick
-scripts/actors/sprite_actor.gd  8-direction billboard sprites with shadows and name plates
-scripts/autotest.gd           scripted full playthrough with screenshots (-- --autotest)
-tools/gen_assets.py           placeholder art generator (Python + Pillow)
+data/                 progression, acts, maps/*.json, dialogue, lessons, mobs, skills, jobs, word studies, scripture, asset overrides
+scripts/g.gd          the one autoload: state, data access, XP, save/continue, settings, Lord's Day
+scripts/audio.gd      music and sound hooks (silent when files are missing)
+scripts/screens/      title, create, story (dream), world (loop, input, camera), end
+scripts/systems/      combat, quests (objective runner), lessons (coach), cutscene, folk (other pilgrims)
+scripts/world/        map_kit (geometry primitives and feedback)
+scripts/maps/         data_map (builds a map from JSON) and the four hand-built maps
+scripts/ui/           hud, coach, joystick, touch buttons, UIKit
+tools/                validate_data.py, check_assets.py, pull_bsb.py, gen_assets.py
 ```
 
-Fonts are Nunito and Cormorant Garamond, both under the SIL Open Font License (see `assets/fonts/`).
+See also `CHANGELOG.md`, `DECISIONS.md`, `PLAYTEST.md`, `PLAY_CONSOLE.md`, `ASSET_REREQUEST.md`.
