@@ -153,7 +153,7 @@ func _build_quest(L: bool) -> void:
 	quest_lbl.custom_minimum_size = Vector2(360, 0)
 	v.add_child(quest_lbl)
 	quest_box.add_child(v)
-	quest_box.gui_input.connect(func(e): if _is_tap(e): world.auto_path_quest())
+	quest_box.gui_input.connect(func(e): if _is_tap(e): world.quests.auto_path_quest())
 	root.add_child(quest_box)
 	_corner(quest_box, L, true, 16, 168)
 	hud_nodes.append(quest_box)
@@ -200,7 +200,7 @@ func _build_combat(L: bool) -> void:
 	var cx := 20.0; var cy := 34.0
 	atk_btn = TouchBtn.new(176, "res://assets/ui/btn_attack.png", "staff", "Attack")
 	atk_btn.caption_size = 24; atk_btn.kind = "primary"
-	atk_btn.pressed.connect(func(): world.attack_pressed())
+	atk_btn.pressed.connect(func(): world.combat.attack_pressed())
 	root.add_child(atk_btn); _corner(atk_btn, side, false, cx, cy); hud_nodes.append(atk_btn); combat_nodes.append(atk_btn)
 	# arc of 4 skills around the attack button
 	var arc := [Vector2(204, 6), Vector2(190, 126), Vector2(112, 216), Vector2(8, 232)]
@@ -280,7 +280,7 @@ func _skill_pressed(i: int) -> void:
 	if i >= ids.size():
 		open_sheet("skills")   # an empty slot leads straight to where skills are learned
 		return
-	world.skill(ids[i])
+	world.combat.skill(ids[i])
 
 func _is_tap(e: InputEvent) -> bool:
 	return e is InputEventScreenTouch and not e.pressed
@@ -361,10 +361,10 @@ func _process(_d: float) -> void:
 		var b: TouchBtn = skill_btns[i]
 		if page == 0 and i < ids.size():
 			var id: String = ids[i]
-			var f: float = world.cooldown_frac(id)
+			var f: float = world.combat.cooldown_frac(id)
 			var was := b.cd_frac
 			b.cd_frac = f
-			b.cd_text = str(int(ceil(world.cd.get(id, 0.0)))) if f > 0.0 else ""
+			b.cd_text = str(int(ceil(world.combat.cd.get(id, 0.0)))) if f > 0.0 else ""
 			if was > 0.0 and f <= 0.0:
 				b.flash()
 			b.disabled = G.zeal < int(G.SKILL_INFO[id].zeal)
@@ -382,7 +382,7 @@ func _process(_d: float) -> void:
 	if not world.is_combat() and act_btn.visible:
 		_corner(act_btn, G.settings.left_handed, false, 40, 40)
 	var p: Vector3 = world.player.position
-	coord_lbl.text = "%s  %d, %d   %s" % [world.info("code"), int(p.x * 4 + 120), int(-p.z * 4 + 80), world.secrets_text()]
+	coord_lbl.text = "%s  %d, %d   %s" % [world.info("code"), int(p.x * 4 + 120), int(-p.z * 4 + 80), world.quests.secrets_text()]
 	minimap.queue_redraw()
 	root.modulate.a = G.settings.hud_opacity
 
@@ -751,15 +751,15 @@ func _sheet_guide(b: VBoxContainer) -> void:
 
 func _sheet_way(b: VBoxContainer) -> void:
 	b.add_child(UIKit.label("The Way · Quest log", 26, UIKit.BLUE_INK, true))
-	for i in world.objectives.size():
-		var o: Dictionary = world.objectives[i]
-		var done: bool = i < world.obj_idx
-		var cur: bool = i == world.obj_idx
-		var txt: String = ("✓  " if done else ("▸  " if cur else "·  ")) + (o.text if i <= world.obj_idx else "???")
+	for i in world.quests.objectives.size():
+		var o: Dictionary = world.quests.objectives[i]
+		var done: bool = i < world.quests.obj_idx
+		var cur: bool = i == world.quests.obj_idx
+		var txt: String = ("✓  " if done else ("▸  " if cur else "·  ")) + (o.text if i <= world.quests.obj_idx else "???")
 		var l := UIKit.label(txt, 20, Color("b85a00") if cur else (Color("8a93a8") if done else Color("aab0c0")), cur)
 		b.add_child(l)
-	if world.obj_idx < world.objectives.size():
-		b.add_child(UIKit.button("Auto-path to current step", func(): clear_overlay(); world.auto_path_quest(), 0, true))
+	if world.quests.obj_idx < world.quests.objectives.size():
+		b.add_child(UIKit.button("Auto-path to current step", func(): clear_overlay(); world.quests.auto_path_quest(), 0, true))
 
 func _sheet_settings(b: VBoxContainer) -> void:
 	b.add_child(UIKit.label("Settings", 26, UIKit.BLUE_INK, true))
@@ -780,7 +780,7 @@ func _rebuild() -> void:
 		c.queue_free()
 	skill_btns.clear(); hud_nodes.clear(); combat_nodes.clear()
 	await get_tree().process_frame
-	_build(); refresh(); set_quest(world.objectives[world.obj_idx].text if world.obj_idx < world.objectives.size() else "")
+	_build(); refresh(); set_quest(world.quests.objectives[world.quests.obj_idx].text if world.quests.obj_idx < world.quests.objectives.size() else "")
 	_on_log("", Color.WHITE)
 
 # ------------------------------------------------------------------ dialogs
@@ -921,7 +921,7 @@ func evangelist_dialog() -> void:
 		{"who": "Evangelist", "text": "Do you see yonder wicket-gate?", "src": src, "portrait": por, "choices": [{"t": "No."}]},
 		{"who": "Evangelist", "text": "Do you see yonder shining light?", "src": src, "portrait": por, "choices": [{"t": "I think I do."}]},
 		{"who": "Evangelist", "text": "Keep that light in your eye, and go up directly thereto: so shalt thou see the gate; at which, when thou knockest, it shall be told thee what thou shalt do.", "src": src, "portrait": por}],
-		func(): world.after_evangelist())
+		func(): world.map.after_evangelist())
 
 func word_study(done: Callable) -> void:
 	var qs := [{"p": "Where is this passage found?", "o": ["Genesis 2", "Exodus 16", "Psalm 23"], "a": 0},
@@ -988,7 +988,7 @@ func show_ko(spoil: float) -> void:
 	w.body.add_child(UIKit.parchment("[BSB: Proverbs 24:16 · text pulled at build time]\nYour standing before God does not rest on this battle."))
 	w.body.add_child(UIKit.label("•  Weariness: you move a little slower for a short while.\n•  Manna spoiled: %s (5%% of unspent). Gather again within 24 h to recover half.\n•  No experience was lost." % str(spoil), 19, UIKit.INK, false, true))
 	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
-	row.add_child(UIKit.button("Rise at the nearest safe site", func(): clear_overlay(); world.rise(), 0, true))
+	row.add_child(UIKit.button("Rise at the nearest safe site", func(): clear_overlay(); world.combat.rise(), 0, true))
 	w.body.add_child(row)
 	w.root.anchor_left = 0.5; w.root.anchor_right = 0.5; w.root.anchor_top = 1; w.root.anchor_bottom = 1
 	w.root.offset_left = -360; w.root.offset_right = 360; w.root.offset_top = -380; w.root.offset_bottom = -30
@@ -1029,9 +1029,9 @@ func waymark_place() -> void:
 	_dim()
 	var w := UIKit.window("Raise a Waymark here", Vector2(640, 0))
 	w.body.add_child(UIKit.label("Leave a word for pilgrims who walk this way after you. Set phrases only, so nothing unkind can be written.", 17, UIKit.SUB, false, true))
-	for ph in world.waymark_phrases:
+	for ph in world.quests.waymark_phrases:
 		var phrase: String = ph
-		w.body.add_child(UIKit.button(phrase, func(): clear_overlay(); world.place_waymark(phrase)))
+		w.body.add_child(UIKit.button(phrase, func(): clear_overlay(); world.quests.place_waymark(phrase)))
 	_center(w.root)
 
 const MUSTERS := [
@@ -1127,7 +1127,7 @@ func muster_enter() -> void:
 	for i in range(1, muster_slots.size()):
 		party.append(muster_slots[i])
 	clear_overlay()
-	world.enter_muster(party)
+	world.map.enter_muster(party)
 
 var boss_ui: Control
 func boss_bar(nm: String, frac: float) -> void:
@@ -1279,13 +1279,13 @@ class Minimap extends Control:
 			if e.get("kind", "") == "waymark":
 				draw_circle(to_map.call(e.pos), 3, Color("8fd0ff")); continue
 			draw_circle(to_map.call(e.pos), 5, Color("2f7ae0") if e.id in ["evangelist", "lamb", "watchful"] else Color("e0a020"))
-		for o in w.others:
+		for o in w.folk.others:
 			if o.actor.visible: draw_circle(to_map.call(o.actor.position), 3, Color(1, 1, 1, 0.45 if o.ghost else 0.85))
-		for al in w.allies:
+		for al in w.combat.allies:
 			draw_circle(to_map.call(al.actor.position), 4, Color("5fe06a"))
-		for m in w.mobs:
+		for m in w.combat.mobs:
 			if m.alive: draw_circle(to_map.call(m.actor.position), 7 if m.get("boss", false) else 4, Color("e83b3b"))
-		var q = w.quest_target()
+		var q = w.quests.quest_target()
 		if q != null:
 			var qp: Vector2 = to_map.call(q.pos if q is Dictionary else q)
 			draw_string(G.font_ui_bold, qp + Vector2(-6, 8), "★", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("ffd400"))
