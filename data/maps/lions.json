@@ -33,9 +33,11 @@
    ]
   ],
   "mini": "#b0a080",
-  "ground": "grass",
-  "ground_tint": "#ffffff",
-  "weather": ""
+  "ground": "grass_dry",
+  "weather": "",
+  "ground_b": "dirt",
+  "flora": "dry",
+  "rock": "earth"
  },
  "enter_say": [
   "Your company is mustered. Giant Grim backs the lions; drive him from the way."

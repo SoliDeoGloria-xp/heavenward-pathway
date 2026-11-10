@@ -19,11 +19,28 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 from scipy import ndimage
+from artkit import finish, HEIGHT, TIER_HEIGHT, PX_PER_UNIT
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets" / "sprites" / "mobs"
 ANIMS = ["idle", "move", "attack", "hit_death"]
-BODY_H = {"common": 72, "rare": 78, "elite": 84, "greater": 96, "boss": 136}   # standing height in sheet pixels
+# standing height in sheet pixels: the art bible's height for the tier at 48 px per world unit
+BODY_H = {tier: round(HEIGHT[TIER_HEIGHT[tier]] * PX_PER_UNIT) for tier in TIER_HEIGHT}
+
+# sheets used as scenery, not as a foe: their standing height in world units
+SCENERY_HEIGHT = {"chained_lions": 2.2}
+
+def game_heights() -> dict:
+    """A creature the game draws taller than its tier (data/mobs.json "size") gets a sheet that
+    tall, so no sprite is ever stretched past 48 px per unit."""
+    mobs = json.loads((ROOT / "data" / "mobs.json").read_text())
+    scale = float(json.loads((ROOT / "data" / "progression.json").read_text())["mob"]["greater_scale"])
+    out: dict = {}
+    for md in mobs.values():
+        if isinstance(md, dict) and "sprite" in md:
+            px = round(float(md.get("size", 1.0)) * (scale if md.get("greater") else 1.0) * PX_PER_UNIT)
+            out[md["sprite"]] = max(out.get(md["sprite"], 0), px)
+    return out
 BG_MIN, BG_SPREAD = 178, 16        # checkerboard squares: bright and nearly grey
 MIN_FRAME_MASS = 0.12              # a blob smaller than this share of the median frame is a stray particle
 MAX_SHEET = 2048
@@ -37,7 +54,7 @@ MAX_POSE_WIDTH = {"move": 1.55, "attack": 2.4, "hit_death": 1.6}   # widest pose
 # Rows judged by eye to show a different character than the idle row (the histogram cannot tell).
 FORCE_GENERATED = {"giant_grim": ("move", "attack", "hit_death"), "simple_sloth_presumption": ("move", "attack", "hit_death"),
                    "sloth_greater": ("move", "attack", "hit_death")}
-FPS = {"idle": 4.0, "walk": 8.0, "attack": 9.0, "hurt": 8.0, "die": 7.0}
+
 
 def cut_out(im: Image.Image) -> np.ndarray:
     """Checkerboard -> alpha. Only background connected to the border is removed, so light
@@ -50,6 +67,23 @@ def cut_out(im: Image.Image) -> np.ndarray:
     outside = ndimage.binary_dilation(outside, iterations=1) & (bg_like | (rgb.min(axis=2) >= BG_MIN - 30))   # eat the pale fringe
     solid = ndimage.binary_opening(~outside, iterations=1)                                                     # drop specks
     rgba = np.dstack([rgb.astype(np.uint8), np.where(solid, 255, 0).astype(np.uint8)])
+    return rgba
+
+HOLE_MIN_AREA = 120
+
+def clear_holes(rgba: np.ndarray) -> np.ndarray:
+    """Checkerboard seen through a ring or a bow is enclosed, so the border flood misses it.
+    An enclosed pale region that holds both white and grey squares is checkerboard."""
+    rgb = rgba[..., :3].astype(np.int16)
+    pale = (rgb.min(axis=2) >= BG_MIN) & (rgb.max(axis=2) - rgb.min(axis=2) <= 16) & (rgba[..., 3] > 0)
+    labels, n = ndimage.label(pale)
+    for i in range(1, n + 1):
+        region = labels == i
+        if region.sum() < HOLE_MIN_AREA:
+            continue
+        v = rgb[region].min(axis=1)
+        if (v >= 248).mean() > 0.15 and (v <= 240).mean() > 0.15:
+            rgba[region, 3] = 0
     return rgba
 
 def frames_of(rgba: np.ndarray) -> list[np.ndarray]:
@@ -212,12 +246,14 @@ def tier_of(name: str, boss: bool) -> str:
     return next((t for t in ("common", "rare", "elite", "greater") if name.endswith("_" + t)), "common")
 
 def build(name: str, files: dict[str, Path], boss: bool) -> dict:
-    target = BODY_H[tier_of(name, boss)]
+    target = max(BODY_H[tier_of(name, boss)], game_heights().get(name, 0))
+    if name in SCENERY_HEIGHT:
+        target = round(SCENERY_HEIGHT[name] * PX_PER_UNIT)
     rows: dict[str, list[Image.Image]] = {}
     for anim in ANIMS:
         if anim not in files:
             continue
-        frames = frames_of(cut_out(Image.open(files[anim])))
+        frames = frames_of(clear_holes(cut_out(Image.open(files[anim]))))
         if not frames:
             continue
         # each raw file is drawn at its own size: the first pose of every row is a standing one,
@@ -254,9 +290,9 @@ def build(name: str, files: dict[str, Path], boss: bool) -> dict:
     for need, fallback in (("walk", "idle"), ("attack", "walk"), ("hurt", "idle"), ("die", "idle")):
         anims.setdefault(need, anims[fallback][:1] if need in ("hurt", "die") else anims[fallback])
     OUT.mkdir(parents=True, exist_ok=True)
-    sheet.save(OUT / f"{name}.png", optimize=True)
+    finish(sheet, cells=(cols, len(rows))).save(OUT / f"{name}.png", optimize=True)     # palette, outline, light: the art bible
     return {"tex": f"res://assets/sprites/mobs/{name}.png", "hframes": cols, "vframes": len(rows), "height": target, "cell": [cw, ch],
-            "anims": anims, "fps": FPS, "generated": generated}
+            "anims": anims, "generated": generated}
 
 def main() -> int:
     table_path = ROOT / "data" / "sprites.json"

@@ -38,9 +38,12 @@
    ]
   ],
   "mini": "#a8c48a",
-  "ground": "cobble",
-  "ground_tint": "#c8c0b4",
-  "weather": ""
+  "ground": "cobble_warm",
+  "weather": "",
+  "ground_b": "cobble",
+  "flora": "green",
+  "rock": "stone",
+  "scatter": false
  },
  "props": [
   {
@@ -122,6 +125,14 @@
    ],
    "n": 3,
    "seed": 122
+  },
+  {
+   "t": "art",
+   "at": [
+    0,
+    -11
+   ],
+   "art": "city_wall"
   }
  ],
  "ents": [

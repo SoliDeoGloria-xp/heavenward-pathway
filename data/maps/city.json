@@ -33,9 +33,14 @@
    ]
   ],
   "mini": "#9c9484",
-  "ground": "cobble",
-  "ground_tint": "#ebe6eb",
-  "weather": "drizzle"
+  "ground": "cobble_dark",
+  "weather": "drizzle",
+  "ground_b": "cobble",
+  "flora": "dark",
+  "rock": "stone",
+  "tufts": 0,
+  "flowers": 0,
+  "patches": 14
  },
  "enter_say": [
   "A great burden weighs upon your back."

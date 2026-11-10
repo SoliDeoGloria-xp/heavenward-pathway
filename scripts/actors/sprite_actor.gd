@@ -21,6 +21,14 @@ var _flash_col := Color.WHITE
 static var _sh: Shader
 static var _sh_ghost: Shader
 var ghost := false
+var _base_y := 0.0
+
+## One clock for every sprite (art bible, "Timing"): an action lasts the same time whoever performs
+## it and however many frames were drawn for it. Frame rate = frames / duration.
+const ACTION_S := {"idle": 1.2, "walk": 0.64, "attack": 0.42, "hurt": 0.28, "die": 0.7, "cast": 0.5, "sit": 1.0, "rest": 1.0}
+const ONCE := ["attack", "hurt", "die", "cast"]      # played through once and held on the last frame
+const BREATH_S := 2.4                                 # a single-frame idle still breathes
+const BREATH := 0.014
 
 ## Passing pilgrims on the Way: other players shown as faint figures (GDD v0.3).
 static func _ghost_shader() -> Shader:
@@ -41,8 +49,8 @@ uniform float flash = 0.0;
 uniform vec4 outline_color : source_color = vec4(1.0, 0.83, 0.25, 1.0);
 uniform float outline = 0.0;
 uniform float half_h = 1.0;
-uniform float shade_top = 1.07;
-uniform float shade_bottom = 0.84;
+uniform float shade_top = 1.0;
+uniform float shade_bottom = 1.0;
 varying float vy;
 void vertex() {
 	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(INV_VIEW_MATRIX[0], MODEL_MATRIX[1], vec4(normalize(cross(INV_VIEW_MATRIX[0].xyz, MODEL_MATRIX[1].xyz)), 0.0), MODEL_MATRIX[3]);
@@ -87,7 +95,7 @@ func set_outline(on: bool) -> void:
 func set_tint(c: Color) -> void:
 	mat.set_shader_parameter("tint", c)
 
-## cfg keys: tex, hframes, vframes, pixel, rows(bool: 5 direction rows), anims {name: [frames], fps}
+## cfg keys: tex, hframes, vframes, pixel, rows(bool: 5 direction rows), anims {name: [frames]}. Timing comes from ACTION_S.
 func setup(c: Dictionary, display_name: String = "", name_color: Color = Color.WHITE) -> void:
 	cfg = c
 	sprite = Sprite3D.new()
@@ -103,6 +111,7 @@ func setup(c: Dictionary, display_name: String = "", name_color: Color = Color.W
 	sprite.centered = true
 	var fh: float = float(c.tex.get_height()) / float(sprite.vframes)
 	sprite.position.y = fh * sprite.pixel_size * 0.5
+	_base_y = sprite.position.y
 	# lit-sprite shader: map key-light tint, top-to-bottom shading, hit flash, target outline
 	mat = ShaderMaterial.new()
 	ghost = c.get("ghost", false)
@@ -114,12 +123,15 @@ func setup(c: Dictionary, display_name: String = "", name_color: Color = Color.W
 	add_child(sprite)
 	pick_height = fh * sprite.pixel_size * 0.5
 	shadow = MeshInstance3D.new()
-	var q := QuadMesh.new(); q.size = Vector2(1.1, 0.75) * c.get("shadow", 1.0); q.orientation = PlaneMesh.FACE_Y
+	# the art bible's one shadow: the blob, 0.62 as deep as it is wide, as wide as the body
+	var body_w: float = float(c.tex.get_width()) / float(c.hframes) * sprite.pixel_size
+	var q := QuadMesh.new(); q.size = Vector2(1.0, 0.62) * clampf(body_w * 0.8, 0.9, 5.0) * (1.0 if c.get("shadow", 1.0) > 0.0 else 0.0); q.orientation = PlaneMesh.FACE_Y
 	shadow.mesh = q
 	var m := StandardMaterial3D.new()
 	m.albedo_texture = G.tex("res://assets/fx/shadow.png")
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	shadow.material_override = m
 	shadow.position.y = 0.02
 	shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -166,8 +178,12 @@ func _process(delta: float) -> void:
 	if not anims.has(a):
 		a = "idle"
 	var fr: Array = anims[a]
-	var fps: float = cfg.get("fps", {}).get(a, 7.0)
-	var col: int = fr[int(anim_t * fps) % fr.size()]
+	var fps: float = fr.size() / float(ACTION_S.get(a, 0.8))
+	var step := int(anim_t * fps)
+	var col: int = fr[mini(step, fr.size() - 1) if (a in ONCE and one_shot != "") else step % fr.size()]
+	if fr.size() == 1 and a == "idle" and not G.settings.reduce_motion:
+		var k := 1.0 + BREATH * sin((anim_t + position.x) * TAU / BREATH_S)
+		sprite.scale.y = k; sprite.position.y = _base_y * k
 	var row := 0
 	var flip := false
 	if cfg.get("rows", false):

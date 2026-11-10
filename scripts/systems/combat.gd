@@ -25,7 +25,7 @@ const NO_RESPAWN := -99.0
 const BOSS_NAME_SIZE := 36
 const BOSS_INTRO_S := 1.8
 const NAME_RANGE := 4.5            # a foe's name shows when it is targeted or this close
-const MOB_SHEET := {"hframes": 7, "vframes": 1, "rows": false, "anims": {"idle": [0, 1], "walk": [2, 3], "attack": [2, 3], "hurt": [4], "die": [5, 6]}, "fps": {"idle": 2.0, "walk": 4.0, "die": 3.0}}
+const MOB_SHEET := {"hframes": 7, "vframes": 1, "rows": false, "anims": {"idle": [0, 1], "walk": [2, 3], "attack": [2, 3], "hurt": [4], "die": [5, 6]}}
 
 var w: World
 var mobs: Array = []             # {id, name, level, actor, hp, max, atk, xp, alive, home, aggro, ...}
@@ -98,7 +98,7 @@ func basic_attack() -> void:
 	if w.t <= next_atk or gcd > 0.0:
 		return
 	next_atk = w.t + float(G.d.interval) / (1.0 + buff("haste"))
-	w.pact.play_once("attack", 0.32)
+	w.pact.play_once("attack", SpriteActor.ACTION_S.attack)
 	var crit := randf() < float(G.d.crit) + buff("crit")
 	var dmg := int(G.d.atk) + randi_range(-2, 2)
 	hit_mob(target, dmg * (2 if crit else 1), crit, randf() < float(G.d.miss))
@@ -124,7 +124,7 @@ func _mob_actor(md: Dictionary, scale: float, pos: Vector3, shadow: float = 1.0)
 	if sheet.is_empty():
 		cfg["tex"] = G.tex("res://assets/sprites/mob_slothling.png"); cfg["pixel"] = PLACEHOLDER_PIXEL * scale
 	else:
-		cfg = {"tex": G.tex(sheet.tex), "hframes": int(sheet.hframes), "vframes": int(sheet.vframes), "rows": false, "anims": sheet.anims, "fps": sheet.fps,
+		cfg = {"tex": G.tex(sheet.tex), "hframes": int(sheet.hframes), "vframes": int(sheet.vframes), "rows": false, "anims": sheet.anims,
 			"pixel": float(md.size) * scale / float(sheet.height)}
 	cfg["shadow"] = shadow * float(md.get("size", 1.0))
 	a.setup(cfg, md.name, Color("ffe0e0"))
@@ -200,7 +200,7 @@ func _mob_tick(delta: float) -> void:
 		var d := a.position.distance_to(p)
 		if dead:
 			m.aggro = false
-		elif (d < AGGRO_RANGE and not w.sitting) or m.aggro:   # a resting pilgrim is not noticed
+		elif not calm_all and ((d < AGGRO_RANGE and not w.sitting) or m.aggro):   # a resting pilgrim is not noticed
 			m.aggro = true
 		if m.aggro and not m.was_aggro:
 			w.kit._pop_mark(a, "!", Color("ffd400"))
@@ -239,7 +239,7 @@ func _mob_tick(delta: float) -> void:
 					Fx.telegraph(w, p, 1.1, TELEGRAPH_S)
 				if w.t > m.next:
 					m.next = w.t + MOB_SWING_S; m.tele = false
-					a.play_once("attack", MOB_ATTACK_S); a.squash(0.12)
+					a.play_once("attack", SpriteActor.ACTION_S.attack); a.squash(0.12)
 					var tp: Vector3 = m.get("tele_pos", p)
 					var still_in: bool = Vector2(p.x - tp.x, p.z - tp.z).length() < 1.25
 					if not still_in or randf() < 0.12:
@@ -286,7 +286,7 @@ func hit_mob(m: Dictionary, dmg: int, crit: bool = false, miss: bool = false, vi
 	var kill: bool = m.hp <= 0.0
 	w.kit._float_text(a.position + Vector3(0, 1.6, 0), str(dmg), Color("ffe25a") if crit else Color.WHITE, crit or kill, dmg)
 	G.zeal = minf(G.zeal_max, G.zeal + ZEAL_ON_HIT)
-	a.play_once("hurt", 0.18)
+	a.play_once("hurt", SpriteActor.ACTION_S.hurt)
 	a.flash(Color.WHITE, 0.9); a.squash(0.14 if crit else 0.09); w.pact.squash(0.05)
 	var dirv := (a.position - w.player.position); dirv.y = 0; dirv = dirv.normalized()
 	Fx.sparks(w, a.position + Vector3(0, 0.7, 0), dirv, Color(0.85, 0.85, 0.8))
@@ -427,7 +427,7 @@ func _cast_strike(id: String, info: Dictionary, fx: Dictionary, dmg: int) -> boo
 		G.say("Too far. Moving closer…", G.WARN); return false
 	used_steps = used_steps or info.job == G.PILGRIM
 	w.pact.facing = to_m.normalized()
-	w.pact.play_once("attack", 0.35)
+	w.pact.play_once("attack", SpriteActor.ACTION_S.attack)
 	if fx.get("lunge", false):
 		var from := w.player.position
 		var dest := from + to_m.normalized() * maxf(0.0, to_m.length() - 1.1)
@@ -494,6 +494,8 @@ func rise() -> void:
 	make_weary()
 
 ## Every foe loses interest and goes home (used when a quiet moment begins).
+var calm_all := false   # screenshots: foes stand where they are
+
 func calm() -> void:
 	target = null
 	for m in mobs:
@@ -602,7 +604,7 @@ func _boss_resolve(c: Vector3, r: float, dmg: int, slam: bool) -> void:
 	if boss == null or not boss.alive or w.ending:
 		return
 	var a: SpriteActor = boss.actor
-	a.play_once("attack", MOB_ATTACK_S); a.squash(0.16 if slam else 0.1)
+	a.play_once("attack", SpriteActor.ACTION_S.attack); a.squash(0.16 if slam else 0.1)
 	Fx.dust(w, c, Color(0.75, 0.68, 0.55, 0.7), 14 if slam else 6)
 	Fx.ring(w, c, Color(1, 0.8, 0.6), r * 0.9, 0.35)
 	w.shake(0.45 if slam else 0.22)
@@ -647,10 +649,10 @@ func _allies_tick(delta: float) -> void:
 		if al.next <= 0.0 and not al.has("dodge"):
 			al.next = randf_range(1.2, 1.6)
 			if al.role == "support":
-				a.play_once("cast", 0.4)
+				a.play_once("cast", SpriteActor.ACTION_S.cast)
 				_ally_hit(al, 6 + randi() % 4)
 			elif a.position.distance_to(boss.actor.position) < 3.0:
-				a.play_once("attack", 0.32)
+				a.play_once("attack", SpriteActor.ACTION_S.attack)
 				_ally_hit(al, (9 if al.role == "damage" else 7) + randi() % 5)
 		if al.role == "support":
 			al.heal_t -= delta
@@ -710,7 +712,7 @@ func _muster_cleared(m: Dictionary) -> void:
 	G.say("Rewards: %s · Fellowship Marks +%d (one per named companion)." % [m.drop, companions], G.INFO)
 	w.hud.muster_cleared(companions)
 	for al in allies:
-		al.actor.play_once("cast", 0.8)
+		al.actor.play_once("cast", SpriteActor.ACTION_S.cast)
 	w.get_tree().create_timer(1.6).timeout.connect(func() -> void: G.say("Lumen: Well fought, all! See you at the hearth.", G.CHAT))
 
 func _boss_fade_fx(p: Vector3) -> void:

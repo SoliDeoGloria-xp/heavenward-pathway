@@ -33,8 +33,10 @@
   ],
   "mini": "#a8c48a",
   "ground": "grass",
-  "ground_tint": "#ffffff",
-  "weather": ""
+  "weather": "",
+  "ground_b": "grass_dark",
+  "flora": "green",
+  "rock": "stone"
  },
  "enter_say": [
   "The House Beautiful. Pilgrims who walked the Way alone meet here."

@@ -33,8 +33,10 @@
   ],
   "mini": "#8cc062",
   "ground": "grass",
-  "ground_tint": "#ffffff",
-  "weather": ""
+  "weather": "",
+  "ground_b": "grass_dark",
+  "flora": "green",
+  "rock": "stone"
  },
  "enter_say": [
   "Welcome to Eden Isle, the Dreamer's vision of the garden."
@@ -44,7 +46,9 @@
    "id": "walk",
    "type": "zone",
    "text": "Walk to the glowing circle by the Dreamer's lamp",
-   "on_start": {"call": "eden_intro"},
+   "on_start": {
+    "call": "eden_intro"
+   },
    "zone": [
     -8,
     7
@@ -169,5 +173,6 @@
     3
    ]
   }
- ]
+ ],
+ "props": []
 }

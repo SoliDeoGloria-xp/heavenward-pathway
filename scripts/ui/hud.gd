@@ -817,19 +817,21 @@ func _rebuild() -> void:
 # ------------------------------------------------------------------ dialogs
 ## Conversation box: speaker portrait, name plate, typewriter text, tap anywhere to continue,
 ## optional reply choices. Lines: {who, text, src?, portrait?, choices?: [{t, fn?}], fn?: Callable (runs when shown)}
-const PORTRAITS := {"The Dreamer": "res://assets/portraits/dreamer.png", "Evangelist": "res://assets/portraits/evangelist.png"}
 var _dlg_lbl: Label
 var _dlg_tw: Tween
 var _dlg_line := {}
 
+## A speaker's portrait is the face of the sprite you see in the world, enlarged: one style, no second drawing.
 func _portrait_tex(who: String, explicit: String) -> Texture2D:
 	if explicit != "":
 		return G.tex(explicit)
-	if PORTRAITS.has(who):
-		return G.tex(PORTRAITS[who])
 	if who == G.pname:
-		var at := AtlasTexture.new(); at.atlas = G.player_sheet if G.player_sheet else G.build_player_sheet(); at.region = G.PLAYER_FACE
-		return at
+		return UIKit.face(G.player_sheet if G.player_sheet else G.build_player_sheet())
+	if who == "The Dreamer":
+		return UIKit.face(MapKit.folk_sheet(MapKit.DREAMER_LOOK))
+	for e in world.ents:
+		if (e.name == who or who.begins_with(String(e.name))) and e.node is SpriteActor and e.node.sprite.texture.get_height() / e.node.sprite.vframes == int(G.PLAYER_CELL.y):
+			return UIKit.face(e.node.sprite.texture)
 	return null
 
 func _dialog_window(who: String, text: String, src: String, portrait: String) -> Dictionary:

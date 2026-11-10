@@ -38,9 +38,11 @@
    ]
   ],
   "mini": "#908898",
-  "ground": "grass",
-  "ground_tint": "#8a8878",
-  "weather": ""
+  "ground": "grass_night",
+  "weather": "",
+  "ground_b": "grass_dark",
+  "flora": "night",
+  "rock": "dark"
  },
  "props": [
   {

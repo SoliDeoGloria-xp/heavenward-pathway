@@ -37,7 +37,7 @@ func _ready() -> void:
 			next_screen = "world"; next_data = {"map": "eden"}
 	art = StoryArt.new(); UIKit.full_rect(art); add_child(art)
 	var ins := UIKit.safe_insets(get_viewport())
-	portrait = TextureRect.new(); portrait.texture = G.tex("res://assets/portraits/dreamer.png")
+	portrait = TextureRect.new(); portrait.texture = UIKit.face(MapKit.folk_sheet(MapKit.DREAMER_LOOK))
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	portrait.anchor_top = 1; portrait.anchor_bottom = 1; portrait.offset_left = 24 + ins.x; portrait.offset_right = 254 + ins.x
 	portrait.offset_top = -530; portrait.offset_bottom = -232; portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE

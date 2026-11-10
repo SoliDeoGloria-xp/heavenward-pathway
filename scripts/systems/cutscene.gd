@@ -65,8 +65,8 @@ func _here() -> Vector3:
 func fall() -> void:
 	w.cam_focus = Vector3(16, 0, 0.5)
 	_serpent = SpriteActor.new(); w.add_child(_serpent); _serpent.position = Vector3(19.2, 0, 1.4)
-	_serpent.setup({"tex": G.tex("res://assets/sprites/serpent.png"), "hframes": 2, "vframes": 1, "pixel": 0.04, "rows": false, "shadow": 0.7,
-		"anims": {"idle": [0, 1]}, "fps": {"idle": 2.0}}, "", Color.WHITE)
+	_serpent.setup({"tex": G.tex("res://assets/sprites/serpent.png"), "hframes": 2, "vframes": 1, "pixel": 1.0 / G.PX_PER_UNIT, "rows": false, "shadow": 0.7,
+		"anims": {"idle": [0, 1]}}, "", Color.WHITE)
 	_serpent.visible = false
 	play("eden.fall", func() -> void: w.quests.leave("city"))
 	w.cam_focus = Vector3(16, 0, 0.5)
@@ -184,14 +184,11 @@ func _fx_clash() -> void:
 ## The burden loosens, tumbles and is seen no more. Nothing but the cross, the tomb and light is shown.
 func _fx_burden_fall() -> void:
 	G.burden = false
-	var ball := MeshInstance3D.new(); var sm := SphereMesh.new(); sm.radius = 0.38; sm.height = 0.7; ball.mesh = sm
-	ball.material_override = w.kit._mat("res://assets/tiles/bark.png", Vector2.ONE, true, Color(0.35, 0.28, 0.22))
-	w.add_child(ball); ball.position = _here() + Vector3(0.3, 1.1, 0)
+	var ball := w.kit.prop("burden", _here() + Vector3(0.3, 0.7, 0))
 	var tomb := _anchor("tomb")
 	var tw := w.create_tween()
 	tw.tween_property(ball, "position", _here() + Vector3(0.8, 0.35, 0.6), 0.5).set_ease(Tween.EASE_IN)
 	tw.tween_property(ball, "position", tomb + Vector3(0, 0.3, -0.8), 2.2)
-	tw.parallel().tween_property(ball, "rotation:x", TAU * 3.0, 2.2)
 	tw.tween_property(ball, "scale", Vector3.ONE * 0.05, 0.4)
 	tw.tween_callback(ball.queue_free)
 	Fx.spiral(w, _here() + Vector3(0, 0.2, 0), Color("fff2c8"))

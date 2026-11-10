@@ -39,9 +39,13 @@
    ]
   ],
   "mini": "#3a3a50",
-  "ground": "dirt",
-  "ground_tint": "#6a6680",
-  "weather": ""
+  "ground": "rock_dark",
+  "weather": "",
+  "ground_b": "pit",
+  "flora": "dark",
+  "rock": "dark",
+  "tufts": 30,
+  "flowers": 0
  },
  "enter_say": [
   "Darkness, and a narrow way. You can hardly see where to set your foot."

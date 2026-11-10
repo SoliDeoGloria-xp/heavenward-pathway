@@ -18,7 +18,7 @@ const AUTO_HEAL_BELOW := 0.45
 const SIT_REGEN := 3.0
 const STEP_DUST_S := 0.34
 const WEARY_ON_ENTER_S := 15.0
-const PLAYER_HEIGHT := 2.0          # world units for a full sheet cell
+const PLAYER_HEIGHT := 2.0          # world units for a full 96 px sheet cell (48 px per unit)
 const MAP_SCRIPT := "res://scripts/maps/%s.gd"
 
 var map_id := "eden"
@@ -140,7 +140,7 @@ func _build_env() -> void:
 	sun.rotation_degrees = Vector3(-52, -38, 0)
 	sun.light_energy = info("sun_e")
 	sun.light_color = info("sun_c")
-	sun.shadow_enabled = true
+	sun.shadow_enabled = false   # the art bible's one shadow is the blob under each sprite
 	add_child(sun)
 
 # ------------------------------------------------------------------ player and camera
@@ -153,8 +153,7 @@ func _build_player() -> void:
 	player.add_child(pact)
 	var sheet: Texture2D = G.player_sheet if G.player_sheet else G.build_player_sheet()
 	pact.setup({"tex": sheet, "hframes": 10, "vframes": 5, "pixel": PLAYER_HEIGHT / G.PLAYER_CELL.y, "rows": true,
-		"anims": {"idle": [0], "walk": [1, 2, 3, 4], "attack": [5, 6], "sit": [7], "rest": [8], "cast": [9]},
-		"fps": {"walk": 9.0, "attack": 6.0}}, G.pname if G.job_id == G.PILGRIM else "%s · %s" % [G.pname, G.job_name()], Color.WHITE)
+		"anims": {"idle": [0], "walk": [1, 2, 3, 4], "attack": [5, 6], "sit": [7], "rest": [8], "cast": [9]}}, G.pname if G.job_id == G.PILGRIM else "%s · %s" % [G.pname, G.job_name()], Color.WHITE)
 	player.position = info("start")
 
 func _build_camera() -> void:

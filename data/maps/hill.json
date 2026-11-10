@@ -38,9 +38,11 @@
    ]
   ],
   "mini": "#a89878",
-  "ground": "grass",
-  "ground_tint": "#b0a880",
-  "weather": ""
+  "ground": "grass_dry",
+  "weather": "",
+  "ground_b": "dirt",
+  "flora": "dry",
+  "rock": "earth"
  },
  "enter_say": [
   "A spring, and three ways. Only one of them goes up."
@@ -376,6 +378,17 @@
    "n": 6,
    "seed": 109,
    "tint": "#8a9a78"
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -27,
+    -10,
+    52,
+    20
+   ],
+   "n": 10,
+   "seed": 204
   }
  ],
  "ents": [

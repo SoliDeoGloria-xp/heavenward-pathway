@@ -49,7 +49,7 @@ func _ready() -> void:
 	bubble = PanelContainer.new(); bubble.theme = G.theme; bubble.visible = false
 	bubble.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/window.png", 12, 14))
 	var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 12); bubble.add_child(h)
-	var face := TextureRect.new(); face.texture = G.tex("res://assets/portraits/dreamer.png"); face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	var face := TextureRect.new(); face.texture = UIKit.face(MapKit.folk_sheet(MapKit.DREAMER_LOOK)); face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; face.custom_minimum_size = Vector2(92, 115); face.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(face)
 	var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 6); v.custom_minimum_size = Vector2(500, 0); h.add_child(v)

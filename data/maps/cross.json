@@ -40,8 +40,10 @@
   ],
   "mini": "#b8c08a",
   "ground": "grass",
-  "ground_tint": "#7f9470",
-  "weather": ""
+  "weather": "",
+  "ground_b": "grass_dry",
+  "flora": "green",
+  "rock": "stone"
  },
  "enter_say": [
   "The way runs straight between two walls, and it climbs."
@@ -98,7 +100,6 @@
     8
    ],
    "tile": "grass",
-   "tint": "#c8d0a0",
    "solid": false
   },
   {
@@ -267,6 +268,17 @@
    "seed": 97,
    "tint": "#8a8680",
    "n": 4
+  },
+  {
+   "t": "woods",
+   "area": [
+    -24,
+    -13,
+    30,
+    2
+   ],
+   "n": 5,
+   "seed": 201
   }
  ],
  "anchors": {

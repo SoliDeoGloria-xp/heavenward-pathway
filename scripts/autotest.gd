@@ -86,7 +86,74 @@ func _jump(from: String) -> void:
 	print("[autotest] partial run from %s: %s" % [from, "PASS" if failures.is_empty() else str(failures)])
 	get_tree().quit(0 if failures.is_empty() else 1)
 
+## Gallery (HPO_GALLERY=1): one fixed set of pictures of every map and screen, taken the same way
+## every build, so tools/shot_diff.py can compare them with the golden set in tests/golden.
+const GALLERY_MAPS := ["eden", "city", "slough", "interpreter", "cross", "hill", "palace", "trial", "lions_path", "lions", "humiliation", "shadow"]
+const GALLERY_SHEETS := ["status", "skills", "bag", "guide", "settings"]
+
+func _gallery_world(map_id: String) -> Node:
+	G.goto("world", {"map": map_id})
+	var guard := 0
+	while (world() == null or world().map_id != map_id or world().hud == null) and guard < 200:
+		await wait(0.1); guard += 1
+	await wait(1.2)
+	return world()
+
+func _gallery_clear(w) -> void:
+	var guard := 0
+	while is_instance_valid(w) and (w.hud.dialog_active() or w.hud.coach.blocking()) and guard < 60:
+		guard += 1
+		if w.hud.dialog_active():
+			w.hud.dialog_next(0)
+		else:
+			w.hud.coach.next()
+		await wait(0.2)
+	w.hud.clear_overlay()
+
+func gallery() -> void:
+	seed(7)
+	G.pname = "Steadfast"; G.lamb_name = "Meadow"; G.build_player_sheet(); G.base_cap = 10
+	G.settings.auto_battle = false; G.guide = "off"
+	await wait(1.5); await shot("ui_title")
+	for map_id in GALLERY_MAPS:
+		var w = await _gallery_world(map_id)
+		if w == null:
+			check(false, "gallery: map '%s' did not load" % map_id); continue
+		if map_id == "city":
+			await shot("ui_dialogue")
+		await _gallery_clear(w)
+		w.hud.coach.visible = false
+		w.combat.calm_all = true
+		var b: Rect2 = w.bounds
+		var spots := [w.player.position, Vector3(b.get_center().x, 0, b.get_center().y), Vector3(b.end.x - 7.0, 0, b.get_center().y)]
+		for i in spots.size():
+			w.player.position = spots[i]; G.hp = G.hp_max
+			w._place_camera(true)
+			await wait(0.7)
+			await _gallery_clear(w)
+			await wait(0.3)
+			await shot("map_%s_%s" % [map_id, "abc"[i]])
+		if map_id == "city":
+			for tab in GALLERY_SHEETS:
+				w.hud.open_sheet(tab); await wait(0.5); await shot("ui_sheet_" + tab)
+			w.hud.clear_overlay()
+			w.hud.open_more(); await wait(0.4); await shot("ui_more"); w.hud.clear_overlay()
+			w.hud.shop(); await wait(0.4); await shot("ui_shop"); w.hud.clear_overlay()
+			w.hud.bench(); await wait(0.4); await shot("ui_bench"); w.hud.clear_overlay()
+			if OS.get_environment("HPO_PORTRAIT") != "0":
+				get_window().size = Vector2i(720, 1280); await wait(1.0)
+				w._place_camera(true); await wait(0.5)
+				await shot("portrait_hud")
+				w.hud.open_sheet("status"); await wait(0.5); await shot("portrait_sheet"); w.hud.clear_overlay()
+				w.hud.open_more(); await wait(0.4); await shot("portrait_more"); w.hud.clear_overlay()
+				get_window().size = Vector2i(1280, 720); await wait(1.0)
+	print("[autotest] gallery: ", "PASS" if failures.is_empty() else "FAILED: %s" % [failures])
+	get_tree().quit(0 if failures.is_empty() else 1)
+
 func run() -> void:
+	if OS.get_environment("HPO_GALLERY") != "":
+		await gallery()
+		return
 	if OS.get_environment("HPO_FROM") != "":
 		await wait(1.0)
 		await _jump(OS.get_environment("HPO_FROM"))

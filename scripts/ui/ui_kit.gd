@@ -142,6 +142,11 @@ static func safe_insets(vp: Viewport) -> Vector4:
 	var kx := vs.x / float(scr.x); var ky := vs.y / float(scr.y)
 	return Vector4(safe.position.x * kx, safe.position.y * ky, (scr.x - safe.end.x) * kx, (scr.y - safe.end.y) * ky)
 
+## Head and shoulders from the first frame of a character sheet or standee (64x96 cells).
+static func face(sheet: Texture2D) -> AtlasTexture:
+	var at := AtlasTexture.new(); at.atlas = sheet; at.region = G.PLAYER_FACE
+	return at
+
 static func icon_rect(name: String, size: float) -> TextureRect:
 	var t := TextureRect.new()
 	t.texture = G.tex("res://assets/icons/%s.png" % name)

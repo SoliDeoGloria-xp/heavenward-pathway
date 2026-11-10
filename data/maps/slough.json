@@ -39,9 +39,11 @@
    ]
   ],
   "mini": "#7a8a6a",
-  "ground": "grass",
-  "ground_tint": "#9aa58a",
-  "weather": "drizzle"
+  "ground": "marsh",
+  "weather": "drizzle",
+  "ground_b": "grass_dark",
+  "flora": "dark",
+  "rock": "stone"
  },
  "enter_say": [
   "The plain is wide and wet. Pliable walks beside you, full of questions."
@@ -389,16 +391,6 @@
    "light": true
   },
   {
-   "t": "billboard",
-   "at": [
-    23.2,
-    0
-   ],
-   "art": "wicket_gate",
-   "h": 4.4,
-   "tint": "#ffffff"
-  },
-  {
    "t": "blooms",
    "area": [
     17,
@@ -431,6 +423,17 @@
     21,
     1.9
    ]
+  },
+  {
+   "t": "reeds",
+   "area": [
+    -14,
+    -8,
+    20,
+    16
+   ],
+   "n": 26,
+   "seed": 77
   }
  ],
  "ents": [

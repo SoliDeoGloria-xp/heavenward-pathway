@@ -426,11 +426,7 @@ var waymark_phrases: Array = ["Beware: danger ahead", "Rest here", "Look closely
 
 func _add_waymark(pos: Vector3, phrase: String, author: String, thanks: int) -> Dictionary:
 	var n := Node3D.new(); n.position = pos; w.add_child(n)
-	var wood := w.kit._mat("res://assets/tiles/bark.png", Vector2(1, 1), true, Color(0.85, 0.75, 0.6))
-	var post_m := MeshInstance3D.new(); var pb := BoxMesh.new(); pb.size = Vector3(0.12, 1.2, 0.12); post_m.mesh = pb; post_m.material_override = wood; post_m.position.y = 0.6; n.add_child(post_m)
-	var plank := MeshInstance3D.new(); var pk := BoxMesh.new(); pk.size = Vector3(0.7, 0.32, 0.06); plank.mesh = pk; plank.material_override = wood; plank.position.y = 1.08; n.add_child(plank)
-	var stone := StandardMaterial3D.new(); stone.albedo_color = Color("9ad0ff"); stone.emission_enabled = true; stone.emission = Color("6ab8ff"); stone.emission_energy_multiplier = 1.2
-	var gem := MeshInstance3D.new(); var sm := SphereMesh.new(); sm.radius = 0.07; sm.height = 0.14; gem.mesh = sm; gem.material_override = stone; gem.position = Vector3(0, 1.32, 0); n.add_child(gem)
+	w.kit.prop("waymark", pos).reparent(n)
 	var wm := {"phrase": phrase, "author": author, "thanks": thanks, "thanked": false, "mine": author == G.pname}
 	var e := w._add_ent("waymark_%d" % w.ents.size(), "Waymark", pos, n, "Read", "scroll", func(): w.hud.waymark_read(wm))
 	e["kind"] = "waymark"

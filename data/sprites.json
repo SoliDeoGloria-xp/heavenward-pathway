@@ -3,10 +3,10 @@
   "tex": "res://assets/sprites/mobs/apollyon.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 202,
   "cell": [
-   166,
-   166
+   245,
+   245
   ],
   "anims": {
    "idle": [
@@ -39,13 +39,6 @@
     20,
     21
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": []
  },
@@ -53,10 +46,10 @@
   "tex": "res://assets/sprites/mobs/beast_worldliness.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   108,
-   163
+   132,
+   201
   ],
   "anims": {
    "idle": [
@@ -90,23 +83,16 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "chained_lions": {
   "tex": "res://assets/sprites/mobs/chained_lions.png",
   "hframes": 7,
   "vframes": 4,
-  "height": 136,
+  "height": 106,
   "cell": [
-   157,
-   163
+   123,
+   127
   ],
   "anims": {
    "idle": [
@@ -141,23 +127,16 @@
     24
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "diabolus_mansoul": {
   "tex": "res://assets/sprites/mobs/diabolus_mansoul.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   144,
-   139
+   177,
+   172
   ],
   "anims": {
    "idle": [
@@ -190,13 +169,6 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": [
    "attack"
   ]
@@ -205,10 +177,10 @@
   "tex": "res://assets/sprites/mobs/dragon_persecution.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   123,
-   170
+   152,
+   209
   ],
   "anims": {
    "idle": [
@@ -242,23 +214,16 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "envy_common": {
   "tex": "res://assets/sprites/mobs/envy_common.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 72,
+  "height": 60,
   "cell": [
-   79,
-   77
+   68,
+   65
   ],
   "anims": {
    "idle": [
@@ -292,13 +257,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "move",
@@ -310,10 +268,10 @@
   "tex": "res://assets/sprites/mobs/envy_elite.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 84,
+  "height": 72,
   "cell": [
-   100,
-   103
+   85,
+   88
   ],
   "anims": {
    "idle": [
@@ -346,13 +304,6 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": [
    "move",
    "attack"
@@ -362,10 +313,10 @@
   "tex": "res://assets/sprites/mobs/envy_greater.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 96,
+  "height": 97,
   "cell": [
-   122,
-   102
+   123,
+   104
   ],
   "anims": {
    "idle": [
@@ -399,13 +350,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "move",
@@ -417,10 +361,10 @@
   "tex": "res://assets/sprites/mobs/envy_rare.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 78,
+  "height": 72,
   "cell": [
-   93,
-   81
+   87,
+   75
   ],
   "anims": {
    "idle": [
@@ -454,13 +398,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "attack",
@@ -471,10 +408,10 @@
   "tex": "res://assets/sprites/mobs/formalist_hypocrisy.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   115,
-   145
+   141,
+   179
   ],
   "anims": {
    "idle": [
@@ -507,13 +444,6 @@
     20,
     21
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": []
  },
@@ -521,10 +451,10 @@
   "tex": "res://assets/sprites/mobs/giant_despair.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   129,
-   160
+   159,
+   197
   ],
   "anims": {
    "idle": [
@@ -558,23 +488,16 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "giant_grim": {
   "tex": "res://assets/sprites/mobs/giant_grim.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 173,
   "cell": [
-   188,
-   144
+   238,
+   183
   ],
   "anims": {
    "idle": [
@@ -608,13 +531,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "move",
@@ -626,10 +542,10 @@
   "tex": "res://assets/sprites/mobs/giant_maul.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   142,
-   160
+   174,
+   198
   ],
   "anims": {
    "idle": [
@@ -662,13 +578,6 @@
     20,
     21
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": []
  },
@@ -676,10 +585,10 @@
   "tex": "res://assets/sprites/mobs/giant_slaygood.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   145,
-   193
+   178,
+   237
   ],
   "anims": {
    "idle": [
@@ -713,23 +622,16 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "gluttony_common": {
   "tex": "res://assets/sprites/mobs/gluttony_common.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 72,
+  "height": 60,
   "cell": [
-   96,
-   78
+   81,
+   66
   ],
   "anims": {
    "idle": [
@@ -764,13 +666,6 @@
     23
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": [
    "move",
    "attack",
@@ -781,10 +676,10 @@
   "tex": "res://assets/sprites/mobs/gluttony_elite.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 84,
+  "height": 72,
   "cell": [
-   81,
-   93
+   70,
+   80
   ],
   "anims": {
    "idle": [
@@ -817,13 +712,6 @@
     20,
     21
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": []
  },
@@ -864,23 +752,16 @@
     15
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "gluttony_rare": {
   "tex": "res://assets/sprites/mobs/gluttony_rare.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 78,
+  "height": 72,
   "cell": [
-   74,
-   95
+   69,
+   88
   ],
   "anims": {
    "idle": [
@@ -914,23 +795,16 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "great_red_dragon": {
   "tex": "res://assets/sprites/mobs/great_red_dragon.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   160,
-   138
+   196,
+   170
   ],
   "anims": {
    "idle": [
@@ -963,13 +837,6 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": [
    "attack"
   ]
@@ -978,10 +845,10 @@
   "tex": "res://assets/sprites/mobs/greed_common.png",
   "hframes": 7,
   "vframes": 4,
-  "height": 72,
+  "height": 60,
   "cell": [
-   77,
-   83
+   65,
+   70
   ],
   "anims": {
    "idle": [
@@ -1018,23 +885,16 @@
     27
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "greed_elite": {
   "tex": "res://assets/sprites/mobs/greed_elite.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 84,
+  "height": 72,
   "cell": [
-   116,
-   90
+   100,
+   77
   ],
   "anims": {
    "idle": [
@@ -1068,13 +928,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "move",
@@ -1123,23 +976,16 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "greed_rare": {
   "tex": "res://assets/sprites/mobs/greed_rare.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 78,
+  "height": 72,
   "cell": [
-   88,
-   129
+   82,
+   119
   ],
   "anims": {
    "idle": [
@@ -1173,23 +1019,16 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "legion_hypocrisy": {
   "tex": "res://assets/sprites/mobs/legion_hypocrisy.png",
   "hframes": 7,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   105,
-   148
+   129,
+   182
   ],
   "anims": {
    "idle": [
@@ -1224,23 +1063,16 @@
     24
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "lust_common": {
   "tex": "res://assets/sprites/mobs/lust_common.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 72,
+  "height": 60,
   "cell": [
-   88,
-   77
+   76,
+   65
   ],
   "anims": {
    "idle": [
@@ -1275,13 +1107,6 @@
     23
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": [
    "move",
    "attack",
@@ -1292,10 +1117,10 @@
   "tex": "res://assets/sprites/mobs/lust_elite.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 84,
+  "height": 77,
   "cell": [
-   85,
-   106
+   78,
+   97
   ],
   "anims": {
    "idle": [
@@ -1330,13 +1155,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "hit_death"
@@ -1379,23 +1197,16 @@
     15
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "lust_rare": {
   "tex": "res://assets/sprites/mobs/lust_rare.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 78,
+  "height": 77,
   "cell": [
-   70,
-   102
+   69,
+   101
   ],
   "anims": {
    "idle": [
@@ -1428,13 +1239,6 @@
     20,
     21
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": []
  },
@@ -1442,10 +1246,10 @@
   "tex": "res://assets/sprites/mobs/madam_bubble.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   126,
-   147
+   154,
+   182
   ],
   "anims": {
    "idle": [
@@ -1478,13 +1282,6 @@
     20,
     21
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "move"
@@ -1534,23 +1331,16 @@
     27
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "pride_elite": {
   "tex": "res://assets/sprites/mobs/pride_elite.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 84,
+  "height": 74,
   "cell": [
-   109,
-   91
+   96,
+   81
   ],
   "anims": {
    "idle": [
@@ -1583,13 +1373,6 @@
     20,
     21
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": []
  },
@@ -1635,13 +1418,6 @@
     23
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": [
    "hit_death"
   ]
@@ -1650,10 +1426,10 @@
   "tex": "res://assets/sprites/mobs/pride_rare.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 78,
+  "height": 72,
   "cell": [
-   96,
-   88
+   89,
+   82
   ],
   "anims": {
    "idle": [
@@ -1686,13 +1462,6 @@
     20,
     21
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": []
  },
@@ -1700,10 +1469,10 @@
   "tex": "res://assets/sprites/mobs/pride_wanderer.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   113,
-   140
+   138,
+   172
   ],
   "anims": {
    "idle": [
@@ -1737,23 +1506,16 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "prince_air": {
   "tex": "res://assets/sprites/mobs/prince_air.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   145,
-   139
+   179,
+   171
   ],
   "anims": {
    "idle": [
@@ -1787,13 +1549,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "attack",
@@ -1804,10 +1559,10 @@
   "tex": "res://assets/sprites/mobs/simple_sloth_presumption.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   190,
-   144
+   234,
+   177
   ],
   "anims": {
    "idle": [
@@ -1841,13 +1596,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "move",
@@ -1859,10 +1607,10 @@
   "tex": "res://assets/sprites/mobs/sloth_common.png",
   "hframes": 7,
   "vframes": 4,
-  "height": 72,
+  "height": 60,
   "cell": [
-   93,
-   88
+   78,
+   73
   ],
   "anims": {
    "idle": [
@@ -1899,23 +1647,16 @@
     27
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "sloth_elite": {
   "tex": "res://assets/sprites/mobs/sloth_elite.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 84,
+  "height": 72,
   "cell": [
-   113,
-   88
+   97,
+   76
   ],
   "anims": {
    "idle": [
@@ -1949,13 +1690,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "attack",
@@ -2004,13 +1738,6 @@
     23
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": [
    "move",
    "attack",
@@ -2021,10 +1748,10 @@
   "tex": "res://assets/sprites/mobs/sloth_rare.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 78,
+  "height": 72,
   "cell": [
-   104,
-   87
+   97,
+   80
   ],
   "anims": {
    "idle": [
@@ -2057,13 +1784,6 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": [
    "move",
    "attack"
@@ -2073,10 +1793,10 @@
   "tex": "res://assets/sprites/mobs/stronghold_unbelief.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   126,
-   150
+   154,
+   185
   ],
   "anims": {
    "idle": [
@@ -2109,13 +1829,6 @@
     20,
     21
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": []
  },
@@ -2123,10 +1836,10 @@
   "tex": "res://assets/sprites/mobs/throne_pride.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 136,
+  "height": 168,
   "cell": [
-   99,
-   146
+   121,
+   179
   ],
   "anims": {
    "idle": [
@@ -2160,23 +1873,16 @@
     21
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": []
  },
  "wrath_common": {
   "tex": "res://assets/sprites/mobs/wrath_common.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 72,
+  "height": 60,
   "cell": [
-   88,
-   77
+   76,
+   65
   ],
   "anims": {
    "idle": [
@@ -2210,13 +1916,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "move",
@@ -2228,10 +1927,10 @@
   "tex": "res://assets/sprites/mobs/wrath_elite.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 84,
+  "height": 72,
   "cell": [
-   86,
-   98
+   74,
+   84
   ],
   "anims": {
    "idle": [
@@ -2266,13 +1965,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "move",
@@ -2319,13 +2011,6 @@
     23
    ]
   },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
-  },
   "generated": [
    "attack",
    "hit_death"
@@ -2335,10 +2020,10 @@
   "tex": "res://assets/sprites/mobs/wrath_rare.png",
   "hframes": 6,
   "vframes": 4,
-  "height": 78,
+  "height": 72,
   "cell": [
-   96,
-   86
+   88,
+   78
   ],
   "anims": {
    "idle": [
@@ -2372,13 +2057,6 @@
     22,
     23
    ]
-  },
-  "fps": {
-   "idle": 4.0,
-   "walk": 8.0,
-   "attack": 9.0,
-   "hurt": 8.0,
-   "die": 7.0
   },
   "generated": [
    "move",

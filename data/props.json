@@ -1,0 +1,795 @@
+{
+ "arbour": {
+  "w": 3.542,
+  "h": 2.792,
+  "solid": 0.0,
+  "shadow": 3.2
+ },
+ "armed": {
+  "w": 1.917,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 2.0,
+  "glow": "gold"
+ },
+ "banner_cloth_blue": {
+  "w": 1.062,
+  "h": 3.604,
+  "solid": 0.0,
+  "shadow": 0.6
+ },
+ "banner_cloth_red": {
+  "w": 1.062,
+  "h": 3.604,
+  "solid": 0.0,
+  "shadow": 0.6
+ },
+ "banner_gold": {
+  "w": 1.062,
+  "h": 3.604,
+  "solid": 0.0,
+  "shadow": 0.6
+ },
+ "banner_leaf": {
+  "w": 1.062,
+  "h": 3.604,
+  "solid": 0.0,
+  "shadow": 0.6
+ },
+ "banner_night": {
+  "w": 1.062,
+  "h": 3.604,
+  "solid": 0.0,
+  "shadow": 0.6
+ },
+ "barrel": {
+  "w": 0.688,
+  "h": 1.0,
+  "solid": 0.45,
+  "shadow": 0.9
+ },
+ "broom": {
+  "w": 1.042,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "burden": {
+  "w": 0.792,
+  "h": 0.792,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "bush_dark": {
+  "w": 1.25,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 1.2
+ },
+ "bush_dry": {
+  "w": 1.25,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 1.2
+ },
+ "bush_green": {
+  "w": 1.25,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 1.2
+ },
+ "bush_night": {
+  "w": 1.25,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 1.2
+ },
+ "chairs": {
+  "w": 1.771,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_dark_a": {
+  "w": 5.5,
+  "h": 4.208,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_dark_b": {
+  "w": 5.5,
+  "h": 5.104,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_dark_c": {
+  "w": 5.5,
+  "h": 6.0,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_dark_low": {
+  "w": 5.5,
+  "h": 2.208,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_earth_a": {
+  "w": 5.5,
+  "h": 4.208,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_earth_b": {
+  "w": 5.5,
+  "h": 5.104,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_earth_c": {
+  "w": 5.5,
+  "h": 6.0,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_earth_low": {
+  "w": 5.5,
+  "h": 2.208,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_grass_a": {
+  "w": 5.5,
+  "h": 4.396,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_grass_b": {
+  "w": 5.5,
+  "h": 5.396,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_grass_low": {
+  "w": 5.5,
+  "h": 2.208,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_snow_a": {
+  "w": 5.5,
+  "h": 4.396,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_snow_b": {
+  "w": 5.5,
+  "h": 5.396,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_snow_low": {
+  "w": 5.5,
+  "h": 2.208,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_stone_a": {
+  "w": 5.5,
+  "h": 4.208,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_stone_b": {
+  "w": 5.5,
+  "h": 5.104,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_stone_c": {
+  "w": 5.5,
+  "h": 6.0,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "cliff_stone_low": {
+  "w": 5.5,
+  "h": 2.208,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "coins": {
+  "w": 0.75,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "crate": {
+  "w": 0.833,
+  "h": 1.0,
+  "solid": 0.45,
+  "shadow": 0.9
+ },
+ "cross": {
+  "w": 2.292,
+  "h": 5.208,
+  "solid": 0.3,
+  "shadow": 1.6
+ },
+ "crystal_cloth_red": {
+  "w": 1.271,
+  "h": 1.896,
+  "solid": 0.4,
+  "shadow": 1.2,
+  "glow": "cloth_red"
+ },
+ "crystal_gold": {
+  "w": 1.271,
+  "h": 1.896,
+  "solid": 0.4,
+  "shadow": 1.2,
+  "glow": "gold"
+ },
+ "crystal_leaf": {
+  "w": 1.271,
+  "h": 1.896,
+  "solid": 0.4,
+  "shadow": 1.2,
+  "glow": "leaf"
+ },
+ "crystal_night": {
+  "w": 1.271,
+  "h": 1.896,
+  "solid": 0.4,
+  "shadow": 1.2,
+  "glow": "night"
+ },
+ "crystal_water": {
+  "w": 1.271,
+  "h": 1.896,
+  "solid": 0.4,
+  "shadow": 1.2,
+  "glow": "water"
+ },
+ "dead_tree_a": {
+  "w": 2.604,
+  "h": 3.604,
+  "solid": 0.3,
+  "shadow": 1.2
+ },
+ "dead_tree_b": {
+  "w": 2.438,
+  "h": 3.604,
+  "solid": 0.3,
+  "shadow": 1.2
+ },
+ "dead_tree_c": {
+  "w": 2.479,
+  "h": 3.604,
+  "solid": 0.3,
+  "shadow": 1.2
+ },
+ "eyes": {
+  "w": 0.271,
+  "h": 0.125,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "glow": "fire"
+ },
+ "fence": {
+  "w": 1.604,
+  "h": 1.0,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "flowers_cloth_blue": {
+  "w": 0.625,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "flowers_cloth_red": {
+  "w": 0.667,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "flowers_gold": {
+  "w": 0.479,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "flowers_night": {
+  "w": 0.583,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "flowers_stone": {
+  "w": 0.625,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "hearth": {
+  "w": 2.312,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 2.0,
+  "glow": "fire"
+ },
+ "house_a": {
+  "w": 6.396,
+  "h": 5.604,
+  "solid": 0.0,
+  "shadow": 6.0
+ },
+ "house_b": {
+  "w": 6.396,
+  "h": 5.604,
+  "solid": 0.0,
+  "shadow": 6.0
+ },
+ "house_c": {
+  "w": 6.396,
+  "h": 5.604,
+  "solid": 0.0,
+  "shadow": 6.0
+ },
+ "house_dark": {
+  "w": 6.396,
+  "h": 5.604,
+  "solid": 0.0,
+  "shadow": 6.0
+ },
+ "lamp": {
+  "w": 0.479,
+  "h": 3.104,
+  "solid": 0.2,
+  "shadow": 0.7,
+  "glow": "fire"
+ },
+ "lamp_cold": {
+  "w": 0.479,
+  "h": 3.104,
+  "solid": 0.2,
+  "shadow": 0.7,
+  "glow": "water"
+ },
+ "menhir_a": {
+  "w": 0.896,
+  "h": 2.396,
+  "solid": 0.45,
+  "shadow": 1.0
+ },
+ "menhir_b": {
+  "w": 0.896,
+  "h": 3.104,
+  "solid": 0.45,
+  "shadow": 1.0
+ },
+ "menhir_c": {
+  "w": 0.896,
+  "h": 1.792,
+  "solid": 0.45,
+  "shadow": 1.0
+ },
+ "mushroom_cloth_red": {
+  "w": 0.938,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "glow": "cloth_red"
+ },
+ "mushroom_gold": {
+  "w": 0.938,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "glow": "gold"
+ },
+ "mushroom_leaf": {
+  "w": 0.938,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "glow": "leaf"
+ },
+ "mushroom_night": {
+  "w": 0.938,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "glow": "night"
+ },
+ "mushroom_water": {
+  "w": 0.938,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "glow": "water"
+ },
+ "patch_dark_a": {
+  "w": 2.312,
+  "h": 1.938,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "patch_dark_b": {
+  "w": 2.979,
+  "h": 2.854,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "patch_dry_a": {
+  "w": 2.292,
+  "h": 1.854,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "patch_dry_b": {
+  "w": 3.312,
+  "h": 2.833,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "patch_leaf_a": {
+  "w": 1.979,
+  "h": 2.0,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "patch_leaf_b": {
+  "w": 3.021,
+  "h": 2.833,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "patch_night_a": {
+  "w": 2.396,
+  "h": 1.917,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "patch_night_b": {
+  "w": 3.188,
+  "h": 2.729,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "patch_stone_a": {
+  "w": 2.292,
+  "h": 2.062,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "patch_stone_b": {
+  "w": 3.312,
+  "h": 2.625,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "patch_wood_a": {
+  "w": 2.396,
+  "h": 1.979,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "patch_wood_b": {
+  "w": 3.292,
+  "h": 2.875,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "pebbles_a": {
+  "w": 0.875,
+  "h": 0.667,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "pebbles_b": {
+  "w": 0.75,
+  "h": 0.667,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "pedestal": {
+  "w": 1.146,
+  "h": 1.104,
+  "solid": 0.6,
+  "shadow": 1.2
+ },
+ "picture": {
+  "w": 1.354,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "pillar": {
+  "w": 0.958,
+  "h": 4.208,
+  "solid": 0.5,
+  "shadow": 1.2
+ },
+ "pillar_broken_a": {
+  "w": 0.958,
+  "h": 2.604,
+  "solid": 0.5,
+  "shadow": 1.2
+ },
+ "pillar_broken_b": {
+  "w": 0.958,
+  "h": 1.5,
+  "solid": 0.5,
+  "shadow": 1.2
+ },
+ "reeds": {
+  "w": 0.604,
+  "h": 1.292,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "rock_a": {
+  "w": 0.854,
+  "h": 0.604,
+  "solid": 0.0,
+  "shadow": 0.81
+ },
+ "rock_b": {
+  "w": 1.312,
+  "h": 0.896,
+  "solid": 0.5,
+  "shadow": 1.26
+ },
+ "rock_c": {
+  "w": 2.104,
+  "h": 1.5,
+  "solid": 0.9,
+  "shadow": 1.9800000000000002
+ },
+ "rock_dark": {
+  "w": 1.5,
+  "h": 1.104,
+  "solid": 0.6,
+  "shadow": 1.4400000000000002
+ },
+ "signpost": {
+  "w": 1.25,
+  "h": 1.896,
+  "solid": 0.2,
+  "shadow": 0.7
+ },
+ "spire_a": {
+  "w": 1.896,
+  "h": 5.0,
+  "solid": 0.6,
+  "shadow": 1.8
+ },
+ "spire_b": {
+  "w": 1.896,
+  "h": 7.0,
+  "solid": 0.6,
+  "shadow": 1.8
+ },
+ "spire_stone": {
+  "w": 1.896,
+  "h": 5.5,
+  "solid": 0.6,
+  "shadow": 1.8
+ },
+ "stepping_stone": {
+  "w": 2.104,
+  "h": 1.375,
+  "solid": 0.0,
+  "shadow": 0.0,
+  "flat": true
+ },
+ "table": {
+  "w": 2.312,
+  "h": 1.5,
+  "solid": 0.0,
+  "shadow": 2.0
+ },
+ "tomb": {
+  "w": 4.562,
+  "h": 2.792,
+  "solid": 1.6,
+  "shadow": 4.0
+ },
+ "torch": {
+  "w": 0.25,
+  "h": 2.0,
+  "solid": 0.0,
+  "shadow": 0.5,
+  "glow": "fire"
+ },
+ "tree_dark_a": {
+  "w": 2.979,
+  "h": 4.208,
+  "solid": 0.45,
+  "shadow": 2.4
+ },
+ "tree_dark_b": {
+  "w": 1.958,
+  "h": 4.792,
+  "solid": 0.45,
+  "shadow": 1.2
+ },
+ "tree_dark_c": {
+  "w": 2.979,
+  "h": 4.208,
+  "solid": 0.45,
+  "shadow": 2.4
+ },
+ "tree_dry_a": {
+  "w": 2.979,
+  "h": 4.208,
+  "solid": 0.45,
+  "shadow": 2.4
+ },
+ "tree_dry_b": {
+  "w": 1.958,
+  "h": 4.792,
+  "solid": 0.45,
+  "shadow": 1.2
+ },
+ "tree_dry_c": {
+  "w": 2.979,
+  "h": 4.208,
+  "solid": 0.45,
+  "shadow": 2.4
+ },
+ "tree_fig": {
+  "w": 3.188,
+  "h": 4.208,
+  "solid": 0.45,
+  "shadow": 2.4
+ },
+ "tree_fruit": {
+  "w": 3.125,
+  "h": 4.208,
+  "solid": 0.45,
+  "shadow": 2.4
+ },
+ "tree_green_a": {
+  "w": 2.979,
+  "h": 4.208,
+  "solid": 0.45,
+  "shadow": 2.4
+ },
+ "tree_green_b": {
+  "w": 1.958,
+  "h": 4.792,
+  "solid": 0.45,
+  "shadow": 1.2
+ },
+ "tree_green_c": {
+  "w": 2.979,
+  "h": 4.208,
+  "solid": 0.45,
+  "shadow": 2.4
+ },
+ "tree_life": {
+  "w": 3.271,
+  "h": 4.208,
+  "solid": 0.45,
+  "shadow": 2.4
+ },
+ "tree_night_a": {
+  "w": 2.979,
+  "h": 4.208,
+  "solid": 0.45,
+  "shadow": 2.4
+ },
+ "tree_night_b": {
+  "w": 1.958,
+  "h": 4.792,
+  "solid": 0.45,
+  "shadow": 1.2
+ },
+ "tree_night_c": {
+  "w": 2.979,
+  "h": 4.208,
+  "solid": 0.45,
+  "shadow": 2.4
+ },
+ "trellis": {
+  "w": 2.521,
+  "h": 1.896,
+  "solid": 0.0,
+  "shadow": 2.2
+ },
+ "tuft_dark_a": {
+  "w": 0.479,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "tuft_dark_b": {
+  "w": 0.625,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "tuft_dry_a": {
+  "w": 0.479,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "tuft_dry_b": {
+  "w": 0.625,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "tuft_green_a": {
+  "w": 0.479,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "tuft_green_b": {
+  "w": 0.625,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "tuft_night_a": {
+  "w": 0.479,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "tuft_night_b": {
+  "w": 0.625,
+  "h": 0.5,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "wall": {
+  "w": 3.0,
+  "h": 2.396,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "wall_high": {
+  "w": 3.0,
+  "h": 4.604,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "wall_low": {
+  "w": 3.0,
+  "h": 1.208,
+  "solid": 0.0,
+  "shadow": 0.0
+ },
+ "waymark": {
+  "w": 0.771,
+  "h": 1.396,
+  "solid": 0.0,
+  "shadow": 0.6
+ },
+ "well": {
+  "w": 1.854,
+  "h": 2.208,
+  "solid": 0.8,
+  "shadow": 1.8
+ }
+}

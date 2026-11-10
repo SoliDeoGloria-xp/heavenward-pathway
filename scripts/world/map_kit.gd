@@ -3,8 +3,6 @@ extends RefCounted
 ## Map-building primitives and world feedback (float text, sparkles, drops, ambience).
 
 var w: World
-const STANDEE_HEIGHT := 1.75       # world units
-const STANDEE_PX := 96.0
 var blinkers: Array = []         # watching eyes that wink out now and then
 var drifters: Array = []         # ground fog cards: [node, home, phase]
 var bobbers: Array = []          # nodes that float gently (tableau orbs)
@@ -32,17 +30,200 @@ var burden_fx: CPUParticles3D
 var weary_fx: CPUParticles3D
 
 
-func _mat(path: String, scale: Vector2 = Vector2.ONE, triplanar: bool = false, tint: Color = Color.WHITE) -> StandardMaterial3D:
+## Every textured surface uses a palette tile at the sprite scale (48 px per world unit), sampled
+## without smoothing. A map's old "tint" only chooses the tile's dark variant; it no longer recolours.
+const TILE_UV := 0.75      # a 64 px tile spans 64/48 world units
+
+func tile_path(tile: String, tint: Color = Color.WHITE) -> String:
+	var lum := tint.get_luminance()
+	if lum < 0.2 and tile == "dirt":
+		tile = "pit"
+	elif lum < 0.5 and ResourceLoader.exists("res://assets/tiles/%s_dark.png" % tile):
+		tile += "_dark"
+	return "res://assets/tiles/%s.png" % tile
+
+func _mat(path: String, _scale: Vector2 = Vector2.ONE, _triplanar: bool = false, tint: Color = Color.WHITE) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
-	m.albedo_texture = G.tex(path)
-	m.albedo_color = tint
-	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	if triplanar:
-		m.uv1_triplanar = true; m.uv1_scale = Vector3(scale.x, scale.y, scale.x)
-	else:
-		m.uv1_scale = Vector3(scale.x, scale.y, 1)
-	m.roughness = 1.0
+	m.albedo_texture = G.tex(tile_path(path.get_file().get_basename(), tint))
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+	m.uv1_triplanar = true; m.uv1_world_triplanar = true; m.uv1_scale = Vector3.ONE * TILE_UV
+	m.roughness = 1.0; m.metallic_specular = 0.0
 	return m
+
+
+# ------------------------------------------------------------------ the drawn world: sprites, ground, depth
+var flora := "green"             # which drawn trees, bushes and grass this map grows
+var rock_kind := "stone"         # which cliffs and boulders
+var path_rects: Array = []       # where roads lie, so grass is not scattered on them
+var _blob_mat: StandardMaterial3D
+
+## A picture standing in the world at the sprite scale. Options: flat (lies on the ground), yaw
+## (a fixed wall-like plane instead of a billboard), glow (ignores the map's light), flip, y.
+func pic(tex_path: String, at: Vector3, o: Dictionary = {}) -> Sprite3D:
+	var sp := Sprite3D.new(); sp.texture = G.tex(tex_path)
+	sp.pixel_size = float(o.get("scale", 1.0)) / G.PX_PER_UNIT
+	sp.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	sp.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD; sp.shaded = false; sp.double_sided = true
+	sp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	sp.flip_h = o.get("flip", false)
+	var tint: Color = G.sprite_tint
+	sp.modulate = Color.WHITE if o.get("glow", false) else Color(tint.r, tint.g, tint.b)
+	var hh := sp.texture.get_height() * sp.pixel_size * 0.5
+	if o.get("flat", false):
+		sp.rotation_degrees.x = -90; sp.rotation.y = float(o.get("yaw", 0.0)); sp.position = at + Vector3(0, float(o.get("y", 0.02)), 0)
+	elif o.has("yaw"):
+		sp.rotation.y = float(o.yaw); sp.position = at + Vector3(0, hh, 0)
+	else:
+		sp.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y; sp.position = at + Vector3(0, hh, 0)
+	w.add_child(sp)
+	return sp
+
+## A prop from the drawn kit (assets/props/k_<name>.png; sizes and collision in data/props.json).
+func prop(name: String, at: Vector3, o: Dictionary = {}) -> Sprite3D:
+	var info: Dictionary = G.data("props").get(name, {})
+	var opts := o.duplicate()
+	if info.has("glow"):
+		opts["glow"] = true
+	if info.get("flat", false):
+		opts["flat"] = true
+	var sp := pic("res://assets/props/k_%s.png" % name, at, opts)
+	if float(info.get("solid", 0.0)) > 0.0 and o.get("solid", true):
+		_solid_cyl(float(info.solid), at)
+	if float(info.get("shadow", 0.0)) > 0.0 and not o.has("yaw"):
+		blob(at, float(info.shadow))
+	return sp
+
+## A delivered painting (assets/props/<name>.png) as scenery.
+func art(name: String, at: Vector3, o: Dictionary = {}) -> Sprite3D:
+	return pic("res://assets/props/%s.png" % name, at, o)
+
+## The one shadow: the same blob under every character and prop.
+func blob(at: Vector3, width: float) -> void:
+	if _blob_mat == null:
+		_blob_mat = StandardMaterial3D.new(); _blob_mat.albedo_texture = G.tex("res://assets/fx/shadow.png")
+		_blob_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA; _blob_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_blob_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	var mi := MeshInstance3D.new(); var q := QuadMesh.new(); q.size = Vector2(width, width * 0.62); q.orientation = PlaneMesh.FACE_Y
+	mi.mesh = q; mi.material_override = _blob_mat; mi.position = at + Vector3(0, 0.022, 0); mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	w.add_child(mi)
+
+func halo(at: Vector3, color: Color, size: float = 0.03, alpha: float = 0.6) -> Sprite3D:
+	var h := Sprite3D.new(); h.texture = G.tex("res://assets/fx/glow.png"); h.pixel_size = size; h.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	h.shaded = false; h.modulate = Color(color.r, color.g, color.b, alpha); h.position = at; w.add_child(h)
+	return h
+
+## The ground: one tile, broken into patches of a second tile so no map is a single flat colour.
+func ground(tile_a: String, tile_b: String = "", share: float = 0.42) -> void:
+	var sh := Shader.new()
+	sh.code = """shader_type spatial;
+uniform sampler2D a : source_color, filter_nearest_mipmap, repeat_enable;
+uniform sampler2D b : source_color, filter_nearest_mipmap, repeat_enable;
+uniform sampler2D mask : filter_linear, repeat_enable;
+uniform float share = 0.42;
+varying vec3 wp;
+void vertex() { wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment() {
+	vec2 texel = floor(wp.xz * 48.0);
+	float m = texture(mask, texel / 48.0 / 34.0).r;
+	float jit = fract(sin(dot(texel, vec2(12.9898, 78.233))) * 43758.5453);
+	vec2 uv = wp.xz * 0.75;
+	ALBEDO = (m + (jit - 0.5) * 0.05 < share) ? texture(b, uv).rgb : texture(a, uv).rgb;
+	ROUGHNESS = 1.0; SPECULAR = 0.0;
+}"""
+	var m := ShaderMaterial.new(); m.shader = sh
+	m.set_shader_parameter("a", G.tex("res://assets/tiles/%s.png" % tile_a))
+	m.set_shader_parameter("b", G.tex("res://assets/tiles/%s.png" % (tile_b if tile_b != "" else tile_a)))
+	m.set_shader_parameter("mask", G.tex("res://assets/tiles/patch_mask.png"))
+	m.set_shader_parameter("share", share)
+	_plane(Vector2(140, 120), m, Vector3.ZERO)
+
+## A road or floor laid over the ground. Its edges are ragged, pixel by pixel, not ruled.
+func path(size: Vector2, tile: String, at: Vector3, ragged: float = 0.4) -> MeshInstance3D:
+	var sh := Shader.new()
+	sh.code = """shader_type spatial;
+uniform sampler2D tex : source_color, filter_nearest_mipmap, repeat_enable;
+uniform vec2 size = vec2(4.0, 4.0);
+uniform float ragged = 0.4;
+varying vec3 wp;
+void vertex() { wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment() {
+	vec2 texel = floor(wp.xz * 48.0);
+	vec2 d2 = min(UV, 1.0 - UV) * size;
+	float edge = min(d2.x, d2.y);
+	float n = fract(sin(dot(floor(texel / 3.0), vec2(41.3, 289.1))) * 43758.5453) * 0.6 + fract(sin(dot(texel, vec2(12.9898, 78.233))) * 43758.5453) * 0.4;
+	if (edge < n * ragged) { discard; }
+	ALBEDO = texture(tex, wp.xz * 0.75).rgb;
+	ROUGHNESS = 1.0; SPECULAR = 0.0;
+}"""
+	var m := ShaderMaterial.new(); m.shader = sh
+	m.set_shader_parameter("tex", G.tex("res://assets/tiles/%s.png" % tile))
+	m.set_shader_parameter("size", size); m.set_shader_parameter("ragged", ragged)
+	path_rects.append(Rect2(at.x - size.x * 0.5, at.z - size.y * 0.5, size.x, size.y).grow(0.3))
+	return _plane(size, m, at)
+
+func _on_path(p: Vector3) -> bool:
+	for r in path_rects:
+		if r.has_point(Vector2(p.x, p.z)):
+			return true
+	return false
+
+## Small life on the ground: tufts, flowers, pebbles and worn patches, never on a road.
+func scatter(seed_n: int, tufts: int = 80, patches: int = 22, flowers: int = 10) -> void:
+	var rng := RandomNumberGenerator.new(); rng.seed = seed_n
+	var b := w.bounds.grow(5.0)
+	var patch_ramp: String = {"green": "leaf", "dry": "dry", "night": "dark", "dark": "dark"}[flora]
+	var bloom := ["gold", "cloth_red", "stone", "night", "cloth_blue"]
+	for i in patches + tufts + flowers:
+		var p := Vector3(rng.randf_range(b.position.x, b.end.x), 0, rng.randf_range(b.position.y, b.end.y))
+		if _on_path(p):
+			continue
+		if i < patches:
+			var kind: String = ["patch_%s_a" % patch_ramp, "patch_%s_b" % patch_ramp, "patch_wood_a", "pebbles_a", "pebbles_b"][rng.randi() % 5]
+			prop(kind, p, {"y": 0.013 + rng.randf() * 0.006, "yaw": rng.randi() % 4 * PI * 0.5, "flip": rng.randf() < 0.5})
+		elif i < patches + tufts:
+			prop("tuft_%s_%s" % [flora, "ab"[rng.randi() % 2]], p, {"flip": rng.randf() < 0.5})
+		elif flora == "green" or flora == "dry":
+			prop("flowers_%s" % bloom[rng.randi() % bloom.size()], p)
+
+## A line of cliffs: overlapping rock masses that read as a ridge from any side.
+func cliffs(a: Vector3, b: Vector3, h: float, seed_n: int, cap: String = "", rise: float = 0.0) -> void:
+	var rng := RandomNumberGenerator.new(); rng.seed = seed_n
+	var kind := "snow" if cap == "snow" else ("grass" if cap != "" and rock_kind != "dark" else rock_kind)
+	var n := maxi(2, int(ceil(a.distance_to(b) / 3.6)))
+	for i in n:
+		var f := (i + 0.5) / n
+		var want := h * (1.0 + rise * f)
+		var size := "low" if want < 3.2 else ("a" if want < 4.8 or kind in ["grass", "snow"] and rng.randf() < 0.5 else ("b" if want < 5.6 or kind in ["grass", "snow"] else "c"))
+		var pos := a.lerp(b, f) + Vector3(rng.randf_range(-0.4, 0.4), 0, rng.randf_range(-0.5, 0.5))
+		prop("cliff_%s_%s" % [kind, size], pos, {"flip": rng.randf() < 0.5})
+	_solid_box(Vector3(maxf(absf(b.x - a.x), 1.2), 3.0, maxf(absf(b.z - a.z), 1.2)), (a + b) * 0.5 + Vector3(0, 1.5, 0))
+
+## The chained lions: the delivered lion art, standing still beside the path.
+func lion(at: Vector3, flip: bool) -> Sprite3D:
+	var sheet: Dictionary = G.data("sprites").get("chained_lions", {})
+	var sp := pic(String(sheet.tex), at, {"flip": flip})
+	sp.hframes = int(sheet.hframes); sp.vframes = int(sheet.vframes); sp.frame = 0
+	sp.position.y = at.y + float(sheet.cell[1]) / G.PX_PER_UNIT * 0.5
+	_solid_cyl(1.0, at); blob(at, 2.4)
+	return sp
+
+## A street lamp: the drawn post, its light and its halo.
+func lamp(at: Vector3, color: Color = Color("ffb060"), energy: float = 1.5) -> void:
+	prop("lamp_cold" if color.b > color.r else "lamp", at)
+	var l := OmniLight3D.new(); l.light_color = color; l.light_energy = energy; l.omni_range = 5.5; l.position = at + Vector3(0, 2.8, 0)
+	w.add_child(l); lamps.append(l)
+	halo(at + Vector3(0, 2.75, 0), color, 0.03, 0.55)
+
+## The far skyline, in two layers at different distances so they slide past each other as the camera moves.
+func backdrop(name: String, at: Vector3, h: float) -> void:
+	for layer in [["far", 9.0, 1.25, 0.0], ["near", 0.0, 1.0, -0.2]]:
+		var sp := Sprite3D.new(); sp.texture = G.tex("res://assets/props/bd_%s_%s.png" % [name, layer[0]])
+		sp.pixel_size = h * float(layer[2]) / float(sp.texture.get_height())
+		sp.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST; sp.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD; sp.shaded = false
+		sp.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+		var tint: Color = G.sprite_tint
+		sp.modulate = Color(tint.r, tint.g, tint.b).darkened(0.0 if layer[0] == "near" else 0.12)
+		sp.position = at + Vector3(0, h * float(layer[2]) * 0.5 + float(layer[3]), -float(layer[1])); w.add_child(sp)
 
 
 func _plane(size: Vector2, mat: Material, pos: Vector3, rot_y: float = 0.0) -> MeshInstance3D:
@@ -81,27 +262,16 @@ func _sphere(r: float, mat: Material, pos: Vector3, squash: float = 1.0) -> Mesh
 	return mi
 
 
-func _tree(pos: Vector3, s: float = 1.0, leaf_tint: Color = Color.WHITE, fruit: Color = Color(0, 0, 0, 0), solid: bool = true) -> Node3D:
+## A tree from the drawn kit. fruit picks the fig (purple), the forbidden fruit (red) or the tree of life (gold).
+func _tree(pos: Vector3, s: float = 1.0, _leaf_tint: Color = Color.WHITE, fruit: Color = Color(0, 0, 0, 0), solid: bool = true) -> Node3D:
 	var root := Node3D.new(); root.position = pos; w.add_child(root)
-	var trunk := MeshInstance3D.new(); var cm := CylinderMesh.new(); cm.top_radius = 0.22 * s; cm.bottom_radius = 0.32 * s; cm.height = 2.0 * s; cm.radial_segments = 8
-	trunk.mesh = cm; trunk.material_override = _mat("res://assets/tiles/bark.png", Vector2(1, 2)); trunk.position.y = s
-	root.add_child(trunk)
-	var lm := _mat("res://assets/tiles/leaves.png", Vector2(2, 2), true, leaf_tint)
-	for off in [Vector3(0, 2.6, 0), Vector3(-0.8, 2.1, 0.3), Vector3(0.8, 2.15, -0.2), Vector3(0.1, 2.0, 0.8)]:
-		var sp := MeshInstance3D.new(); var sm := SphereMesh.new(); sm.radius = 1.1 * s; sm.height = 1.9 * s; sm.radial_segments = 10; sm.rings = 6
-		sp.mesh = sm; sp.material_override = lm; sp.position = off * s
-		root.add_child(sp)
-	if fruit.a > 0.0:
-		var fm := StandardMaterial3D.new(); fm.albedo_color = fruit; fm.roughness = 0.5
-		for i in 7:
-			var a := i * TAU / 7.0
-			var f := MeshInstance3D.new(); var fs := SphereMesh.new(); fs.radius = 0.16 * s; fs.height = 0.32 * s
-			f.mesh = fs; f.material_override = fm
-			f.position = Vector3(cos(a) * 1.2, 2.0 + (i % 3) * 0.35, sin(a) * 1.2) * s
-			root.add_child(f)
-	if solid:
-		_solid_cyl(0.45 * s, pos)
-	sways.append([root, randf() * TAU])
+	var name := "tree_%s_%s" % [flora, "abc"[int(absf(pos.x * 7.3 + pos.z * 3.1 + s * 10.0)) % 3]]
+	if _leaf_tint.r > 1.5:
+		name = "tree_life"
+	elif fruit.a > 0.0:
+		name = "tree_fruit" if fruit.r > fruit.b * 1.5 else "tree_fig"
+	var sp := prop(name, pos, {"solid": solid, "flip": int(absf(pos.x * 3.0)) % 2 == 0})
+	sp.reparent(root)
 	return root
 
 
@@ -117,22 +287,23 @@ func _water(size: Vector2, pos: Vector3, tint: Color = Color(0.95, 1.0, 1.05)) -
 	var sh := Shader.new()
 	sh.code = """shader_type spatial;
 render_mode unshaded;
-uniform sampler2D tex : source_color, filter_linear, repeat_enable;
-uniform vec2 scale = vec2(8.0, 2.0);
-uniform vec3 tint = vec3(0.95, 1.0, 1.05);
-void fragment(){
-	vec2 uv = UV * scale;
-	vec3 a = texture(tex, uv + vec2(TIME * 0.05, TIME * 0.02)).rgb;
-	vec3 b = texture(tex, uv * 1.3 - vec2(TIME * 0.03, 0.0)).rgb;
-	vec2 cell = floor(uv * 7.0);
+uniform sampler2D tex : source_color, filter_nearest, repeat_enable;
+uniform vec3 light = vec3(1.0);
+varying vec3 wp;
+void vertex() { wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment() {
+	vec2 texel = floor(wp.xz * 48.0);
+	vec2 uv = (texel + floor(vec2(TIME * 5.0, TIME * 2.0))) / 64.0;      // the tile slides a whole pixel at a time
+	vec3 c = texture(tex, uv).rgb;
+	vec2 cell = floor(texel / 6.0);
 	float rnd = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
-	float glint = step(0.93, fract(rnd + TIME * 0.35)) * step(0.6, fract(uv.x * 7.0)) * 0.35;
-	ALBEDO = mix(a, b, 0.5) * tint + vec3(glint) * tint;
+	if (fract(rnd + TIME * 0.3) > 0.94 && mod(texel.x, 6.0) < 3.0 && mod(texel.y, 6.0) < 1.0) { c = vec3(0.957, 0.937, 0.894); }
+	ALBEDO = c * light;
 }"""
 	var m := ShaderMaterial.new(); m.shader = sh
-	m.set_shader_parameter("tex", G.tex("res://assets/tiles/water.png"))
-	m.set_shader_parameter("scale", Vector2(size.x / 4.0, size.y / 4.0))
-	m.set_shader_parameter("tint", Vector3(tint.r, tint.g, tint.b))
+	m.set_shader_parameter("tex", G.tex("res://assets/tiles/mire.png" if (tint.g > tint.b * 1.1 and tint.get_luminance() < 0.6) else tile_path("water", tint)))
+	var lt: Color = G.sprite_tint
+	m.set_shader_parameter("light", Vector3(lt.r, lt.g, lt.b))
 	_plane(size, m, pos)
 
 
@@ -144,13 +315,13 @@ func _label3d(text: String, pos: Vector3, color: Color = Color.WHITE, size: int 
 	return l
 
 
-func _sprite_npc(tex_path: String, hframes: int, vframes: int, rows: bool, pos: Vector3, nm: String, color: Color, pixel: float = 0.042, flip_inv := false) -> SpriteActor:
+func _sprite_npc(tex_path: String, hframes: int, vframes: int, rows: bool, pos: Vector3, nm: String, color: Color, _pixel: float = 0.0, flip_inv := false) -> SpriteActor:
 	var a := SpriteActor.new()
 	w.add_child(a)
 	a.position = pos
 	var idle := [0, 1] if hframes >= 2 else [0]
-	a.setup({"tex": G.tex(tex_path), "hframes": hframes, "vframes": vframes, "pixel": pixel, "rows": rows,
-		"anims": {"idle": idle}, "fps": {"idle": 1.6}, "flip_inverted": flip_inv}, nm, color)
+	a.setup({"tex": G.tex(tex_path), "hframes": hframes, "vframes": vframes, "pixel": 1.0 / G.PX_PER_UNIT, "rows": rows,
+		"anims": {"idle": idle}, "flip_inverted": flip_inv}, nm, color)
 	return a
 
 
@@ -373,10 +544,19 @@ var _followers: Array = []
 
 
 # ------------------------------------------------------------------ other pilgrims (passing ghosts on the Way, real players in Houses)
+const FOLK_LOOKS := 8
+const DREAMER_LOOK := [1, 5, 3]
+
+## Other pilgrims wear the delivered pilgrim art with re-dyed robes (assets/sprites/player/folk_<n>.png).
+static func folk_sheet(look: Array) -> Texture2D:
+	if look == DREAMER_LOOK:
+		return G.tex("res://assets/sprites/player/dreamer.png")
+	return G.tex("res://assets/sprites/player/folk_%d.png" % ((int(look[0]) * 5 + int(look[1]) * 3 + int(look[2])) % FOLK_LOOKS))
+
 func _pilgrim_actor(look: Array, nm: String, col: Color, ghost: bool) -> SpriteActor:
 	var a := SpriteActor.new(); w.add_child(a)
-	a.setup({"tex": G.build_sheet(int(look[0]), int(look[1]), int(look[2])), "hframes": 10, "vframes": 5, "pixel": 0.042, "rows": true, "ghost": ghost,
-		"anims": {"idle": [0], "walk": [1, 2, 3, 4], "attack": [5, 6], "sit": [7], "rest": [8], "cast": [9]}, "fps": {"walk": 9.0, "attack": 6.0}}, nm, col)
+	a.setup({"tex": folk_sheet(look), "hframes": 10, "vframes": 5, "pixel": 1.0 / G.PX_PER_UNIT, "rows": true, "ghost": ghost,
+		"anims": {"idle": [0], "walk": [1, 2, 3, 4], "attack": [5, 6], "sit": [7], "rest": [8], "cast": [9]}}, nm, col)
 	return a
 
 
@@ -430,9 +610,9 @@ func warp(at: Vector3) -> Node3D:
 		"gravity": Vector3.ZERO, "color": Color("fff0c0"), "size": 0.14, "local": true})
 	return n
 
-## A standing character drawn as one picture (assets/sprites/npc/<id>.png, 96x96, feet at the bottom).
+## A standing character drawn as one picture (assets/sprites/npc/<id>.png, a 64x96 cell, feet on the bottom edge).
 func standee(id: String, display_name: String, name_color: Color) -> SpriteActor:
 	var a := SpriteActor.new(); w.add_child(a)
-	a.setup({"tex": G.tex("res://assets/sprites/npc/%s.png" % id), "hframes": 1, "vframes": 1, "pixel": STANDEE_HEIGHT / STANDEE_PX, "rows": false,
-		"anims": {"idle": [0], "walk": [0]}, "fps": {"idle": 1.0}}, display_name, name_color)
+	a.setup({"tex": G.tex("res://assets/sprites/npc/%s.png" % id), "hframes": 1, "vframes": 1, "pixel": 1.0 / G.PX_PER_UNIT, "rows": false,
+		"anims": {"idle": [0], "walk": [0]}}, display_name, name_color)
 	return a

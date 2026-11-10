@@ -577,6 +577,7 @@ func goto(screen: String, data: Dictionary = {}) -> void:
 	main.show_screen(screen, data)
 
 ## Composite the layered paper-doll sheet (body + tinted robe + tinted hair + staff) into one texture.
+const PX_PER_UNIT := 48.0           # the art bible's scale: sprite pixels per world unit, for everything
 const PLAYER_CELL := Vector2(64, 96)        # one frame of a player sheet (assets/sprites/player)
 const PLAYER_FACE := Rect2(10, 10, 44, 46)   # head and shoulders inside the first frame, for portraits
 const PILGRIM_LOOKS := ["pilgrim", "pilgrim_b"]
