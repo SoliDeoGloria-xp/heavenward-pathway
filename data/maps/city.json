@@ -1,0 +1,256 @@
+{
+ "id": "city",
+ "act": "city",
+ "name": "City of Destruction",
+ "sub": "Chapter 1 · Flee from the wrath to come",
+ "layer": "The Way",
+ "combat": true,
+ "start": [
+  -12,
+  3
+ ],
+ "music": "city",
+ "burden": true,
+ "resumable": true,
+ "look": {
+  "bg": "#2a2832",
+  "amb": "#a8a4c0",
+  "amb_e": 0.38,
+  "tint": [
+   0.86,
+   0.87,
+   0.98
+  ],
+  "sun_e": 0.55,
+  "sun_c": "#c8c4d8",
+  "post": [
+   0.72,
+   1.08,
+   [
+    0.93,
+    0.95,
+    1.05
+   ]
+  ],
+  "mini": "#9c9484",
+  "ground": "cobble",
+  "ground_tint": "#ebe6eb",
+  "weather": "drizzle"
+ },
+ "enter_say": [
+  "A great burden weighs upon your back."
+ ],
+ "ents": [
+  {
+   "id": "obstinate",
+   "kind": "npc",
+   "name": "Obstinate",
+   "at": [
+    -16,
+    -4
+   ],
+   "look": [
+    1,
+    1,
+    4
+   ],
+   "act": "Talk",
+   "icon": "talk"
+  },
+  {
+   "id": "pliable",
+   "kind": "npc",
+   "name": "Pliable",
+   "at": [
+    -14.6,
+    -4.6
+   ],
+   "look": [
+    0,
+    2,
+    2
+   ],
+   "act": "Talk",
+   "icon": "talk"
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    8.5,
+    -7.6
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "spawns": [
+  {
+   "mob": "slothling",
+   "count": 6,
+   "area": [
+    -4,
+    -5,
+    20,
+    11
+   ]
+  },
+  {
+   "mob": "whelp",
+   "count": 3,
+   "area": [
+    2,
+    -6,
+    14,
+    12
+   ],
+   "at": "hunt"
+  },
+  {
+   "mob": "scoffling",
+   "count": 2,
+   "area": [
+    8,
+    -5,
+    8,
+    10
+   ],
+   "at": "hunt"
+  }
+ ],
+ "objectives": [
+  {
+   "id": "wake",
+   "type": "script",
+   "text": "Wake under the burden",
+   "xp": [
+    20,
+    5
+   ],
+   "on_start": {
+    "call": "wake"
+   }
+  },
+  {
+   "id": "fight",
+   "type": "kill",
+   "count": 3,
+   "text": "First fight: overcome the Slothlings",
+   "xp": [
+    30,
+    20
+   ],
+   "on_start": {
+    "flag": "city_fight",
+    "call": "city_lessons"
+   }
+  },
+  {
+   "id": "steps",
+   "type": "check",
+   "check": "skill:steps",
+   "text": "Learn First Steps (More → Skills)",
+   "xp": [
+    10,
+    10
+   ],
+   "on_done": {
+    "show": [
+     "evangelist"
+    ],
+    "say": "Evangelist approaches you."
+   }
+  },
+  {
+   "id": "roll",
+   "type": "talk",
+   "ent": "evangelist",
+   "dialog": "city.evangelist",
+   "text": "Speak with Evangelist",
+   "xp": [
+    30,
+    0
+   ],
+   "on_done": {
+    "give": {
+     "Parchment Roll": 1
+    },
+    "unlock": "snapshot",
+    "say": "New: Snapshot mode (camera button by the minimap)."
+   }
+  },
+  {
+   "id": "hunt",
+   "type": "kill",
+   "count": 8,
+   "text": "Clear the street: Slothlings and Whelps",
+   "xp": [
+    60,
+    20
+   ]
+  },
+  {
+   "id": "rest",
+   "type": "check",
+   "check": "rested",
+   "text": "Sit and rest until your strength returns",
+   "xp": [
+    30,
+    0
+   ],
+   "dialog_start": "city.rest",
+   "on_start": {"call": "calm"},
+   "on_done": {
+    "show": [
+     "warp"
+    ]
+   }
+  },
+  {
+   "id": "light",
+   "type": "exit",
+   "text": "Follow the shining light toward the Wicket Gate",
+   "zone": [
+    21,
+    0
+   ],
+   "to": "slough",
+   "xp": [
+    20,
+    5
+   ],
+   "ent": "warp"
+  }
+ ],
+ "side": [
+  {
+   "id": "obstinate",
+   "type": "talk",
+   "ent": "obstinate",
+   "dialog": "city.obstinate",
+   "text": "A neighbor's grievance",
+   "xp": [
+    20,
+    0
+   ],
+   "on_done": {
+    "hide": [
+     "obstinate"
+    ]
+   }
+  },
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "city.page",
+   "xp": [
+    20,
+    10
+   ],
+   "text": "The Dreamer's Page: the City",
+   "page": true
+  }
+ ]
+}

@@ -3,6 +3,7 @@ extends RefCounted
 ## Coach text: the Dreamer's guided lessons and first-fight tips.
 
 var w: World
+const EDEN_INTRO_DELAY := 1.6
 
 func _init(world: World) -> void:
 	w = world
@@ -24,6 +25,10 @@ func _talk_dreamer() -> void:
 
 
 # ------------------------------------------------------------------ Eden lessons
+## Called by Eden's first objective: the Dreamer speaks once the garden has had a moment to be seen.
+func eden_intro() -> void:
+	w.get_tree().create_timer(EDEN_INTRO_DELAY).timeout.connect(_eden_intro)
+
 func _eden_intro() -> void:
 	if not w.is_inside_tree():
 		return
@@ -128,7 +133,7 @@ func _on_new_obj() -> void:
 				w.get_tree().create_timer(1.0).timeout.connect(_lesson_skills)
 
 
-func _city_lessons() -> void:
+func city_lessons() -> void:
 	if not w.is_inside_tree():
 		return
 	var steps := [
@@ -155,10 +160,3 @@ func _skill_btn_for(id: String) -> Control:
 	return w.hud.skill_btns[k] if k >= 0 else null
 
 
-func _city_tips_tick() -> void:
-	if w.map_id != "city" or w.cinema or w.hud.coach.busy():
-		return
-	if w.combat.slain >= 2 and G.tip_once("auto"):
-		w.hud.coach.tip("Auto attacks and uses your skills for you. It works only in fields like this street; bosses and story moments are always yours to play.", func(): return w.hud.auto_btn, 6.0)
-	elif w.combat.slain >= 3 and not w.combat._any_aggro() and G.hp < G.hp_max * 0.7 and G.tip_once("sit"):
-		w.hud.coach.tip("Sit to recover Health and Zeal three times faster. Moving stands you up.", func(): return w.hud.sit_btn, 6.0)

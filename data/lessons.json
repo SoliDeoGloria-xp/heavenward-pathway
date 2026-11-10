@@ -1,0 +1,64 @@
+{
+ "city": {
+  "hunt": {
+   "text": "Auto attacks and uses your skills for you. It works only in fields like this street; bosses and story moments are always yours to play.",
+   "target": "auto_btn"
+  },
+  "rest": {
+   "text": "Tap Sit. You recover Health and Zeal three times faster while sitting. Moving stands you up.",
+   "target": "sit_btn"
+  }
+ },
+ "slough": {
+  "stones": {
+   "text": "New: ground matters. The mire slows you and drains Health. The pale stepping stones are firm: walk from stone to stone.",
+   "target": "minimap"
+  },
+  "mire": {
+   "text": "Job Level 3 opens Take Refuge (More → Skills). It heals you in a fight; keep it on your skill bar.",
+   "target": "more_btn"
+  }
+ },
+ "interpreter": {
+  "study": {
+   "text": "New: the means of grace. Reading here gives Manna and teaches Prayer of Rest, a skill that restores Zeal. Learn it in More → Skills.",
+   "target": "more_btn"
+  }
+ },
+ "cross": {
+  "shining": {
+   "text": "New: your status changed. The Burden chip is gone from your plate and you move at full speed. Steady Footing (a passive skill) is now open in Skills.",
+   "target": "plate"
+  }
+ },
+ "hill": {
+  "climb": {
+   "text": "New: buffs. Watchful Eye is open in Skills. Use it before a hard fight: more critical hits for a few seconds.",
+   "target": "more_btn"
+  },
+  "byways": {
+   "text": "A field boss! Red circles show where the blow will land. Walk out of them. A wide ring means a slam: get well clear.",
+   "target": "atk_btn"
+  }
+ },
+ "palace": {
+  "armor": {
+   "text": "New: the Armor of God. It is the same for every pilgrim and is never sold or upgraded. See it in More → Equipment.",
+   "target": "more_btn"
+  },
+  "muster": {
+   "text": "New: companions. For a Muster, Lumen, Rook and a Steward fight beside you. They act by themselves; you play your own part.",
+   "target": "quest_box"
+  },
+  "calling": {
+   "text": "Your Calling's skills go on page 2 of the skill bar. Tap the page button to switch.",
+   "target": "page_btn"
+  }
+ },
+ "trial": {
+  "prove": {
+   "text": "The lent skill is on page 2 of your skill bar. Tap the page button, then the skill.",
+   "target": "page_btn"
+  }
+ }
+}

@@ -49,10 +49,7 @@ var stat_plus := {}         # stat -> "+" Button in Status
 var skill_learn := {}       # skill -> Learn Button in Skills
 var sheet_tab := ""         # tab currently open in the side sheet
 var coach: Coach
-
-const SKILLS := [
-	[{"id": "steps", "name": "First Steps", "icon": "steps"}, {"id": "refuge", "name": "Take Refuge", "icon": "refuge"}, {"id": "", "name": "Lv 10", "icon": "lock"}, {"id": "", "name": "Lv 15", "icon": "lock"}],
-	[{"id": "", "name": "Calling", "icon": "lock"}, {"id": "", "name": "Calling", "icon": "lock"}, {"id": "", "name": "Calling", "icon": "lock"}, {"id": "", "name": "Calling", "icon": "lock"}]]
+const TOAST_W := 500.0
 
 func _ready() -> void:
 	layer = 10
@@ -84,9 +81,11 @@ func _build() -> void:
 	banner_box = VBoxContainer.new(); banner_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	banner_box.position = Vector2(-400, 150); banner_box.size = Vector2(800, 120); banner_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	banner_box.modulate.a = 0.0; root.add_child(banner_box)
-	toast_lbl = UIKit.outlined("", 26, Color("ffe27a"))
+	toast_lbl = UIKit.outlined("", 22, Color("ffe27a"))
 	toast_lbl.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	toast_lbl.position = Vector2(-450, 92); toast_lbl.size = Vector2(900, 40); toast_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# sits between the name plate and the menu buttons so long quest text never covers either
+	toast_lbl.position = Vector2(-TOAST_W * 0.5 + (50.0 if not G.settings.left_handed else -50.0), 92); toast_lbl.size = Vector2(TOAST_W, 80)
+	toast_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; toast_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	toast_lbl.modulate.a = 0.0; root.add_child(toast_lbl)
 	flash_rect = ColorRect.new(); UIKit.full_rect(flash_rect); flash_rect.color = Color(0.8, 0, 0, 0); flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(flash_rect)
@@ -238,16 +237,9 @@ func _build_combat(L: bool) -> void:
 	_apply_page()
 
 ## Skills usable on this map, in bar order. Eden-only skills show only in Eden.
+## Skills on the current bar page. Page 1 holds Pilgrim skills, page 2 the Calling's.
 func bar_skills() -> Array:
-	var out: Array = []
-	for id in G.SKILL_ORDER:
-		var info: Dictionary = G.SKILL_INFO[id]
-		if not G.has_skill(id):
-			continue
-		if info.get("eden", false) != (world != null and world.map_id == "eden"):
-			continue
-		out.append(id)
-	return out
+	return G.page_skills(page, world != null and world.map_id == "eden")
 
 func _build_exp() -> void:
 	exp_bar = UIKit.gauge("exp", 100, 12)
@@ -261,7 +253,7 @@ func _apply_page() -> void:
 	for i in 4:
 		var b: TouchBtn = skill_btns[i]
 		b.cd_frac = 0.0; b.cd_text = ""; b.cost = ""
-		if page == 1:
+		if page == 1 and ids.is_empty():
 			b.kind = "empty"; b.set_icon("lock"); b.caption = "Calling"; b.disabled = false
 		elif i < ids.size():
 			var info: Dictionary = G.SKILL_INFO[ids[i]]
@@ -273,10 +265,10 @@ func _apply_page() -> void:
 	page_btn.caption = "%d/2" % (page + 1); page_btn.queue_redraw()
 
 func _skill_pressed(i: int) -> void:
-	if page == 1:
-		G.say("Page 2 holds your Calling's skills. You choose a Calling (Valiant, Watcher or Shepherd) at the Interpreter's House.", G.WARN)
-		return
 	var ids := bar_skills()
+	if page == 1 and ids.is_empty():
+		G.say("Page 2 holds your Calling's skills. You take up a Calling at the Palace Beautiful (Base Level 10 and Job Level 10).", G.WARN)
+		return
 	if i >= ids.size():
 		open_sheet("skills")   # an empty slot leads straight to where skills are learned
 		return
@@ -359,7 +351,7 @@ func _process(_d: float) -> void:
 	var ids := bar_skills()
 	for i in 4:
 		var b: TouchBtn = skill_btns[i]
-		if page == 0 and i < ids.size():
+		if i < ids.size():
 			var id: String = ids[i]
 			var f: float = world.combat.cooldown_frac(id)
 			var was := b.cd_frac
@@ -382,7 +374,7 @@ func _process(_d: float) -> void:
 	if not world.is_combat() and act_btn.visible:
 		_corner(act_btn, G.settings.left_handed, false, 40, 40)
 	var p: Vector3 = world.player.position
-	coord_lbl.text = "%s  %d, %d   %s" % [world.info("code"), int(p.x * 4 + 120), int(-p.z * 4 + 80), world.quests.secrets_text()]
+	coord_lbl.text = "%s  %d, %d   %s" % [world.map_id, int(p.x * 4 + 120), int(-p.z * 4 + 80), world.quests.secrets_text()]
 	minimap.queue_redraw()
 	root.modulate.a = G.settings.hud_opacity
 
@@ -407,7 +399,7 @@ func banner(title: String, sub: String) -> void:
 	tw.tween_property(banner_box, "modulate:a", 1.0, 0.6); tw.tween_interval(2.4); tw.tween_property(banner_box, "modulate:a", 0.0, 0.8)
 
 func quest_toast(text: String) -> void:
-	toast_lbl.text = "New quest step: " + text
+	toast_lbl.text = "Next: " + text
 	var tw := create_tween(); toast_lbl.modulate.a = 0.0
 	tw.tween_property(toast_lbl, "modulate:a", 1.0, 0.3); tw.tween_interval(2.2); tw.tween_property(toast_lbl, "modulate:a", 0.0, 0.5)
 
@@ -482,7 +474,9 @@ func open_more() -> void:
 	var w := UIKit.window("Menu", Vector2(720, 0))
 	var grid := GridContainer.new(); grid.columns = 5; grid.add_theme_constant_override("h_separation", 12); grid.add_theme_constant_override("v_separation", 12)
 	var items := [["status", "Status", "status"], ["skills", "Skills", "skills"], ["bag", "Satchel", "bag"], ["equip", "Equipment", "equip"], ["way", "The Way", "quest"],
-		["guide", "Guide", "guide"], ["waymark", "Waymark", "scroll"], ["chat", "Chat log", "talk"], ["", "Friends", "friends"], ["settings", "Settings", "settings"]]
+		["guide", "Guide", "guide"], ["waymark", "Waymark", "scroll"], ["chat", "Messages", "talk"], ["settings", "Settings", "settings"]]
+	if G.ONLINE:
+		items.insert(items.size() - 1, ["", "Friends", "friends"])
 	more_tiles.clear()
 	for it in items:
 		var b := Button.new(); b.custom_minimum_size = Vector2(128, 128); b.focus_mode = Control.FOCUS_NONE
@@ -512,7 +506,7 @@ func _locked(nm: String) -> void:
 	clear_overlay()
 	var msg := {"Congregation": "Congregations open at the Palace Beautiful (vertical slice).", "Friends": "Friends, mentorship and walking the Way together need online play, which this offline demo does not include.",
 		"Veiled Library": "The Veiled Library (codex, Westminster Shorter Catechism, full Scripture readings) arrives in a later build."}
-	G.say(msg.get(nm, "Not in this demo."), G.WARN)
+	G.say(msg.get(nm, "Not available yet."), G.WARN)
 
 func open_chat() -> void:
 	_dim()
@@ -529,7 +523,7 @@ func open_chat() -> void:
 		var c: Color = l[1]
 		s += "[color=#%s]%s[/color]\n" % [c.darkened(0.45).to_html(false), l[0]]
 	r.text = s; sc.add_child(r); w.body.add_child(sc)
-	w.body.add_child(UIKit.label("Local chat is heard only in Houses and Wilds. There is no world chat (by design). Other pilgrims are simulated in this demo.", 16, UIKit.SUB, false, true))
+	w.body.add_child(UIKit.label("Messages from the world and from the pilgrims of a House appear here.", 16, UIKit.SUB, false, true))
 	_center(w.root)
 
 func open_sheet(tab: String) -> void:
@@ -604,7 +598,8 @@ func _sheet_equip(b: VBoxContainer) -> void:
 	b.add_child(UIKit.label("Equipment", 26, UIKit.BLUE_INK, true))
 	var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 20)
 	var slots := VBoxContainer.new(); slots.add_theme_constant_override("separation", 8)
-	for s in ["Head (upper): —", "Head (mid): —", "Body: Pilgrim's robe ○", "Hand: Walking staff ○", "Garment: —", "Fruit socket: — (crafted only)"]:
+	for s in ["Head (upper): —", "Head (mid): —", "Body: %s" % ("New Garment ○" if G.flags.has("sealed") else "Pilgrim's rags ○"), "Hand: Walking staff ○",
+		"Armor of God: %s" % ("the whole armor (+%d guard)" % int(G.PROG["armor_guard"]) if G.armor else "—"), "Fruit socket: — (crafted only)"]:
 		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 10)); p.custom_minimum_size = Vector2(330, 0)
 		p.add_child(UIKit.label(s, 18)); slots.add_child(p)
 	h.add_child(slots)
@@ -617,10 +612,12 @@ func _sheet_equip(b: VBoxContainer) -> void:
 
 func _sheet_skills(b: VBoxContainer) -> void:
 	var head := HBoxContainer.new()
-	var t := UIKit.label("Skills · Pilgrim (Job Lv %d)" % G.job, 26, UIKit.BLUE_INK, true); t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var t := UIKit.label("Skills · %s (Job Lv %d)" % [G.job_name(), G.job], 26, UIKit.BLUE_INK, true); t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(t); head.add_child(_points_chip("Skill points", G.skill_pts)); b.add_child(head)
 	b.add_child(UIKit.label("Each Job Level gives 2 skill points. Spend 1 to learn a skill or raise it a level. Learned skills appear on your skill bar by themselves.", 18, UIKit.SUB, false, true))
 	for id in G.SKILL_ORDER:
+		if not G.skill_open(id):
+			continue
 		var info: Dictionary = G.SKILL_INFO[id]
 		var lv := int(G.skill_lv.get(id, 0))
 		var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 12))
@@ -635,7 +632,7 @@ func _sheet_skills(b: VBoxContainer) -> void:
 		nm.add_child(UIKit.label("   Lv %d / %d" % [lv, info.max], 19, Color("2a5bd7") if lv > 0 else UIKit.SUB, true))
 		v.add_child(nm)
 		v.add_child(UIKit.label(info.does, 17, UIKit.SUB, false, true))
-		var nums := "Zeal %d · recharges in %d s" % [info.zeal, int(info.cd)]
+		var nums := "Zeal %d · recharges in %d s" % [info.zeal, int(info.cd)] if info.kind == "active" else "Passive"
 		if lv > 0:
 			nums = G.skill_num(id).text + "  " + nums
 		if lv > 0 and lv < int(info.max):
@@ -656,12 +653,13 @@ func _sheet_skills(b: VBoxContainer) -> void:
 		skill_learn[id] = bt
 		h.add_child(bt)
 		card.add_child(h); b.add_child(card)
-	var lock := PanelContainer.new(); lock.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 12))
-	var lh := HBoxContainer.new(); lh.add_theme_constant_override("separation", 12)
-	lh.add_child(UIKit.icon_rect("lock", 56))
-	lh.add_child(UIKit.label("Calling skills (skill bar page 2) open when you choose a Calling (Valiant, Watcher or Shepherd) at the Interpreter's House.", 17, UIKit.SUB, false, true))
-	lh.get_child(1).size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lock.add_child(lh); b.add_child(lock)
+	if G.job_id == G.PILGRIM:
+		var lock := PanelContainer.new(); lock.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 12))
+		var lh := HBoxContainer.new(); lh.add_theme_constant_override("separation", 12)
+		lh.add_child(UIKit.icon_rect("lock", 56))
+		var ll := UIKit.label("More skills open as the road teaches them. Calling skills (skill bar page 2) open when you take up a Calling at the Palace Beautiful.", 17, UIKit.SUB, false, true)
+		ll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lh.add_child(ll); lock.add_child(lh); b.add_child(lock)
 
 func _points_chip(label: String, n: int) -> Control:
 	var p := PanelContainer.new()
@@ -758,21 +756,44 @@ func _sheet_way(b: VBoxContainer) -> void:
 		var txt: String = ("✓  " if done else ("▸  " if cur else "·  ")) + (o.text if i <= world.quests.obj_idx else "???")
 		var l := UIKit.label(txt, 20, Color("b85a00") if cur else (Color("8a93a8") if done else Color("aab0c0")), cur)
 		b.add_child(l)
+	b.add_child(UIKit.label("Dreamer's Pages: %d of %d   ·   Calling: %s" % [Quests.pages_found(), G.data("acts").order.size() - 1, G.job_name()], 18, UIKit.SUB, true))
 	if world.quests.obj_idx < world.quests.objectives.size():
 		b.add_child(UIKit.button("Auto-path to current step", func(): clear_overlay(); world.quests.auto_path_quest(), 0, true))
 
+const TEXT_SIZE_NAMES := ["Normal", "Large", "Largest"]
+
 func _sheet_settings(b: VBoxContainer) -> void:
 	b.add_child(UIKit.label("Settings", 26, UIKit.BLUE_INK, true))
-	for s in [["auto_loot", "Auto-loot nearby drops"], ["dmg_numbers", "Show damage numbers"], ["reduce_motion", "Reduce motion (no bounce, shake or hit pause)"], ["reduce_flashing", "Reduce flashing"], ["fx_high", "High-quality effects (glow, blur, rain)"], ["haptics", "Vibration"], ["left_handed", "Left-handed layout (mirror the HUD)"]]:
+	var toggles := [["auto_loot", "Auto-loot nearby drops"], ["dmg_numbers", "Show damage numbers"], ["reduce_motion", "Reduce motion (no bounce, shake or hit pause)"],
+		["reduce_flashing", "Reduce flashing"], ["fx_high", "High-quality effects (glow, blur, rain)"], ["haptics", "Vibration"], ["left_handed", "Left-handed layout (mirror the HUD)"]]
+	if G.DEV_UNLOCK:
+		toggles.append(["lords_day_bypass", "Tester: play on the Lord's Day (bypass Lord's Day Mode)"])
+	for s in toggles:
 		var key: String = s[0]
 		var cb := CheckButton.new(); cb.text = s[1]; cb.button_pressed = bool(G.settings[key]); cb.focus_mode = Control.FOCUS_NONE
+		cb.custom_minimum_size.y = UIKit.MIN_TOUCH
 		cb.add_theme_font_size_override("font_size", 21); cb.add_theme_color_override("font_color", UIKit.INK); cb.add_theme_color_override("font_pressed_color", UIKit.INK)
-		cb.toggled.connect(func(on): G.settings[key] = on; _setting_changed(key))
+		cb.toggled.connect(func(on: bool) -> void: G.settings[key] = on; _setting_changed(key))
 		b.add_child(cb)
-	var row := HBoxContainer.new(); row.add_child(UIKit.label("HUD opacity", 20)); var sl := HSlider.new(); sl.min_value = 0.4; sl.max_value = 1.0; sl.step = 0.05; sl.value = G.settings.hud_opacity
-	sl.custom_minimum_size = Vector2(300, 40); sl.value_changed.connect(func(v): G.settings.hud_opacity = v); row.add_child(sl); b.add_child(row)
-	b.add_child(UIKit.label("Camera: pinch to zoom, two-finger swipe to rotate. Lord's Day Mode turns on automatically on Sundays (not in this demo). Music and sound arrive with the composer pass.", 16, UIKit.SUB, false, true))
-	b.add_child(UIKit.button("Return to title", func(): G.goto("title"), 0))
+	for sl in [["music_vol", "Music volume", 0.0], ["sfx_vol", "Sound volume", 0.0], ["hud_opacity", "HUD opacity", 0.4]]:
+		b.add_child(_slider_row(sl[0], sl[1], sl[2]))
+	var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 8)
+	var tl := UIKit.label("Text size", 20); tl.custom_minimum_size.x = 200; row.add_child(tl)
+	for i in TEXT_SIZE_NAMES.size():
+		var idx: int = i
+		row.add_child(UIKit.button(TEXT_SIZE_NAMES[i], func() -> void: G.settings.text_size = float(idx); _setting_changed("text_size"); open_sheet("settings"), 150, int(G.settings.text_size) == i))
+	b.add_child(row)
+	b.add_child(UIKit.label("Camera: pinch to zoom, two-finger swipe to rotate. On the Lord's Day the game rests: only quiet Scripture reading is open. Your journey saves by itself at each chapter and objective.", 16, UIKit.SUB, false, true))
+	b.add_child(UIKit.button("Save and return to title", func() -> void: G.save_game(); G.goto("title"), 0))
+
+func _slider_row(key: String, text: String, low: float) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	var l := UIKit.label(text, 20); l.custom_minimum_size.x = 200; row.add_child(l)
+	var sl := HSlider.new(); sl.min_value = low; sl.max_value = 1.0; sl.step = 0.05; sl.value = G.settings[key]
+	sl.custom_minimum_size = Vector2(320, UIKit.MIN_TOUCH)
+	sl.value_changed.connect(func(v: float) -> void: G.settings[key] = v; _setting_changed(key))
+	row.add_child(sl)
+	return row
 
 func _rebuild() -> void:
 	clear_overlay()
@@ -909,31 +930,20 @@ func run_dialog(lines: Array, done: Callable, i: int = 0) -> void:
 		w.root.gui_input.connect(tap)
 		w.root.mouse_filter = Control.MOUSE_FILTER_STOP
 
-func evangelist_dialog() -> void:
-	var src := "John Bunyan, The Pilgrim's Progress (1678) · public domain"
-	var por := "res://assets/portraits/evangelist.png"
-	run_dialog([
-		{"who": "Evangelist", "text": "Wherefore dost thou cry?", "src": src, "portrait": por},
-		{"who": G.pname, "text": "I am weighed down by this burden, and I fear what is to come."},
-		{"who": "Evangelist", "text": "If this be thy condition, why standest thou still?", "src": src, "portrait": por},
-		{"who": G.pname, "text": "Because I know not whither to go.", "src": src},
-		{"who": "Evangelist", "text": "He gives you a parchment roll. Written within: “Fly from the wrath to come.”", "src": src + " · alluding to Matthew 3:7 [BSB pulled at build time]", "portrait": por},
-		{"who": "Evangelist", "text": "Do you see yonder wicket-gate?", "src": src, "portrait": por, "choices": [{"t": "No."}]},
-		{"who": "Evangelist", "text": "Do you see yonder shining light?", "src": src, "portrait": por, "choices": [{"t": "I think I do."}]},
-		{"who": "Evangelist", "text": "Keep that light in your eye, and go up directly thereto: so shalt thou see the gate; at which, when thou knockest, it shall be told thee what thou shalt do.", "src": src, "portrait": por}],
-		func(): world.map.after_evangelist())
-
-func word_study(done: Callable) -> void:
-	var qs := [{"p": "Where is this passage found?", "o": ["Genesis 2", "Exodus 16", "Psalm 23"], "a": 0},
-		{"p": "Why was the man placed in the garden?", "o": ["To build a great city", "To tend it and keep it", "To rest and do nothing"], "a": 1}]
-	_word_q(qs, 0, -1, done)
+## Word Study: read a passage, then recall it. Passages and questions are in data/word_studies.json.
+var _study: Dictionary = {}
+func word_study(done: Callable, id: String = "") -> void:
+	var all: Dictionary = G.data("word_studies")
+	_study = all.get(id if id != "" else world.map_id, all["eden"])
+	_word_q(_study.questions, 0, -1, done)
 
 func _word_q(qs: Array, qi: int, picked: int, done: Callable) -> void:
 	_dim(false)
-	var w := UIKit.window("Word Study · Stone Tablet", Vector2(980, 0))
+	var w := UIKit.window("Word Study · %s" % _study.title, Vector2(980, 0))
 	var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 20)
 	var left := VBoxContainer.new(); left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.add_child(UIKit.parchment("[BSB: Genesis 2:15 · text pulled at build time]\n\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n▬▬▬▬▬▬▬▬▬▬▬▬"))
+	var verse: String = G.data("scripture").get(_study.ref, "")
+	left.add_child(UIKit.parchment("[BSB: %s]\n\n%s" % [_study.ref, verse if verse != "" else "Open your Bible to this passage and read it slowly."]))
 	left.add_child(UIKit.label("Read slowly. The passage stays visible while you answer.", 17, UIKit.SUB, false, true))
 	h.add_child(left)
 	var right := VBoxContainer.new(); right.custom_minimum_size = Vector2(420, 0); right.add_theme_constant_override("separation", 8)
@@ -1005,6 +1015,36 @@ func secret_card(title: String, text: String, n: int, total: int) -> void:
 	row.add_child(UIKit.button("Keep walking", func(): clear_overlay(), 200, true)); w.body.add_child(row)
 	_dim(); _center(w.root)
 
+## The Calling: six jobs side by side. trial = try one in the yard; otherwise this is the first job change.
+func calling(trial: bool, chosen: Callable) -> void:
+	_dim(false)
+	var w := UIKit.window("Try a Calling" if trial else "Take up your Calling", Vector2(1180, 0))
+	w.body.add_child(UIKit.label("A Calling is how you will serve along the Way. It is given, not earned, and none ranks above another." + (" This is only a trial: you choose for good later." if trial else " Base Level carries on; Job Level begins again at 1."), 17, UIKit.SUB, false, true))
+	var grid := GridContainer.new(); grid.columns = 3; grid.add_theme_constant_override("h_separation", 10); grid.add_theme_constant_override("v_separation", 10)
+	for id in G.JOB_ORDER:
+		grid.add_child(_calling_card(id, trial, chosen))
+	w.body.add_child(grid)
+	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
+	row.add_child(UIKit.button("Not yet", func() -> void: clear_overlay(); world.quests.ui_cancelled(), 160)); w.body.add_child(row)
+	_center(w.root)
+
+func _calling_card(id: String, trial: bool, chosen: Callable) -> Control:
+	var job: Dictionary = G.JOBS[id]
+	var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 10)); card.custom_minimum_size = Vector2(370, 0)
+	var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 2)
+	var head := HBoxContainer.new(); head.add_theme_constant_override("separation", 8)
+	var swatch := ColorRect.new(); swatch.color = Color(String(job.tint)); swatch.custom_minimum_size = Vector2(18, 18); swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(swatch); head.add_child(UIKit.label(String(job.name), 23, UIKit.BLUE_INK, true))
+	v.add_child(head)
+	v.add_child(UIKit.label(String(job.role), 16, Color("b85a00"), true))
+	v.add_child(UIKit.label(String(job.blurb), 16, UIKit.INK, false, true))
+	var names: Array = job.skills.map(func(sid: String) -> String: return String(G.SKILL_INFO[sid].name))
+	v.add_child(UIKit.label("Skills: " + ", ".join(names), 16, UIKit.SUB, false, true))
+	var bt := UIKit.button("Try this" if trial else "Choose %s" % job.name, func() -> void: clear_overlay(); chosen.call(id), 0, true)
+	more_tiles["calling_" + id] = bt
+	v.add_child(bt); card.add_child(v)
+	return card
+
 func waymark_read(wm: Dictionary) -> void:
 	_dim()
 	var w := UIKit.window("Waymark", Vector2(600, 0))
@@ -1044,6 +1084,8 @@ var muster_slots: Array = []
 var muster_win: Dictionary = {}
 
 func muster_board() -> void:
+	if not G.ONLINE:
+		_muster_gathering(); return
 	_dim()
 	var w := UIKit.window("Muster Board  ·  Palace Beautiful", Vector2(860, 0))
 	w.body.add_child(UIKit.label("Answer a muster for battles Bunyan gives to a company. Bring friends, or the board finds pilgrims for you; empty places fill with Stewards of the House after 60 seconds.", 17, UIKit.SUB, false, true))
@@ -1061,6 +1103,28 @@ func muster_board() -> void:
 			h.add_child(UIKit.label("Opens in %s" % md.why, 16, UIKit.SUB))
 		p.add_child(h); w.body.add_child(p)
 	w.body.add_child(UIKit.label("Rewards are the same with any company; each pilgrim beside you adds Fellowship Marks. No speed rankings.", 15, UIKit.SUB, false, true))
+	_center(w.root)
+
+## Single-player: no queue. A short gathering scene, then the company (AI companions) sets out.
+const COMPANY := [{"name": "Lumen", "role": "support", "ai": false, "look": [2, 2, 1]}, {"name": "Rook", "role": "defender", "ai": false, "look": [0, 1, 5]},
+	{"name": "Steward of the House", "role": "damage", "ai": true, "look": [0, 4, 5]}]
+
+func _muster_gathering() -> void:
+	_dim(false)
+	var w := UIKit.window("Muster: Giant Grim at the Lions' Gate", Vector2(720, 0))
+	w.body.add_child(UIKit.label("Giant Grim backs the lions and lets no pilgrim pass. Your company gathers at the board.", 19, UIKit.INK, false, true))
+	muster_slots = [{"name": G.pname + " (you)", "role": G.job_name(), "ai": false, "look": [G.hair_style, G.hair_col, G.robe_col]}]
+	muster_slots.append_array(COMPANY)
+	for sl in muster_slots:
+		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 8, 10))
+		var h := HBoxContainer.new()
+		var l := UIKit.label(String(sl.name), 19, UIKit.INK, true); l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		h.add_child(l); h.add_child(UIKit.label(String(sl.role), 17, UIKit.SUB)); p.add_child(h); w.body.add_child(p)
+	w.body.add_child(UIKit.label("Your companions fight by themselves. Rewards are the same with any company.", 16, UIKit.SUB, false, true))
+	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END; row.add_theme_constant_override("separation", 8)
+	row.add_child(UIKit.button("Not yet", func() -> void: clear_overlay(); world.quests.ui_cancelled(), 160))
+	row.add_child(UIKit.button("Set out together", func() -> void: muster_enter(), 260, true))
+	w.body.add_child(row)
 	_center(w.root)
 
 func muster_queue(md: Dictionary) -> void:
@@ -1127,7 +1191,8 @@ func muster_enter() -> void:
 	for i in range(1, muster_slots.size()):
 		party.append(muster_slots[i])
 	clear_overlay()
-	world.map.enter_muster(party)
+	G.muster_party = party
+	world.quests.travel_go()
 
 var boss_ui: Control
 func boss_bar(nm: String, frac: float) -> void:
@@ -1136,14 +1201,14 @@ func boss_bar(nm: String, frac: float) -> void:
 		return
 	if boss_ui == null:
 		boss_ui = BossBar.new(); boss_ui.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-		boss_ui.position = Vector2(-260, 74); boss_ui.size = Vector2(520, 46); boss_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		boss_ui.position = Vector2(-TOAST_W * 0.5 + (50.0 if not G.settings.left_handed else -50.0), 128); boss_ui.size = Vector2(TOAST_W, 46)   # clear of the plate and the quest toast; boss_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		root.add_child(boss_ui); hud_nodes.append(boss_ui)
 	boss_ui.set("nm", nm); boss_ui.set("frac", frac); boss_ui.queue_redraw()
 
 func muster_cleared(humans: int) -> void:
 	var w := UIKit.window("Muster cleared", Vector2(620, 0))
 	w.body.add_child(UIKit.label("Giant Grim is driven from the way.", 26, UIKit.BLUE_INK, true))
-	w.body.add_child(UIKit.label("•  Grim's Broken Chain\n•  Fellowship Marks +%d  (one per pilgrim in your company; Stewards add none, and nothing is lost for walking alone)\n•  Base and Job experience" % humans, 18, UIKit.INK, false, true))
+	w.body.add_child(UIKit.label("•  Grim's Broken Chain\n•  Fellowship Marks +%d  (one per named companion; nothing is lost for walking alone)\n•  Base and Job experience" % humans, 18, UIKit.INK, false, true))
 	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
 	row.add_child(UIKit.button("Well fought", func(): clear_overlay(), 200, true)); w.body.add_child(row)
 	_dim(); _center(w.root)
@@ -1357,6 +1422,7 @@ func motes_to_plate(from: Vector2) -> void:
 	p.tween_callback(func(): if is_instance_valid(plate_hp): plate_hp.get_parent().get_parent().get_parent().create_tween().tween_property(plate_hp.get_parent().get_parent().get_parent(), "modulate", Color.WHITE, 0.6))
 
 func _setting_changed(key: String) -> void:
+	G.apply_settings(); G.save_settings()
 	if key == "left_handed":
 		_rebuild()
 	elif key == "fx_high" and world:

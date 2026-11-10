@@ -1,0 +1,428 @@
+{
+ "id": "interpreter",
+ "act": "interpreter",
+ "name": "The House of the Interpreter",
+ "sub": "Chapter 3 · Things profitable to see",
+ "layer": "House",
+ "combat": false,
+ "start": [
+  0,
+  8
+ ],
+ "bounds": [
+  -16,
+  -8,
+  32,
+  18
+ ],
+ "music": "interpreter",
+ "burden": true,
+ "resumable": true,
+ "look": {
+  "bg": "#2a2622",
+  "amb": "#e6e0d8",
+  "amb_e": 0.44,
+  "tint": [
+   1.03,
+   0.98,
+   0.9
+  ],
+  "sun_e": 0.6,
+  "sun_c": "#fff0d8",
+  "post": [
+   0.9,
+   1.04,
+   [
+    1.02,
+    1.0,
+    0.96
+   ]
+  ],
+  "mini": "#b8a888",
+  "ground": "cobble",
+  "ground_tint": "#c8c2b8",
+  "weather": ""
+ },
+ "enter_say": [
+  "A large house a little way past the Gate. The door stands open and a lamp is lit."
+ ],
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    -3
+   ],
+   "size": [
+    28,
+    5
+   ],
+   "tile": "dirt",
+   "tint": "#8a6a58"
+  },
+  {
+   "t": "wall",
+   "from": [
+    -16,
+    -8
+   ],
+   "to": [
+    16,
+    -8
+   ],
+   "h": 4.5,
+   "tint": "#e8dcc8"
+  },
+  {
+   "t": "wall",
+   "from": [
+    -16,
+    -8
+   ],
+   "to": [
+    -16,
+    10
+   ],
+   "h": 4.5,
+   "tint": "#e8dcc8"
+  },
+  {
+   "t": "wall",
+   "from": [
+    16,
+    -8
+   ],
+   "to": [
+    16,
+    10
+   ],
+   "h": 4.5,
+   "tint": "#e8dcc8"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    -12.5,
+    0.8
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    -7.5,
+    0.8
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    -2.5,
+    0.8
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    2.5,
+    0.8
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    7.5,
+    0.8
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    12.5,
+    0.8
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "box",
+   "at": [
+    12.5,
+    5
+   ],
+   "size": [
+    3.2,
+    1.0,
+    1.6
+   ],
+   "tile": "bark",
+   "tint": "#b08a60"
+  },
+  {
+   "t": "light",
+   "at": [
+    12.5,
+    5
+   ],
+   "y": 2.6,
+   "color": "#ffe9b0",
+   "e": 2.0,
+   "range": 6
+  },
+  {
+   "t": "shaft",
+   "at": [
+    0,
+    3
+   ]
+  }
+ ],
+ "ents": [
+  {
+   "id": "interp",
+   "kind": "npc",
+   "name": "Interpreter",
+   "at": [
+    1.8,
+    5.5
+   ],
+   "look": [
+    2,
+    4,
+    5
+   ],
+   "act": "Talk",
+   "icon": "talk"
+  },
+  {
+   "id": "picture",
+   "kind": "spot",
+   "name": "The Picture",
+   "at": [
+    -10,
+    -3
+   ],
+   "act": "Behold",
+   "icon": "eye",
+   "prop": {
+    "t": "pedestal",
+    "color": "#f0d890"
+   }
+  },
+  {
+   "id": "parlor",
+   "kind": "spot",
+   "name": "The Dusty Parlor",
+   "at": [
+    -5,
+    -3
+   ],
+   "act": "Behold",
+   "icon": "eye",
+   "prop": {
+    "t": "pedestal",
+    "color": "#c8b8a0"
+   }
+  },
+  {
+   "id": "children",
+   "kind": "spot",
+   "name": "Passion and Patience",
+   "at": [
+    0,
+    -3
+   ],
+   "act": "Behold",
+   "icon": "eye",
+   "prop": {
+    "t": "pedestal",
+    "color": "#f0a8b8"
+   }
+  },
+  {
+   "id": "fire",
+   "kind": "spot",
+   "name": "The Fire by the Wall",
+   "at": [
+    5,
+    -3
+   ],
+   "act": "Behold",
+   "icon": "eye",
+   "prop": {
+    "t": "pedestal",
+    "color": "#ff9a40"
+   }
+  },
+  {
+   "id": "armed",
+   "kind": "spot",
+   "name": "The Armed Man",
+   "at": [
+    10,
+    -3
+   ],
+   "act": "Behold",
+   "icon": "eye",
+   "prop": {
+    "t": "pedestal",
+    "color": "#a8c8ff"
+   }
+  },
+  {
+   "id": "desk",
+   "kind": "spot",
+   "name": "Reading Room",
+   "at": [
+    12.5,
+    3.4
+   ],
+   "act": "Read",
+   "icon": "library"
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    -14,
+    7.5
+   ],
+   "act": "Search",
+   "icon": "eye"
+  },
+  {
+   "id": "warp",
+   "kind": "warp",
+   "name": "The way onward",
+   "at": [
+    0,
+    9.3
+   ],
+   "act": "Go on",
+   "icon": "warp",
+   "hidden": true
+  }
+ ],
+ "objectives": [
+  {
+   "id": "greet",
+   "type": "talk",
+   "ent": "interp",
+   "dialog": "interp.greet",
+   "text": "Speak with the Interpreter",
+   "xp": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "picture",
+   "type": "interact",
+   "ent": "picture",
+   "dialog": "interp.picture",
+   "text": "Behold: The Picture",
+   "xp": [
+    30,
+    0
+   ]
+  },
+  {
+   "id": "parlor",
+   "type": "interact",
+   "ent": "parlor",
+   "dialog": "interp.parlor",
+   "text": "Behold: The Dusty Parlor",
+   "xp": [
+    30,
+    0
+   ]
+  },
+  {
+   "id": "children",
+   "type": "interact",
+   "ent": "children",
+   "dialog": "interp.children",
+   "text": "Behold: Passion and Patience",
+   "xp": [
+    30,
+    0
+   ]
+  },
+  {
+   "id": "fire",
+   "type": "interact",
+   "ent": "fire",
+   "dialog": "interp.fire",
+   "text": "Behold: The Fire by the Wall",
+   "xp": [
+    30,
+    0
+   ]
+  },
+  {
+   "id": "armed",
+   "type": "interact",
+   "ent": "armed",
+   "dialog": "interp.armed",
+   "text": "Behold: The Armed Man",
+   "xp": [
+    30,
+    0
+   ]
+  },
+  {
+   "id": "study",
+   "type": "interact",
+   "ent": "desk",
+   "dialog": "interp.study",
+   "ui": "word_study",
+   "text": "Read in the reading room (Word Study)",
+   "xp": [
+    30,
+    20
+   ],
+   "on_done": {
+    "manna": 5,
+    "flag": "prayer_taught",
+    "dialog": "interp.study_done",
+    "show": [
+     "warp"
+    ],
+    "say": "Word Study complete. Manna +5. Prayer of Rest can now be learned."
+   }
+  },
+  {
+   "id": "exit",
+   "type": "exit",
+   "text": "Take the road to the place of deliverance",
+   "zone": [
+    0,
+    9.3
+   ],
+   "to": "cross",
+   "xp": [
+    0,
+    0
+   ],
+   "ent": "warp"
+  }
+ ],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "interp.page",
+   "xp": [
+    20,
+    20
+   ],
+   "text": "The Dreamer's Page: the Interpreter's House",
+   "page": true
+  }
+ ]
+}

@@ -1,0 +1,163 @@
+{
+ "slothling": {
+  "name": "Slothling",
+  "level": 1,
+  "tint": "#ffffff",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "sloth",
+  "drop": "Bread of Provision"
+ },
+ "whelp": {
+  "name": "Idle Whelp",
+  "level": 2,
+  "tint": "#d8c8a0",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "sloth",
+  "drop": "Bread of Provision"
+ },
+ "scoffling": {
+  "name": "Scoffling",
+  "level": 3,
+  "tint": "#c8a8d8",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "pride"
+ },
+ "mire_sloth": {
+  "name": "Mire Sloth",
+  "level": 4,
+  "tint": "#8a9a6a",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "sloth",
+  "drop": "Bread of Provision"
+ },
+ "glutton_grub": {
+  "name": "Glutton Grub",
+  "level": 5,
+  "tint": "#d8a070",
+  "pixel": 0.044,
+  "sprite": "mob_slothling",
+  "family": "gluttony",
+  "drop": "Bread of Provision"
+ },
+ "despondling": {
+  "name": "Despondling",
+  "level": 6,
+  "tint": "#7a86a8",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "doubt"
+ },
+ "stumbler": {
+  "name": "Stumbler",
+  "level": 7,
+  "tint": "#b89a7a",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "sloth",
+  "drop": "Bronze Buckle"
+ },
+ "loiterer": {
+  "name": "Loiterer",
+  "level": 8,
+  "tint": "#9aa87a",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "sloth",
+  "drop": "Bronze Buckle"
+ },
+ "pretender": {
+  "name": "Pretender",
+  "level": 9,
+  "tint": "#d8d0a0",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "pride",
+  "drop": "Bronze Buckle"
+ },
+ "simple": {
+  "name": "Simple",
+  "level": 8,
+  "tint": "#c8c8b0",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "sloth"
+ },
+ "sloth": {
+  "name": "Sloth",
+  "level": 8,
+  "tint": "#8a9a8a",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "sloth"
+ },
+ "doubt": {
+  "name": "Doubt",
+  "level": 8,
+  "tint": "#6a7aa8",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "doubt",
+  "greater": true
+ },
+ "mistrust": {
+  "name": "Shade of Mistrust",
+  "level": 9,
+  "tint": "#8a7a9a",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "doubt"
+ },
+ "timorous": {
+  "name": "Shade of Timorousness",
+  "level": 10,
+  "tint": "#a8a8c8",
+  "pixel": 0.04,
+  "sprite": "mob_slothling",
+  "family": "doubt"
+ },
+ "formalist": {
+  "name": "Formalist and Hypocrisy",
+  "level": 9,
+  "tint": "#d8c890",
+  "pixel": 0.075,
+  "sprite": "mob_slothling",
+  "family": "pride",
+  "boss": true,
+  "hp": 900,
+  "atk": 13,
+  "slam": 18,
+  "xp_bonus": 30
+ },
+ "presumption": {
+  "name": "Presumption",
+  "level": 8,
+  "tint": "#c89070",
+  "pixel": 0.075,
+  "sprite": "mob_slothling",
+  "family": "pride",
+  "boss": true,
+  "hp": 800,
+  "atk": 12,
+  "slam": 17,
+  "xp_bonus": 30
+ },
+ "grim": {
+  "name": "Giant Grim",
+  "level": 10,
+  "tint": "#c79994",
+  "pixel": 0.088,
+  "sprite": "mob_slothling",
+  "family": "wrath",
+  "boss": true,
+  "hp": 1100,
+  "atk": 14,
+  "slam": 20,
+  "xp_bonus": 20,
+  "muster": true,
+  "drop": "Grim's Broken Chain"
+ }
+}

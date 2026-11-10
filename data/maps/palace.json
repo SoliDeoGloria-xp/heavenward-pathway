@@ -1,0 +1,300 @@
+{
+ "id": "palace",
+ "act": "palace",
+ "name": "Palace Beautiful",
+ "sub": "Chapter 6 · A house for the relief of pilgrims",
+ "layer": "House",
+ "combat": false,
+ "start": [
+  0,
+  11
+ ],
+ "music": "palace",
+ "resumable": true,
+ "look": {
+  "bg": "#3a4a30",
+  "amb": "#f2eaf8",
+  "amb_e": 0.46,
+  "tint": [
+   1.04,
+   1.0,
+   0.94
+  ],
+  "sun_e": 0.82,
+  "sun_c": "#ffeacc",
+  "post": [
+   1.1,
+   1.05,
+   [
+    1.06,
+    1.0,
+    0.92
+   ]
+  ],
+  "mini": "#a8c48a",
+  "ground": "grass",
+  "ground_tint": "#ffffff",
+  "weather": ""
+ },
+ "enter_say": [
+  "The House Beautiful. Pilgrims who walked the Way alone meet here."
+ ],
+ "ents": [
+  {
+   "id": "discretion",
+   "kind": "npc",
+   "name": "Discretion",
+   "at": [
+    -2.4,
+    2.6
+   ],
+   "look": [
+    1,
+    0,
+    0
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true,
+   "color": "#ffe0f0"
+  },
+  {
+   "id": "prudence",
+   "kind": "npc",
+   "name": "Prudence",
+   "at": [
+    -6.6,
+    -7.6
+   ],
+   "look": [
+    2,
+    1,
+    1
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true,
+   "color": "#ffe0f0"
+  },
+  {
+   "id": "piety",
+   "kind": "npc",
+   "name": "Piety",
+   "at": [
+    -3.8,
+    3.2
+   ],
+   "look": [
+    1,
+    2,
+    3
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true,
+   "color": "#ffe0f0"
+  },
+  {
+   "id": "charity",
+   "kind": "npc",
+   "name": "Charity",
+   "at": [
+    3.4,
+    3.0
+   ],
+   "look": [
+    2,
+    3,
+    4
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true,
+   "color": "#ffe0f0"
+  },
+  {
+   "id": "yard",
+   "kind": "spot",
+   "name": "The Yard",
+   "at": [
+    14,
+    6
+   ],
+   "act": "Enter",
+   "icon": "staff",
+   "hidden": true,
+   "prop": {
+    "t": "pedestal",
+    "color": "#a8c8ff"
+   }
+  },
+  {
+   "id": "gate",
+   "kind": "spot",
+   "name": "The Lions' Path",
+   "at": [
+    -14,
+    10
+   ],
+   "act": "Set out",
+   "icon": "warp",
+   "hidden": true,
+   "prop": {
+    "t": "pedestal",
+    "color": "#ffc890"
+   },
+   "dialog": "palace.gate"
+  },
+  {
+   "id": "bell",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    1.6,
+    9.2
+   ],
+   "act": "Search",
+   "icon": "eye",
+   "hidden": true
+  }
+ ],
+ "objectives": [
+  {
+   "id": "porter",
+   "type": "talk",
+   "ent": "watchful",
+   "dialog": "palace.watchful",
+   "text": "Speak with Watchful the Porter",
+   "xp": [
+    40,
+    0
+   ],
+   "on_done": {
+    "show": [
+     "discretion",
+     "piety",
+     "charity",
+     "prudence"
+    ]
+   }
+  },
+  {
+   "id": "damsels",
+   "type": "talk",
+   "ent": "discretion",
+   "dialog": "palace.damsels",
+   "text": "Answer the family of the House",
+   "xp": [
+    60,
+    20
+   ]
+  },
+  {
+   "id": "armor",
+   "type": "interact",
+   "ent": "armory",
+   "dialog": "palace.armor",
+   "text": "Receive the Armor of God at the armory",
+   "xp": [
+    50,
+    0
+   ],
+   "on_done": {
+    "armor": true,
+    "say": "You received the whole Armor of God. Every blow against you is lighter.",
+    "show": [
+     "yard"
+    ]
+   }
+  },
+  {
+   "id": "trial",
+   "type": "travel",
+   "ent": "yard",
+   "dialog": "palace.trial",
+   "ui": "calling_trial",
+   "to": "trial",
+   "until": "trial_done",
+   "text": "The Calling trial: try a Calling in the yard",
+   "xp": [
+    0,
+    0
+   ],
+   "on_done": {
+    "show": [
+     "gate"
+    ]
+   }
+  },
+  {
+   "id": "path",
+   "type": "travel",
+   "ent": "gate",
+   "dialog": "palace.gate",
+   "to": "lions_path",
+   "until": "lions_path_done",
+   "text": "Clear the Lions' Path",
+   "xp": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "muster",
+   "type": "travel",
+   "ent": "board",
+   "ui": "muster",
+   "to": "lions",
+   "until": "grim_down",
+   "text": "Answer the Muster Board: Giant Grim",
+   "xp": [
+    0,
+    0
+   ],
+   "on_done": {
+    "show": [
+     "bell"
+    ]
+   }
+  },
+  {
+   "id": "bell",
+   "type": "interact",
+   "ent": "bell",
+   "dialog": "palace.bell",
+   "text": "Something was left for you at the gate",
+   "xp": [
+    40,
+    20
+   ],
+   "page": true,
+   "on_done": {
+    "give": {
+     "The Lamb's Bell": 1
+    },
+    "hide": [
+     "bell"
+    ],
+    "flag": "page_palace"
+   }
+  },
+  {
+   "id": "calling",
+   "type": "interact",
+   "ent": "discretion",
+   "dialog": "palace.calling",
+   "ui": "calling",
+   "needs": "first_job",
+   "text": "Take up your Calling (speak with Discretion)",
+   "xp": [
+    0,
+    0
+   ],
+   "on_done": {
+    "dialog": "palace.called",
+    "screen": "end"
+   }
+  }
+ ],
+ "side": []
+}

@@ -1,11 +1,66 @@
 {
-  "base_cost": [40, 60, 90, 130, 190, 260, 350, 470, 620],
-  "job_cost": [20, 30, 45, 60, 80, 100, 130, 170, 220],
-  "base_after10": {"start": 800, "growth": 1.12},
-  "job_after10": {"start": 220, "growth": 1.10},
-  "eden_base_cap": 5,
-  "pilgrim_base_cap": 10,
-  "first_job_gate": {"base": 10, "job": 10},
-  "mob_xp": {"base": "3+level", "greater_mult": 4, "boss": [150, 250]},
-  "max_base": 99, "max_job": 50
+ "base_cost": [
+  40,
+  60,
+  90,
+  130,
+  190,
+  260,
+  350,
+  470,
+  620
+ ],
+ "job_cost": [
+  20,
+  30,
+  45,
+  60,
+  80,
+  100,
+  130,
+  170,
+  220
+ ],
+ "base_after10": {
+  "start": 800,
+  "growth": 1.12
+ },
+ "job_after10": {
+  "start": 220,
+  "growth": 1.1
+ },
+ "eden_base_cap": 5,
+ "pilgrim_base_cap": 10,
+ "first_job_gate": {
+  "base": 10,
+  "job": 10
+ },
+ "mob_xp": {
+  "base": 3,
+  "per_level": 1,
+  "greater_mult": 4,
+  "boss": [
+   150,
+   250
+  ]
+ },
+ "max_base": 99,
+ "max_job": 50,
+ "armor_guard": 3,
+ "burden_slow": 0.88,
+ "mob": {
+  "hp_base": 40,
+  "hp_per_lv": 22,
+  "atk_base": 5,
+  "atk_per_lv": 1.5,
+  "greater_hp": 3.0,
+  "greater_atk": 1.35,
+  "greater_scale": 1.35,
+  "job_share": 0.5,
+  "respawn": 24
+ },
+ "mob_share_target": [
+  0.15,
+  0.25
+ ]
 }

@@ -1,0 +1,847 @@
+{
+ "eden.fall": [
+  {
+   "who": "The Dreamer",
+   "text": "Behold the two trees in the midst of the garden: the tree of life, and the tree of the knowledge of good and evil.",
+   "src": "[BSB: Genesis 2:9]"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "The man was told he could eat freely of every tree but one. In the day he ate of that tree, he would surely die.",
+   "src": "[BSB: Genesis 2:16–17]"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "And I saw in my dream that the serpent spoke in the garden, and questioned the word that had been given.",
+   "src": "[BSB: Genesis 3:1]",
+   "fx": "serpent"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "The fruit was taken and eaten. The man, the head of all his kind, broke the covenant, and all his children fell with him.",
+   "src": "[BSB: Genesis 3:6] [BSB: Romans 5:12]",
+   "fx": "darken_half"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "Their eyes were opened, and they knew shame. They hid themselves among the trees of the garden.",
+   "src": "[BSB: Genesis 3:7–8]",
+   "fx": "hide"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "So the man was driven out, east of Eden. Cherubim and a flaming sword, turning every way, guarded the way back to the tree of life.",
+   "src": "[BSB: Genesis 3:24]",
+   "fx": "cherubim"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "{lamb} will not cross that line. See, it waits at the garden's edge. Take its bell with you, and do not forget what was lost here.",
+   "fx": "lamb_stays"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "I woke, and behold, it was a dream. But I could not unsee the garden. Now my dream turns, pilgrim. Wake."
+  }
+ ],
+ "city.wake": [
+  {
+   "who": "The Dreamer",
+   "text": "I saw a man clothed with rags, standing in a certain place, with his face from his own house, a book in his hand, and a great burden upon his back.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "That man is you, pilgrim. This is the City of Destruction. You were born in Adam, and the burden is your sin. It slows you, and you cannot put it down by yourself.",
+   "src": "[BSB: Romans 5:12]"
+  },
+  {
+   "who": "$player",
+   "text": "What shall I do?",
+   "fx": "rise"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "First, rise. Slothlings crowd these streets: the sins of sloth that would keep you sitting still. Overcome them, and someone will come to show you the way."
+  }
+ ],
+ "city.evangelist": [
+  {
+   "who": "Evangelist",
+   "text": "Wherefore dost thou cry?",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
+   "portrait": "res://assets/portraits/evangelist.png"
+  },
+  {
+   "who": "$player",
+   "text": "I am weighed down by this burden, and I fear what is to come."
+  },
+  {
+   "who": "Evangelist",
+   "text": "If this be thy condition, why standest thou still?",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
+   "portrait": "res://assets/portraits/evangelist.png"
+  },
+  {
+   "who": "$player",
+   "text": "Because I know not whither to go.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  },
+  {
+   "who": "Evangelist",
+   "text": "He gives you a parchment roll. Written within is a warning to flee from the wrath to come.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain · [BSB: Matthew 3:7]",
+   "portrait": "res://assets/portraits/evangelist.png"
+  },
+  {
+   "who": "Evangelist",
+   "text": "Do you see yonder wicket-gate?",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
+   "choices": [
+    {
+     "t": "No."
+    }
+   ],
+   "portrait": "res://assets/portraits/evangelist.png"
+  },
+  {
+   "who": "Evangelist",
+   "text": "Do you see yonder shining light?",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
+   "choices": [
+    {
+     "t": "I think I do."
+    }
+   ],
+   "portrait": "res://assets/portraits/evangelist.png"
+  },
+  {
+   "who": "Evangelist",
+   "text": "Keep that light in your eye, and go up directly thereto: so shalt thou see the gate; at which, when thou knockest, it shall be told thee what thou shalt do.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
+   "portrait": "res://assets/portraits/evangelist.png"
+  }
+ ],
+ "city.obstinate": [
+  {
+   "who": "Obstinate",
+   "text": "There goes the one with the book. You would leave your friends and every comfort for a tale about a gate?"
+  },
+  {
+   "who": "$player",
+   "text": "All that you would keep is not worth a little of what I am seeking. Come with me and see.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: 2 Corinthians 4:18]"
+  },
+  {
+   "who": "Obstinate",
+   "text": "Not I. I will not be led about by a book. Pliable, come home with me.",
+   "choices": [
+    {
+     "t": "The book is true. Read it with me."
+    },
+    {
+     "t": "Then I must go without you."
+    }
+   ]
+  },
+  {
+   "who": "Pliable",
+   "text": "If what the pilgrim says is so, those are better things than ours. I think I will go along, at least a little way."
+  },
+  {
+   "who": "Obstinate",
+   "text": "Two fools instead of one. I am going back.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "city.rest": [
+  {
+   "who": "The Dreamer",
+   "text": "You are worn. A pilgrim is not an engine. Sit, and let your strength return; there is no shame in rest.",
+   "src": "[BSB: Psalm 127:2]"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "If you ever fall in a fight, you will rise again a little weary, and nothing you have learned will be taken from you."
+  }
+ ],
+ "city.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page from my own book, blown into this street. \"I looked, and saw him open the book and read; and as he read, he wept and trembled.\" Keep it. I am writing your road as you walk it.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  }
+ ],
+ "slough.sink": [
+  {
+   "who": "Pliable",
+   "text": "Tell me again of the things ahead. A kingdom that lasts? Crowns? No more crying?",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Revelation 21:4]"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "And as they talked they did not watch the ground. Both fell suddenly into the bog. The name of the slough was Despond.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)",
+   "fx": "splash"
+  },
+  {
+   "who": "Pliable",
+   "text": "Is this the happiness you told me of? If we fare this badly at setting out, what comes later? You may have the brave country alone for me."
+  },
+  {
+   "who": "The Dreamer",
+   "text": "He struggled out on the side nearest his own house, and the pilgrim saw him no more. Mark this: he loved the reward, but not the road.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)",
+   "fx": "pliable_leaves"
+  }
+ ],
+ "slough.help": [
+  {
+   "who": "Help",
+   "text": "What are you doing in there?"
+  },
+  {
+   "who": "$player",
+   "text": "I was told to go this way to the gate, to flee the wrath to come. And I fell in.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Help",
+   "text": "Why did you not look for the steps? Give me your hand.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)",
+   "fx": "help_pulls"
+  },
+  {
+   "who": "Help",
+   "text": "This mire cannot be mended. When a sinner wakes to his lost condition, fears and doubts and discouragements all settle here together.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Help",
+   "text": "Yet good, firm steps have been set through the very middle of it: the promises. In this weather they are hard to see, but they hold.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Psalm 40:2]"
+  },
+  {
+   "who": "Help",
+   "text": "I did not come because you swam well. I came because I was sent. Remember that when you tell this story.",
+   "src": "[BSB: Psalm 40:1–2]"
+  }
+ ],
+ "slough.wiseman": [
+  {
+   "who": "Mr. Worldly Wiseman",
+   "text": "Good fellow! Where are you off to, so bent under that load?"
+  },
+  {
+   "who": "$player",
+   "text": "To the Wicket Gate ahead. I am told I will be put in the way to be rid of my burden there."
+  },
+  {
+   "who": "Mr. Worldly Wiseman",
+   "text": "There is no more dangerous road. Weariness, hunger, lions, darkness. And all because of a book too high for you."
+  },
+  {
+   "who": "Mr. Worldly Wiseman",
+   "text": "Hear me. In the village of Morality lives a gentleman named Legality. He has eased many shoulders. It is not a mile. Why not try?",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)",
+   "choices": [
+    {
+     "t": "Take his counsel and turn aside.",
+     "flag": "ww_detour"
+    },
+    {
+     "t": "No. I will keep the light in my eye."
+    }
+   ]
+  },
+  {
+   "who": "The Dreamer",
+   "text": "So the pilgrim turned out of the way. But the hill by Legality's house hung over the road, and flashes of fire came out of it, and the burden grew heavier than before.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Galatians 3:10]",
+   "if": "ww_detour",
+   "fx": "sinai"
+  },
+  {
+   "who": "Evangelist",
+   "text": "Did I not point you to the gate? No one is counted righteous by the works of the law. Legality cannot free you; he is himself in bondage.",
+   "src": "[BSB: Galatians 2:16]",
+   "if": "ww_detour",
+   "portrait": "res://assets/portraits/evangelist.png"
+  },
+  {
+   "who": "Evangelist",
+   "text": "Yet the gate still stands open to you. Go back to the way, and do not turn aside again.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)",
+   "if": "ww_detour",
+   "portrait": "res://assets/portraits/evangelist.png"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "The pilgrim went on, and would not be turned. Good counsel is known by where it sends you.",
+   "unless": "ww_detour"
+  }
+ ],
+ "slough.gate": [
+  {
+   "who": "The Dreamer",
+   "text": "Over the gate there was written an invitation to knock, with a promise that it would be opened.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Matthew 7:7]"
+  },
+  {
+   "who": "Goodwill",
+   "text": "Who is there? Where have you come from, and what do you want?",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "$player",
+   "text": "A poor burdened sinner from the City of Destruction. I am going to be delivered from the wrath to come. Are you willing to let me in?",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Goodwill",
+   "text": "I am willing with all my heart.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
+   "fx": "gate_opens"
+  },
+  {
+   "who": "$player",
+   "text": "But I have done nothing to earn an open gate. I turned aside. I sank."
+  },
+  {
+   "who": "Goodwill",
+   "text": "The gate is not wages. The Lord of this way has promised that whoever comes will never be driven out.",
+   "src": "[BSB: John 6:37]"
+  },
+  {
+   "who": "Goodwill",
+   "text": "A sinner is counted righteous by faith, apart from works. It is a gift: received, not achieved. So no one may boast.",
+   "src": "[BSB: Romans 3:28] [BSB: Ephesians 2:8–9]"
+  },
+  {
+   "who": "Goodwill",
+   "text": "As for your burden, carry it until you come to the place of deliverance. There it will fall from your back by itself.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Goodwill",
+   "text": "Look ahead. Do you see the narrow way? It is as straight as a rule can make it. Keep to it, and go first to the house of the Interpreter.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Matthew 7:13–14]"
+  }
+ ],
+ "slough.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page from my book, half sunk. It tells of one drawn up out of a pit of clay and set upon a rock. I wrote it down for you before you needed it.",
+   "src": "[BSB: Psalm 40:2]"
+  }
+ ],
+ "interp.greet": [
+  {
+   "who": "Interpreter",
+   "text": "Come in. I will show you what will be profitable to you. Goodwill sent word that a pilgrim was on the way.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Interpreter",
+   "text": "I teach with pictures. Walk the hall, look at each one, and I will tell you its meaning. Then come to the reading room."
+  }
+ ],
+ "interp.picture": [
+  {
+   "who": "Interpreter",
+   "text": "A portrait of a very grave man: eyes lifted up, the best of books in his hand, the world behind his back, and he stands as if he pleaded with men.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Interpreter",
+   "text": "I show you this first because he is the only kind of guide authorized to lead you on this road: one who opens the Word plainly and seeks no crown here.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: 2 Timothy 4:2]"
+  },
+  {
+   "who": "Interpreter",
+   "text": "You will meet others who claim to lead. Compare them with this picture."
+  }
+ ],
+ "interp.parlor": [
+  {
+   "who": "Interpreter",
+   "text": "This parlor was never swept. Take the broom.",
+   "fx": "dust"
+  },
+  {
+   "who": "$player",
+   "text": "The dust flies everywhere! I can hardly breathe, and the room is no cleaner."
+  },
+  {
+   "who": "Interpreter",
+   "text": "The room is a heart that grace has not yet cleansed. The broom is the law: it shows sin and stirs it up, but gives no power to remove it.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Romans 7:9]"
+  },
+  {
+   "who": "Interpreter",
+   "text": "Now watch: water is sprinkled first, and the room is swept clean with ease. So the gospel comes, and sin is subdued, and the heart is made fit to live in.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: John 15:3]",
+   "fx": "sprinkle"
+  }
+ ],
+ "interp.children": [
+  {
+   "who": "Interpreter",
+   "text": "Two children, each in a chair. The elder is Passion; the other, Patience. Passion will have all his good things now, this year.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Interpreter",
+   "text": "See: a bag of treasure is poured at his feet. He laughs at Patience. And look again. It is all spent, and he has nothing left but rags.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)",
+   "fx": "coins"
+  },
+  {
+   "who": "Interpreter",
+   "text": "Patience is willing to wait for the best things. What is seen is passing; what is not seen lasts.",
+   "src": "[BSB: 2 Corinthians 4:18]"
+  },
+  {
+   "who": "$player",
+   "text": "Then it is wiser not to covet what is now, but to wait for what is to come."
+  }
+ ],
+ "interp.fire": [
+  {
+   "who": "Interpreter",
+   "text": "A fire burns against this wall. One stands by, always throwing water on it. Yet it burns higher and hotter.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)",
+   "fx": "fire_up"
+  },
+  {
+   "who": "Interpreter",
+   "text": "The fire is the work of grace in the heart. The one with the water is the enemy. Behind the wall, out of sight, oil is poured on the fire without ceasing.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Interpreter",
+   "text": "You will not see the hand that feeds it. But the work that was begun in you will be carried to completion. When you feel only the water, remember the oil.",
+   "src": "[BSB: Philippians 1:6] [BSB: 2 Corinthians 12:9]"
+  }
+ ],
+ "interp.armed": [
+  {
+   "who": "Interpreter",
+   "text": "A stately palace, and people in gold walking on its roof. At the door, armed men stand to keep out any who would enter, and a crowd hangs back, afraid.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Interpreter",
+   "text": "Then one with a very stout face comes up to the man at the table and says: Set down my name, sir. He puts on a helmet, draws his sword, and cuts his way through.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)",
+   "fx": "clash"
+  },
+  {
+   "who": "Interpreter",
+   "text": "It is through many hardships that we must enter the kingdom. Not that the fight buys the door: the name was written first. But the road is a real road.",
+   "src": "[BSB: Acts 14:22]"
+  },
+  {
+   "who": "$player",
+   "text": "I think I know the meaning of this. Let me go on from here."
+  }
+ ],
+ "interp.study": [
+  {
+   "who": "Interpreter",
+   "text": "Here is the reading room. Sit and read slowly. The Word is how a pilgrim is fed; this is one of the ordinary means by which grace comes to you.",
+   "src": "[BSB: Psalm 119:105]"
+  },
+  {
+   "who": "Interpreter",
+   "text": "And learn to be still. A burdened pilgrim who never rests will not go far. I will teach you a short prayer of rest.",
+   "src": "[BSB: Matthew 11:28]"
+  }
+ ],
+ "interp.study_done": [
+  {
+   "who": "Interpreter",
+   "text": "Keep all this in mind, to be a goad in your sides on the way. Now go. The place of deliverance is not far.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "interp.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page left on the reading-room desk in my own hand: \"Then said the Interpreter, Hast thou considered all these things? And he answered, Yes, and they put me in hope and fear.\"",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  }
+ ],
+ "cross.climb": [
+  {
+   "who": "The Dreamer",
+   "text": "Now I saw in my dream that the highway was fenced on either side with a wall, and the wall was called Salvation. Up this way the burdened pilgrim ran, but not without great difficulty, because of the load on his back.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Isaiah 26:1]"
+  }
+ ],
+ "cross.burden": [
+  {
+   "who": "The Dreamer",
+   "text": "He ran thus till he came to a place somewhat ascending; and upon that place stood a cross, and a little below, in the bottom, a sepulchre.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
+   "cam": "cross"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "So I saw in my dream, that just as the pilgrim came up with the cross, his burden loosed from off his shoulders, and fell from off his back, and began to tumble.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
+   "fx": "burden_fall"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "It tumbled till it came to the mouth of the sepulchre, where it fell in, and I saw it no more.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
+   "cam": "tomb"
+  },
+  {
+   "who": "$player",
+   "text": "He has given me rest by his sorrow, and life by his death.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain · [BSB: Isaiah 53:5] [BSB: 1 Peter 2:24]",
+   "cam": "cross"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "The pilgrim did nothing here but come and look. It was carried by another. He stood still a while, and wondered, and the water ran down his cheeks.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Zechariah 12:10]"
+  }
+ ],
+ "cross.shining": [
+  {
+   "who": "A Shining One",
+   "text": "Peace be to you. I am sent to tell you: your sins are forgiven.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Mark 2:5]"
+  },
+  {
+   "who": "A Shining One",
+   "text": "Your rags are taken away. Here is a change of garment, given, not woven by you.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Zechariah 3:4]",
+   "fx": "garment"
+  },
+  {
+   "who": "A Shining One",
+   "text": "I set a mark on your forehead, and give you this roll with a seal upon it. Look on it as you go, and hand it in at the Celestial Gate.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Ephesians 1:13]"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "Then the pilgrim gave three leaps for joy, and went on singing.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  }
+ ],
+ "cross.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page caught in the grass beside the way. I wrote there what the pilgrim sang: that he came this far laden with his sin, and that here the burden fell from off his back. \"Blest cross! blest sepulchre!\"",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  }
+ ],
+ "hill.foot": [
+  {
+   "who": "The Dreamer",
+   "text": "At the bottom of the hill was a spring, and three ways. One went straight up, narrow and steep, and its name was Difficulty. One turned left, called Danger; one right, called Destruction. The pilgrim drank, and began to go up the hill.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Isaiah 49:10]"
+  }
+ ],
+ "hill.byways": [
+  {
+   "who": "Formalist",
+   "text": "We were born in the land of Vain-glory, and are going for praise to Mount Zion. The gate was too far about, so we climbed over the wall. It is our custom."
+  },
+  {
+   "who": "$player",
+   "text": "The one who does not come in by the door, but climbs in another way, is a thief and a robber.",
+   "src": "[BSB: John 10:1]"
+  },
+  {
+   "who": "Hypocrisy",
+   "text": "We are in the way as well as you. Wherein is your condition better than ours? Save for that coat on your back."
+  },
+  {
+   "who": "$player",
+   "text": "The coat was given me to cover my nakedness, and I have a mark and a sealed roll. You have none of these, for you did not come in at the gate.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "They laughed, and took the easy roads around the hill. And when the pilgrim would not follow, they turned on him.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "hill.arbour": [
+  {
+   "who": "The Dreamer",
+   "text": "About midway up the hill was a pleasant arbour, made by the Lord of the hill for the refreshing of weary travellers.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "The pilgrim sat, and drew out his roll to read for comfort. The shade was cool.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)",
+   "choices": [
+    {
+     "t": "Rest a moment, then rise and go on."
+    },
+    {
+     "t": "Close your eyes. Just for a little while.",
+     "flag": "slept"
+    }
+   ]
+  },
+  {
+   "who": "The Dreamer",
+   "text": "He fell into a slumber, and then into a fast sleep, which kept him there until it was almost night; and in his sleep his roll fell out of his hand.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain",
+   "if": "slept",
+   "fx": "sleep"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "He rose in good time. But in his haste the roll slipped from his coat, and he did not see it fall.",
+   "unless": "slept"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "Rest is a gift. Sloth wears rest's clothes. Learn to tell them apart.",
+   "src": "[BSB: Proverbs 6:9–11]"
+  }
+ ],
+ "hill.presumption": [
+  {
+   "who": "The Dreamer",
+   "text": "Three lay fast asleep a little out of the way, with fetters on their heels: Simple, Sloth and Presumption.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "$player",
+   "text": "Wake up! You sleep at the edge of a pit. Let me help you off with your irons."
+  },
+  {
+   "who": "Simple",
+   "text": "I see no danger."
+  },
+  {
+   "who": "Sloth",
+   "text": "Yet a little more sleep."
+  },
+  {
+   "who": "Presumption",
+   "text": "Every barrel must stand on its own bottom. Mind your own road.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "And Presumption rose, irons and all, to drive the pilgrim off."
+  }
+ ],
+ "hill.roll": [
+  {
+   "who": "$player",
+   "text": "My roll! I had it at the arbour. I must go back for it. How many steps have I taken in vain?",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "The Dreamer",
+   "text": "There it lay, under the settle. He caught it up with trembling and haste, and put it in his coat. Who can tell how joyful he was? It was the assurance of his life, and his pass at the desired haven.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: 1 Thessalonians 5:6]"
+  }
+ ],
+ "hill.lions": [
+  {
+   "who": "The Dreamer",
+   "text": "Now before him in a very narrow passage he saw two lions in the way.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Watchful",
+   "text": "Is your strength so small? Do not fear the lions: they are chained, and are placed there for trial of faith where it is, and for discovery of those that have none.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  },
+  {
+   "who": "Watchful",
+   "text": "Keep in the midst of the path, and no hurt shall come to you.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain · [BSB: 1 Peter 5:8]"
+  }
+ ],
+ "hill.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page weighted under a stone at the hilltop. I had written: \"The hill, though high, I covet to ascend; the difficulty will not me offend.\" Better hard and right than easy and lost.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  }
+ ],
+ "palace.watchful": [
+  {
+   "who": "Watchful",
+   "text": "This house was built by the Lord of the hill, and he built it for the relief and security of pilgrims.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  },
+  {
+   "who": "Watchful",
+   "text": "You come late. The sun is set.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "$player",
+   "text": "I slept in the arbour, and lost my roll, and had to go back for it. I am sorry for it."
+  },
+  {
+   "who": "Watchful",
+   "text": "Well. I will call out the family of the house. Discretion will speak with you first."
+  }
+ ],
+ "palace.damsels": [
+  {
+   "who": "Discretion",
+   "text": "Where have you come from, and how did you get into the way?"
+  },
+  {
+   "who": "$player",
+   "text": "From the City of Destruction. A man named Evangelist pointed me to the gate, and I came in there."
+  },
+  {
+   "who": "Piety",
+   "text": "What moved you to leave? And what did you see at the Interpreter's house?"
+  },
+  {
+   "who": "$player",
+   "text": "A dreadful sound was in my ears, that ruin would come on me if I stayed. And at the house I saw how grace is kept alive in the heart, though I could not see the hand that kept it."
+  },
+  {
+   "who": "Prudence",
+   "text": "Do you not still carry some of the things you left behind? Thoughts of the old country?"
+  },
+  {
+   "who": "$player",
+   "text": "Yes, greatly against my will. But when I think of what I saw at the cross, and look at my roll, those things are as if they were dead to me.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Romans 7:21–25]"
+  },
+  {
+   "who": "Charity",
+   "text": "Have you a family? Neighbors? Why did they not come with you?"
+  },
+  {
+   "who": "$player",
+   "text": "I told them, and I wept. They thought it a tale. I did not want to come alone.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Luke 14:26]"
+  },
+  {
+   "who": "Charity",
+   "text": "Then you are clear of their blood, and you are not alone now. This is a house full of pilgrims. Come in, {name}.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "palace.armor": [
+  {
+   "who": "Prudence",
+   "text": "This is the armory. Here is enough to arm as many pilgrims as there are stars in the sky, and it is all of one kind.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  },
+  {
+   "who": "Prudence",
+   "text": "Belt, breastplate, shoes, shield, helmet and sword. No pilgrim has a better set than another, and none is earned. It is given whole.",
+   "src": "[BSB: Ephesians 6:13–17]",
+   "fx": "armor"
+  },
+  {
+   "who": "Piety",
+   "text": "Notice there is nothing for the back. A pilgrim who stands is covered; you will want to remember that in the valley ahead.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "palace.trial": [
+  {
+   "who": "Discretion",
+   "text": "Every pilgrim is given work to do along the way. We call it a Calling. It is not a rank, and it earns nothing; it is how you will serve.",
+   "src": "[BSB: 1 Peter 4:10]"
+  },
+  {
+   "who": "Discretion",
+   "text": "Do not choose in a hurry. Go into the yard and try one against a Doubt. You may take up a different one when the time comes."
+  }
+ ],
+ "palace.gate": [
+  {
+   "who": "Watchful",
+   "text": "The lions' path lies outside. Shades of Mistrust and Timorousness haunt it and turn pilgrims back. Clear it, and the road on will be open.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "palace.bell": [
+  {
+   "who": "Charity",
+   "text": "This was found at the gate, tied to a page with a thread of wool. No one here knows the hand."
+  },
+  {
+   "who": "The Dreamer",
+   "text": "It is my hand. The page says: \"What was lost is more than you can recover; but a way has been made, and it is walked, not earned.\" And that is your lamb's bell.",
+   "fx": "bell"
+  },
+  {
+   "who": "$player",
+   "text": "{lamb} stayed at the garden's edge. I had almost forgotten the sound."
+  },
+  {
+   "who": "The Dreamer",
+   "text": "Keep it. I do not think that story is finished."
+  }
+ ],
+ "palace.not_ready": [
+  {
+   "who": "Discretion",
+   "text": "Not yet. A Calling is taken up at Base Level 10 and Job Level 10. Walk the lions' path again, or look for what you passed by on the road."
+  }
+ ],
+ "palace.calling": [
+  {
+   "who": "Discretion",
+   "text": "You have been through the Slough, the Gate, the Cross and the Hill, and you stood with a company against Grim. It is time."
+  },
+  {
+   "who": "Discretion",
+   "text": "Remember: you are not made a pilgrim by your Calling. You were made one at the Gate. This is only the work put into your hands.",
+   "src": "[BSB: Ephesians 2:10]"
+  }
+ ],
+ "palace.called": [
+  {
+   "who": "Discretion",
+   "text": "Then go in peace, {name}. Tomorrow the road goes down into the Valley of Humiliation, and it is hard going down."
+  },
+  {
+   "who": "The Dreamer",
+   "text": "So I saw in my dream that they brought him to the foot of the hill, and gave him a loaf of bread, a bottle of wine, and a cluster of raisins; and then he went on his way.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  }
+ ],
+ "palace.hearth": [
+  {
+   "who": "The Dreamer",
+   "text": "You sit by the fire among the pilgrims. For a while no one needs anything from you."
+  }
+ ],
+ "trial.intro": [
+  {
+   "who": "Discretion",
+   "text": "A Doubt has been let into the yard. Use the skill lent to you on the second page of your skill bar, and see whether this work fits your hands."
+  }
+ ],
+ "lions_path.intro": [
+  {
+   "who": "Watchful",
+   "text": "Stay on the path. The shades cannot abide a pilgrim who keeps walking.",
+   "src": "[BSB: Isaiah 30:21]"
+  }
+ ],
+ "lions.intro": [
+  {
+   "who": "Lumen",
+   "text": "There he is. Grim stands with the lions and lets no one by. Rook will hold him; you strike; I will keep you on your feet. Step out of the red circles!",
+   "src": "Part II of The Pilgrim's Progress tells how Great-heart's company met Giant Grim at the lions."
+  }
+ ]
+}

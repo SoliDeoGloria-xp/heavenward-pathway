@@ -56,14 +56,14 @@ func build() -> void:
 		var sh := MeshInstance3D.new(); var qb := BoxMesh.new(); qb.size = Vector3(0.6, 0.8, 0.02); sh.mesh = qb; sh.material_override = parch
 		sh.position = Vector3(-0.72 + k * 0.72, 1.6, 0.07); sh.rotation.z = (k - 1) * 0.06; board.add_child(sh)
 	w.kit._solid_box(Vector3(2.6, 2, 0.4), board.position + Vector3(0, 1, 0))
-	w._add_ent("board", "Muster Board", board.position, board, "Muster", "friends", func(): w.hud.muster_board())
+	w._add_ent("board", "Muster Board", board.position, board, "Muster", "friends", func() -> void: G.say("The Muster Board. Nothing is posted for you just now.", G.SYS))
 	# doors: armory and reading room
-	w._add_ent("armory", "The Armory", Vector3(-6, 0, -9.2), null, "Enter", "equip", func(): G.say("The armory: here every pilgrim is given the whole armour of God, the same for all (Act II, full game). [BSB: Ephesians 6:13]", G.NPC))
+	w._add_ent("armory", "The Armory", Vector3(-6, 0, -9.2), null, "Enter", "equip", func(): G.say("The armory: here every pilgrim is given the whole armour of God, the same for all [BSB: Ephesians 6:13]", G.NPC))
 	w._add_ent("reading", "Reading Room", Vector3(6, 0, -9.2), null, "Enter", "library", func(): G.say("Reading Together rooms: friends read one passage side by side. On the Lord's Day they are quiet and reward-free.", G.NPC))
 	# the porter
 	var watchful := w.kit._sprite_npc("res://assets/sprites/npc_evangelist.png", 2, 5, true, Vector3(2.6, 0, 6.5), "Watchful the Porter", Color("ffe9a0"))
 	watchful.set_tint(Color(1.05, 0.95, 0.8))
-	w._add_ent("watchful", "Watchful", watchful.position, watchful, "Talk", "talk", _act_watchful)
+	w._add_ent("watchful", "Watchful", watchful.position, watchful, "Talk", "talk", Callable())
 	# lamps, trees, a fountain
 	for lp in [Vector3(-3, 0, 4.5), Vector3(3, 0, 4.5), Vector3(-12, 0, 2), Vector3(12, 0, 2)]:
 		w.kit._box(Vector3(0.15, 3, 0.15), w.kit._mat("res://assets/tiles/bark.png", Vector2(1, 1), true, Color(0.3, 0.3, 0.32)), lp + Vector3(0, 1.5, 0))
@@ -90,7 +90,7 @@ func build() -> void:
 	for sp in [Vector3(-6, 0, 2), Vector3(6, 0, -1)]:
 		Fx.shaft(w, sp, 10.0, 2.4, 0.16)
 	w.quests._add_waymark(Vector3(-2.4, 0, 9.5), "Rest at the hearth before you go on", "Ebenezer", 230)
-	# pilgrims in the House (simulated in the offline demo; real players online)
+	# the named fellow pilgrims of the House (single-player: they are characters, not other players)
 	for i in w.folk.HOUSE_FOLK.size():
 		var f: Array = w.folk.HOUSE_FOLK[i]
 		var a := w.kit._pilgrim_actor(f[1], f[0], Color("dfe9ff"), false)
@@ -102,42 +102,12 @@ func build() -> void:
 			a.play("sit")
 	w.kit._edge_fade(Color("3a4a30"))
 	w.kit._weather_petals()
-	w.quests.objectives = [
-		{"id": "porter", "text": "Speak with Watchful the Porter", "ent": "watchful"},
-		{"id": "rest", "text": "Rest at the hearth (needed once before Act III)", "ent": "hearth"},
-		{"id": "muster", "text": "Answer the Muster Board", "ent": "board"}]
-
-
-func _act_watchful() -> void:
-	var src := "John Bunyan, The Pilgrim's Progress (1678) · public domain"
-	w.hud.run_dialog([
-		{"who": "Watchful", "text": "Fear not the lions, for they are chained, and are placed there for trial of faith where it is, and for discovery of those that have none.", "src": src},
-		{"who": "Watchful", "text": "This house was built by the Lord of the hill, and he built it for the relief and security of pilgrims.", "src": src},
-		{"who": "Watchful", "text": "Here pilgrims who walked the way alone find one another. Rest at the hearth. Then see the Muster Board: Giant Grim has come to back the lions, and a company is wanted to drive him off.", "src": "Part II tells how Great-heart's company met Giant Grim at the lions."}],
-		_watchful_done)
-
-
-func _watchful_done() -> void:
-	if w.quests.cur_obj() == "porter":
-		G.add_xp(60, 12); w.quests.complete()
-
 
 func _act_hearth() -> void:
 	if not w.sitting:
 		w.toggle_sit()
-	if w.quests.cur_obj() == "rest":
-		G.house_rested = true
-		w.kit._sparkle(w.player.position + Vector3(0, 1.2, 0), Color("ffd8a0"))
-		G.hp = G.hp_max; G.zeal = G.zeal_max; G.weary = false
-		G.say("You rest in the House, among the pilgrims. HP and Zeal restored.", G.INFO)
-		G.add_xp(40, 8); w.quests.complete()
-	else:
-		G.say("You sit by the fire.", G.SYS)
-
-
-func enter_muster(party: Array) -> void:
-	G.muster_party = party
-	if w.quests.cur_obj() == "muster":
-		w.quests.complete()
-	w.ending = true
-	G.goto("world", {"map": "lions"})
+	G.house_rested = true
+	w.kit._sparkle(w.player.position + Vector3(0, 1.2, 0), Color("ffd8a0"))
+	G.hp = G.hp_max; G.zeal = G.zeal_max; G.weary = false
+	G.say("You rest in the House, among the pilgrims. Health and Zeal restored.", G.INFO)
+	G.stats_changed.emit()

@@ -35,22 +35,6 @@ func _ready() -> void:
 				{"who": DREAMER, "art": "den", "text": "Only a tinker who dreamed. I tell you what I saw, so that you may walk it yourself. I will be beside you, and I will show you how this world works."},
 				{"who": DREAMER, "art": "garden", "text": "First, a garden, as it was in the beginning, before anything went wrong. Come. Walk with me.", "choices": [{"t": "I'll follow you."}]}]
 			next_screen = "world"; next_data = {"map": "eden"}
-		"fall":
-			cards = [
-				{"who": DREAMER, "art": "serpent", "text": "And I saw in my dream that the serpent spoke in the garden, and questioned the word that had been given.", "src": "[BSB: Genesis 3:1 · pulled at build time]"},
-				{"who": DREAMER, "art": "cherubim", "text": "So the man was driven out, east of Eden.", "src": "[BSB: Genesis 3:24]"}]
-			next_screen = "world"; next_data = {"map": "city", "wake": true}
-		"wake":
-			cards = [{"who": DREAMER, "art": "city", "text": "Wake, pilgrim."}]
-			next_screen = "world"; next_data = {"map": "city", "wake": true}
-		"onward":
-			cards = [
-				{"who": DREAMER, "art": "way", "text": "So you ran, and the way led on: through the Slough of Despond, where Help drew you out; to the Wicket Gate; to the House of the Interpreter."},
-				{"who": DREAMER, "art": "cross", "text": "At the Cross the burden loosed from off your shoulders and tumbled into the sepulchre, and you saw it no more. Then up the Hill Difficulty, on hands and knees.", "src": "Paraphrasing " + PD},
-				{"who": DREAMER, "art": "palace", "text": "“He lift up his eyes, and behold there was a very stately palace before him, the name of which was Beautiful.”", "src": PD},
-				{"who": "Demo preview", "art": "palace", "text": "This demo skips ahead to the end of Act II. The Palace Beautiful is the first House, where pilgrims who walked the Way alone meet one another.",
-					"choices": [{"t": "Enter the House"}]}]
-			next_screen = "world"; next_data = {"map": "palace"}
 	art = StoryArt.new(); UIKit.full_rect(art); add_child(art)
 	var ins := UIKit.safe_insets(get_viewport())
 	portrait = TextureRect.new(); portrait.texture = G.tex("res://assets/portraits/dreamer.png")

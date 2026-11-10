@@ -1,0 +1,356 @@
+{
+ "id": "cross",
+ "act": "cross",
+ "name": "The Cross",
+ "sub": "Chapter 4 · The place of deliverance",
+ "layer": "The Way",
+ "combat": false,
+ "start": [
+  -21,
+  0
+ ],
+ "bounds": [
+  -24,
+  -8,
+  48,
+  16
+ ],
+ "music": "cross",
+ "burden": true,
+ "resumable": true,
+ "look": {
+  "bg": "#3a3a2c",
+  "amb": "#f0e8d8",
+  "amb_e": 0.44,
+  "tint": [
+   1.04,
+   1.0,
+   0.92
+  ],
+  "sun_e": 0.8,
+  "sun_c": "#fff0d0",
+  "post": [
+   0.9,
+   1.04,
+   [
+    1.03,
+    1.0,
+    0.95
+   ]
+  ],
+  "mini": "#b8c08a",
+  "ground": "grass",
+  "ground_tint": "#9fb08a",
+  "weather": ""
+ },
+ "enter_say": [
+  "The way runs straight between two walls, and it climbs."
+ ],
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    -4,
+    0
+   ],
+   "size": [
+    38,
+    3.2
+   ],
+   "tile": "dirt",
+   "tint": "#b9b3a4"
+  },
+  {
+   "t": "wall",
+   "from": [
+    -24,
+    -4.5
+   ],
+   "to": [
+    8,
+    -4.5
+   ],
+   "h": 2.0,
+   "tint": "#f0ead8"
+  },
+  {
+   "t": "wall",
+   "from": [
+    -24,
+    4.5
+   ],
+   "to": [
+    8,
+    4.5
+   ],
+   "h": 2.0,
+   "tint": "#f0ead8"
+  },
+  {
+   "t": "box",
+   "at": [
+    16,
+    -1.5
+   ],
+   "size": [
+    9,
+    0.5,
+    8
+   ],
+   "tile": "grass",
+   "tint": "#c8d0a0",
+   "solid": false
+  },
+  {
+   "t": "cross",
+   "at": [
+    17,
+    -2.5
+   ]
+  },
+  {
+   "t": "tomb",
+   "at": [
+    19,
+    4.2
+   ]
+  },
+  {
+   "t": "shaft",
+   "at": [
+    17,
+    -2.2
+   ]
+  },
+  {
+   "t": "light",
+   "at": [
+    17,
+    -2
+   ],
+   "y": 4.5,
+   "color": "#fff2c8",
+   "e": 3.0,
+   "range": 12
+  },
+  {
+   "t": "trees",
+   "area": [
+    -24,
+    -8,
+    48,
+    2
+   ],
+   "n": 10,
+   "seed": 8
+  },
+  {
+   "t": "trees",
+   "area": [
+    -24,
+    6.5,
+    48,
+    1.5
+   ],
+   "n": 10,
+   "seed": 9
+  }
+ ],
+ "anchors": {
+  "cross": [
+   17,
+   -2.5
+  ],
+  "tomb": [
+   19,
+   4.2
+  ]
+ },
+ "ents": [
+  {
+   "id": "shine0",
+   "kind": "npc",
+   "name": "A Shining One",
+   "at": [
+    13.4,
+    1.0
+   ],
+   "look": [
+    1,
+    5,
+    5
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true,
+   "color": "#fff2c0",
+   "glow": true
+  },
+  {
+   "id": "shine1",
+   "kind": "npc",
+   "name": "A Shining One",
+   "at": [
+    15.8,
+    1.9
+   ],
+   "look": [
+    1,
+    5,
+    5
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true,
+   "color": "#fff2c0",
+   "glow": true
+  },
+  {
+   "id": "shine2",
+   "kind": "npc",
+   "name": "A Shining One",
+   "at": [
+    18.2,
+    1.0
+   ],
+   "look": [
+    1,
+    5,
+    5
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true,
+   "color": "#fff2c0",
+   "glow": true
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    -6,
+    3.4
+   ],
+   "act": "Search",
+   "icon": "eye"
+  },
+  {
+   "id": "warp",
+   "kind": "warp",
+   "name": "The way onward",
+   "at": [
+    22.5,
+    0
+   ],
+   "act": "Go on",
+   "icon": "warp",
+   "hidden": true
+  }
+ ],
+ "objectives": [
+  {
+   "id": "climb",
+   "type": "path",
+   "points": [
+    [
+     -12,
+     0
+    ],
+    [
+     -2,
+     0
+    ],
+    [
+     8,
+     0
+    ]
+   ],
+   "dialog": "cross.climb",
+   "text": "Run up the way between the walls",
+   "xp": [
+    30,
+    10
+   ]
+  },
+  {
+   "id": "burden",
+   "type": "zone",
+   "zone": [
+    15.2,
+    -0.6
+   ],
+   "dialog": "cross.burden",
+   "text": "Come up to the Cross",
+   "xp": [
+    60,
+    0
+   ],
+   "on_done": {
+    "burden": false,
+    "flag": "burden_gone",
+    "show": [
+     "shine0",
+     "shine1",
+     "shine2"
+    ],
+    "say": "The burden is gone. You stand upright."
+   }
+  },
+  {
+   "id": "shining",
+   "type": "talk",
+   "ent": "shine1",
+   "dialog": "cross.shining",
+   "text": "Three Shining Ones come to you",
+   "xp": [
+    40,
+    10
+   ],
+   "on_done": {
+    "give": {
+     "Sealed Roll": 1,
+     "New Garment": 1
+    },
+    "flag": "sealed",
+    "hide": [
+     "shine0",
+     "shine1",
+     "shine2"
+    ],
+    "show": [
+     "warp"
+    ]
+   }
+  },
+  {
+   "id": "exit",
+   "type": "exit",
+   "text": "Go on, singing, toward the Hill",
+   "zone": [
+    22.5,
+    0
+   ],
+   "to": "hill",
+   "xp": [
+    0,
+    0
+   ],
+   "ent": "warp"
+  }
+ ],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "cross.page",
+   "xp": [
+    20,
+    10
+   ],
+   "text": "The Dreamer's Page: the Cross",
+   "page": true
+  }
+ ]
+}

@@ -1,0 +1,69 @@
+{
+ "order": [
+  "eden",
+  "city",
+  "slough",
+  "interpreter",
+  "cross",
+  "hill",
+  "palace"
+ ],
+ "acts": {
+  "eden": {
+   "name": "Eden Isle",
+   "minutes": 34,
+   "base": 330,
+   "job": 35,
+   "end_base": 5,
+   "end_job": 2
+  },
+  "city": {
+   "name": "City of Destruction + Evangelist",
+   "minutes": 20,
+   "base": 240,
+   "job": 70,
+   "end_base": 6,
+   "end_job": 4
+  },
+  "slough": {
+   "name": "Slough + Worldly Wiseman + Wicket Gate",
+   "minutes": 15,
+   "base": 200,
+   "job": 60,
+   "end_base": 7,
+   "end_job": 5
+  },
+  "interpreter": {
+   "name": "Interpreter's House",
+   "minutes": 15,
+   "base": 200,
+   "job": 40,
+   "end_base": 7,
+   "end_job": 5
+  },
+  "cross": {
+   "name": "The Cross",
+   "minutes": 10,
+   "base": 150,
+   "job": 30,
+   "end_base": 8,
+   "end_job": 6
+  },
+  "hill": {
+   "name": "Hill Difficulty",
+   "minutes": 20,
+   "base": 470,
+   "job": 230,
+   "end_base": 9,
+   "end_job": 8
+  },
+  "palace": {
+   "name": "Palace Beautiful, Calling trial, Lions' Path, Giant Grim",
+   "minutes": 25,
+   "base": 620,
+   "job": 390,
+   "end_base": 10,
+   "end_job": 10
+  }
+ }
+}

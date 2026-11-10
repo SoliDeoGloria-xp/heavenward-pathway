@@ -1,0 +1,149 @@
+{
+ "id": "trial",
+ "act": "palace",
+ "name": "The Palace Yard",
+ "sub": "The Calling trial",
+ "layer": "House",
+ "combat": true,
+ "repeat_flag": "trial_done",
+ "start": [
+  0,
+  6
+ ],
+ "bounds": [
+  -10,
+  -8,
+  20,
+  16
+ ],
+ "music": "palace",
+ "look": {
+  "bg": "#3a4a30",
+  "amb": "#f2eaf8",
+  "amb_e": 0.46,
+  "tint": [
+   1.04,
+   1.0,
+   0.94
+  ],
+  "sun_e": 0.82,
+  "sun_c": "#ffeacc",
+  "post": [
+   1.1,
+   1.05,
+   [
+    1.06,
+    1.0,
+    0.92
+   ]
+  ],
+  "mini": "#a8c48a",
+  "ground": "cobble",
+  "ground_tint": "#fff5e0",
+  "weather": ""
+ },
+ "props": [
+  {
+   "t": "wall",
+   "from": [
+    -10,
+    -8
+   ],
+   "to": [
+    10,
+    -8
+   ],
+   "h": 3,
+   "tint": "#f4eee0"
+  },
+  {
+   "t": "trees",
+   "area": [
+    -10,
+    7,
+    20,
+    1
+   ],
+   "n": 5,
+   "seed": 21
+  },
+  {
+   "t": "lamp",
+   "at": [
+    -8,
+    -6
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    8,
+    -6
+   ],
+   "color": "#ffd080"
+  }
+ ],
+ "ents": [
+  {
+   "id": "warp",
+   "kind": "warp",
+   "name": "The way onward",
+   "at": [
+    0,
+    7.2
+   ],
+   "act": "Go on",
+   "icon": "warp",
+   "hidden": true
+  }
+ ],
+ "spawns": [
+  {
+   "mob": "doubt",
+   "count": 1,
+   "area": [
+    -1,
+    -4,
+    2,
+    1
+   ],
+   "at": "prove"
+  }
+ ],
+ "objectives": [
+  {
+   "id": "prove",
+   "type": "kill",
+   "count": 1,
+   "dialog_start": "trial.intro",
+   "text": "Overcome the Doubt with your lent skill",
+   "xp": [
+    100,
+    80
+   ],
+   "on_done": {
+    "flag": "trial_done",
+    "show": [
+     "warp"
+    ]
+   }
+  },
+  {
+   "id": "exit",
+   "type": "exit",
+   "text": "Return to the House",
+   "zone": [
+    0,
+    7.2
+   ],
+   "to": "palace",
+   "xp": [
+    0,
+    0
+   ],
+   "ent": "warp"
+  }
+ ],
+ "side": []
+}

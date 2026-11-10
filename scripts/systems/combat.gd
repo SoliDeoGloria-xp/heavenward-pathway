@@ -1,58 +1,148 @@
 class_name Combat
 extends RefCounted
-## Mobs, the player's skills, KO and Weariness, and the Muster boss with AI companions.
+## Mobs, the player's attacks and skills, KO and Weariness, field bosses and the Muster boss
+## with AI companions. Mob and skill numbers come from data (mobs.json, skills.json, progression.json).
+
+signal mob_slain(mob: Dictionary)
+
+const AGGRO_RANGE := 6.0
+const LEASH_RANGE := 14.0
+const MOB_REACH := 1.4
+const TELEGRAPH_S := 0.6
+const MOB_SWING_S := 2.0
+const GCD := 1.0
+const SKILL_BUFFER_S := 0.3          # a press this close to the end of the global cooldown is queued
+const ZEAL_ON_HIT := 3.0
+const WEARY_S := 25.0
+const DROP_CHANCE := 0.6
+const AOE_FALLBACK_RANGE := 10.0
+const BOSS_SHADOW := 2.2
+const NO_RESPAWN := -99.0
+const BOSS_NAME_SIZE := 36
+const MOB_SHEET := {"hframes": 7, "vframes": 1, "rows": false, "anims": {"idle": [0, 1], "walk": [2, 3], "hurt": [4], "die": [5, 6]}, "fps": {"idle": 2.0, "walk": 4.0, "die": 3.0}}
 
 var w: World
+var mobs: Array = []             # {id, name, level, actor, hp, max, atk, xp, alive, home, aggro, ...}
+var boss = null                  # the live boss mob dict (field boss or Muster boss)
+var boss_atk_t := 0.0
+var boss_count := 0
+var boss_enraged := false
+var allies: Array = []           # Muster party: {actor, name, role, ai, next, slot}
+var target = null                # mob dict being attacked
+var dead := false
+var next_atk := 0.0
+var cd := {}                     # skill id -> seconds left
+var gcd := 0.0
+var queued_skill := ""
+var slain := 0
+var used_steps := false
+var buffs := {}                  # stat -> {"add": float, "until": float}
+var regen_until := 0.0           # Prayer of Rest and similar: bonus Zeal per second until this time
+var regen_rate := 0.0
 
 func _init(world: World) -> void:
 	w = world
 
-var allies: Array = []           # Muster party: {actor, name, role, ai, next, slot}
+# ------------------------------------------------------------------ timers and derived numbers
+func tick_cooldowns(delta: float) -> void:
+	gcd = maxf(0.0, gcd - delta)
+	for k in cd.keys():
+		cd[k] = maxf(0.0, cd[k] - delta)
 
-var boss = null                  # Muster boss mob dict
+func buff(stat: String) -> float:
+	var b: Dictionary = buffs.get(stat, {})
+	return float(b.add) if not b.is_empty() and w.t < float(b.until) else 0.0
 
-var boss_atk_t := 0.0
+func zeal_regen_bonus() -> float:
+	return regen_rate if w.t < regen_until else 0.0
 
-var boss_count := 0
+func ready(id: String) -> bool:
+	return G.has_skill(id) and cd.get(id, 0.0) <= 0.0 and gcd <= 0.0 and G.zeal >= int(G.SKILL_INFO[id].zeal)
 
-var boss_enraged := false
+func fire_queued() -> void:
+	if queued_skill != "" and gcd <= 0.0:
+		var qs := queued_skill; queued_skill = ""
+		skill(qs)
 
-var target = null               # mob dict being attacked
-
-var dead := false
-
-var next_atk := 0.0
-
-var cd := {"steps": 0.0, "refuge": 0.0, "tend": 0.0}
-
-var used_steps := false
-
-var gcd := 0.0
-
-var mobs: Array = []             # {node, actor, hp, max, alive, pos, next, aggro, home, bar, respawn}
-
-var slain := 0
-
-var queued_skill := ""
-
+## Basic attack from attributes: Fortitude (damage), Diligence (speed), Sobriety (misses), Hope (crits).
+func basic_attack() -> void:
+	if w.t <= next_atk or gcd > 0.0:
+		return
+	next_atk = w.t + float(G.d.interval) / (1.0 + buff("haste"))
+	w.pact.play_once("attack", 0.32)
+	var crit := randf() < float(G.d.crit) + buff("crit")
+	var dmg := int(G.d.atk) + randi_range(-2, 2)
+	hit_mob(target, dmg * (2 if crit else 1), crit, randf() < float(G.d.miss))
 
 # ------------------------------------------------------------------ mobs
-func _spawn_mob(pos: Vector3) -> void:
-	var a := SpriteActor.new(); w.add_child(a); a.position = pos
-	a.setup({"tex": G.tex("res://assets/sprites/mob_slothling.png"), "hframes": 7, "vframes": 1, "pixel": 0.04, "rows": false,
-		"anims": {"idle": [0, 1], "walk": [2, 3], "hurt": [4], "die": [5, 6]}, "fps": {"idle": 2.0, "walk": 4.0, "die": 3.0}}, "Slothling", Color("ffe0e0"))
-	var bg := MeshInstance3D.new(); var q := QuadMesh.new(); q.size = Vector2(0.9, 0.09); bg.mesh = q
-	var bgm := StandardMaterial3D.new(); bgm.albedo_color = Color(0.1, 0.1, 0.12); bgm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; bgm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED; bgm.no_depth_test = true; bgm.render_priority = 4
-	bg.material_override = bgm; bg.position.y = -0.45; bg.visible = false; a.add_child(bg)
-	var fg := MeshInstance3D.new(); var q2 := QuadMesh.new(); q2.size = Vector2(0.86, 0.06); fg.mesh = q2
-	var fgm := StandardMaterial3D.new(); fgm.albedo_color = Color("e83b3b"); fgm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; fgm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED; fgm.no_depth_test = true; fgm.render_priority = 5
-	fg.material_override = fgm; bg.add_child(fg)
-	var tr := MeshInstance3D.new(); var q3 := QuadMesh.new(); q3.size = Vector2(0.86, 0.06); tr.mesh = q3
-	var trm := StandardMaterial3D.new(); trm.albedo_color = Color(1, 1, 1, 0.9); trm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; trm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED; trm.no_depth_test = true; trm.render_priority = 4
-	tr.material_override = trm; tr.position.z = -0.001; bg.add_child(tr)
-	a.set_meta("trail", tr)
-	mobs.append({"actor": a, "hp": 60.0, "max": 60.0, "alive": true, "next": 0.0, "home": pos, "wander": pos, "wander_t": randf_range(1, 4), "bg": bg, "fg": fg, "aggro": false, "respawn": 0.0, "tele": false, "tele_pos": Vector3.ZERO, "trail": tr, "trail_v": 1.0, "was_aggro": false})
+## Spawn tables live in the map's JSON. A group with "at" appears when that objective starts;
+## groups without it are there from the beginning (group id "").
+func spawn_group(objective_id: String) -> void:
+	var rng := RandomNumberGenerator.new(); rng.seed = hash(w.map_id + objective_id)
+	for sp in w.def.get("spawns", []):
+		if String(sp.get("at", "")) != objective_id:
+			continue
+		var a: Array = sp.area
+		for i in int(sp.count):
+			_spawn_mob(String(sp.mob), Vector3(rng.randf_range(a[0], a[0] + a[2]), 0, rng.randf_range(a[1], a[1] + a[3])))
 
+func _mob_actor(md: Dictionary, pixel: float, pos: Vector3, shadow: float = 1.0) -> SpriteActor:
+	var a := SpriteActor.new(); w.add_child(a); a.position = pos
+	var cfg := MOB_SHEET.duplicate(true)
+	cfg["tex"] = G.tex("res://assets/sprites/%s.png" % md.sprite); cfg["pixel"] = pixel; cfg["shadow"] = shadow
+	a.setup(cfg, md.name, Color("ffe0e0"))
+	a.set_tint(Color(String(md.tint)) * G.sprite_tint)
+	return a
+
+func _spawn_mob(id: String, pos: Vector3) -> Dictionary:
+	var md: Dictionary = G.MOBS[id]
+	var rules: Dictionary = G.PROG["mob"]
+	var greater: bool = md.get("greater", false)
+	var lv := int(md.level)
+	var a := _mob_actor(md, float(md.pixel) * (float(rules.greater_scale) if greater else 1.0), pos)
+	var hp := (float(rules.hp_base) + float(rules.hp_per_lv) * lv) * (float(rules.greater_hp) if greater else 1.0)
+	var atk := (float(rules.atk_base) + float(rules.atk_per_lv) * lv) * (float(rules.greater_atk) if greater else 1.0)
+	var bars := _hp_bars(a)
+	var m := {"id": id, "name": md.name, "level": lv, "greater": greater, "drop": md.get("drop", ""), "actor": a, "hp": hp, "max": hp, "atk": atk,
+		"xp": mob_xp(md), "alive": true, "next": 0.0, "home": pos, "wander": pos, "wander_t": randf_range(1, 4),
+		"bg": bars[0], "fg": bars[1], "trail": bars[2], "aggro": false, "respawn": 0.0, "tele": false, "tele_pos": Vector3.ZERO, "trail_v": 1.0, "was_aggro": false}
+	mobs.append(m)
+	return m
+
+## Common monster XP = 3 + level; Greater x4; a boss pays its bonus on top of its objective (150-250 in all).
+static func mob_xp(md: Dictionary) -> int:
+	var rules: Dictionary = G.PROG["mob_xp"]
+	if md.get("boss", false):
+		return int(md.get("xp_bonus", 0))
+	return (int(rules.base) + int(rules.per_level) * int(md.level)) * (int(rules.greater_mult) if md.get("greater", false) else 1)
+
+func _hp_bars(a: SpriteActor) -> Array:
+	var out: Array = []
+	for spec in [[Vector2(0.9, 0.09), Color(0.1, 0.1, 0.12), 4], [Vector2(0.86, 0.06), Color("e83b3b"), 5], [Vector2(0.86, 0.06), Color(1, 1, 1, 0.9), 4]]:
+		var mi := MeshInstance3D.new(); var q := QuadMesh.new(); q.size = spec[0]; mi.mesh = q
+		var mat := StandardMaterial3D.new(); mat.albedo_color = spec[1]; mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED; mat.no_depth_test = true; mat.render_priority = spec[2]
+		mi.material_override = mat
+		out.append(mi)
+	out[0].position.y = -0.45; out[0].visible = false; a.add_child(out[0])
+	out[0].add_child(out[1]); out[2].position.z = -0.001; out[0].add_child(out[2])
+	return out
+
+## A field boss or the Muster boss: one large foe with telegraphed blows and a periodic slam.
+func spawn_boss(id: String, pos: Vector3) -> Dictionary:
+	var md: Dictionary = G.MOBS[id]
+	var a := _mob_actor(md, float(md.pixel), pos, BOSS_SHADOW)
+	if a.name_lbl:
+		a.name_lbl.font_size = BOSS_NAME_SIZE; a.name_lbl.position.y = -0.3
+	var bars := _hp_bars(a)
+	boss = {"id": id, "name": md.name, "level": int(md.level), "greater": false, "drop": md.get("drop", ""), "actor": a, "hp": float(md.hp), "max": float(md.hp),
+		"atk": float(md.atk), "slam": float(md.slam), "xp": mob_xp(md), "muster": md.get("muster", false), "alive": true, "next": 0.0, "home": pos, "wander": pos,
+		"wander_t": 99.0, "bg": bars[0], "fg": bars[1], "trail": bars[2], "aggro": true, "respawn": 0.0, "tele": false, "tele_pos": Vector3.ZERO, "trail_v": 1.0,
+		"was_aggro": true, "boss": true, "goal": Vector3.ZERO}
+	mobs.append(boss)
+	boss_atk_t = 3.0; boss_count = 0; boss_enraged = false
+	G.say("%s bars the way!" % md.name, G.WARN)
+	return boss
 
 func _mob_tick(delta: float) -> void:
 	var p := w.player.position
@@ -69,7 +159,7 @@ func _mob_tick(delta: float) -> void:
 		var d := a.position.distance_to(p)
 		if dead:
 			m.aggro = false
-		elif d < 6.0 or m.aggro:
+		elif (d < AGGRO_RANGE and not w.sitting) or m.aggro:   # a resting pilgrim is not noticed
 			m.aggro = true
 		if m.aggro and not m.was_aggro:
 			w.kit._pop_mark(a, "!", Color("ffd400"))
@@ -77,7 +167,7 @@ func _mob_tick(delta: float) -> void:
 		elif not m.aggro and m.was_aggro and not dead:
 			w.kit._pop_mark(a, "?", Color("dff2ff"))
 		m.was_aggro = m.aggro
-		if d > 14.0 and m.aggro and not dead:
+		if d > LEASH_RANGE and m.aggro and not dead:
 			m.aggro = false
 		var goal: Vector3
 		if m.aggro and not dead:
@@ -88,7 +178,7 @@ func _mob_tick(delta: float) -> void:
 				m.wander_t = randf_range(2, 5); m.wander = m.home + Vector3(randf_range(-3, 3), 0, randf_range(-3, 3))
 			goal = m.wander
 		var to := goal - a.position; to.y = 0
-		var stop := 1.4 if m.aggro else 0.2
+		var stop := MOB_REACH if m.aggro else 0.2
 		if to.length() > stop:
 			var v := to.normalized() * (1.9 if m.aggro else 0.9) * delta
 			a.position += v
@@ -100,19 +190,19 @@ func _mob_tick(delta: float) -> void:
 				if m.next == 0.0:
 					m.next = w.t + 1.2
 				# telegraph 0.6 s before the lunge: step out of the red circle to avoid it
-				if not m.tele and w.t > m.next - 0.6:
+				if not m.tele and w.t > m.next - TELEGRAPH_S:
 					m.tele = true
 					m.tele_pos = p
-					Fx.telegraph(w, p, 1.1, 0.6)
+					Fx.telegraph(w, p, 1.1, TELEGRAPH_S)
 				if w.t > m.next:
-					m.next = w.t + 2.0; m.tele = false
+					m.next = w.t + MOB_SWING_S; m.tele = false
 					a.play_once("walk", 0.3); a.squash(0.12)
 					var tp: Vector3 = m.get("tele_pos", p)
 					var still_in: bool = Vector2(p.x - tp.x, p.z - tp.z).length() < 1.25
 					if not still_in or randf() < 0.12:
 						w.kit._float_text(p + Vector3(0, 2.2, 0), "Miss", Color("dff2ff"))
 					else:
-						var dmg := 7 + randi() % 4
+						var dmg := int(m.atk) + randi() % 4
 						_hurt_player(dmg)
 		a.position.x = clampf(a.position.x, w.bounds.position.x, w.bounds.end.x)
 		a.position.z = clampf(a.position.z, w.bounds.position.y, w.bounds.end.y)
@@ -121,7 +211,7 @@ func _mob_tick(delta: float) -> void:
 func _hurt_player(dmg: int) -> void:
 	if w.sitting:
 		w._stand()
-	dmg = maxi(1, dmg - int(G.d.guard))   # Steadfastness blocks a little of every blow
+	dmg = maxi(1, dmg - int(G.d.guard) - int(buff("guard")))   # Steadfastness blocks a little of every blow
 	G.hp = maxf(0.0, G.hp - dmg)
 	w.kit._float_text(w.player.position + Vector3(0, 2.2, 0), str(dmg), Color("ff6a6a"), false, dmg)
 	if G.hp < G.hp_max * 0.5 and w.is_combat() and G.tip_once("low_hp"):
@@ -143,11 +233,11 @@ func hit_mob(m: Dictionary, dmg: int, crit: bool = false, miss: bool = false) ->
 	m.aggro = true
 	var kill: bool = m.hp <= 0.0
 	w.kit._float_text(a.position + Vector3(0, 1.6, 0), str(dmg), Color("ffe25a") if crit else Color.WHITE, crit or kill, dmg)
-	G.zeal = minf(G.zeal_max, G.zeal + 3.0)
+	G.zeal = minf(G.zeal_max, G.zeal + ZEAL_ON_HIT)
 	a.play_once("hurt", 0.18)
 	a.flash(Color.WHITE, 0.9); a.squash(0.14 if crit else 0.09); w.pact.squash(0.05)
 	var dirv := (a.position - w.player.position); dirv.y = 0; dirv = dirv.normalized()
-	Fx.sparks(w, a.position + Vector3(0, 0.7, 0), dirv, Color(0.85, 0.85, 0.8))   # Sloth family: grey dust
+	Fx.sparks(w, a.position + Vector3(0, 0.7, 0), dirv, Color(0.85, 0.85, 0.8))
 	Fx.dust(w, a.position, Color(0.7, 0.72, 0.66, 0.5), 3)
 	if crit:
 		Fx.star(w, a.position + Vector3(0, 0.9, 0)); w.shake(0.35); G.haptic(30)
@@ -163,23 +253,32 @@ func hit_mob(m: Dictionary, dmg: int, crit: bool = false, miss: bool = false) ->
 		_boss_down(m)
 		return
 	if m.hp <= 0.0:
-		m.alive = false; m.respawn = 14.0; m.bg.visible = false
-		a.play_once("die", 0.7)
-		w.get_tree().create_timer(0.35).timeout.connect(func(): Fx.motes_up(w, a.position + Vector3(0, 0.4, 0), Color("fff6d8"), 16, 1.2); Fx.ring(w, a.position, Color(1, 0.95, 0.75), 2.2, 0.5))
-		w.get_tree().create_timer(0.7).timeout.connect(func(): if not m.alive: a.visible = false)
-		if target == m:
-			target = null
-		slain += 1
-		G.say("You overcame the Slothling.", G.SYS)
-		G.add_xp(4, 2)   # 3 + monster level 1
-		if randf() < 0.8:
-			w.kit._drop("Bread of Provision", "bread", a.position)
-		if w.quests.cur_obj() == "fight":
-			w.quests.objectives[0].text = "Overcome the Slothlings (%d/3)" % mini(slain, 3)
-			if slain >= 3:
-				w.get_tree().create_timer(1.6).timeout.connect(w.map._evangelist_arrives)
-			w.quests._update_quest()
+		_mob_down(m)
 
+func _mob_down(m: Dictionary) -> void:
+	var a: SpriteActor = m.actor
+	m.alive = false; m.bg.visible = false
+	m.respawn = NO_RESPAWN if m.greater else float(G.PROG["mob"].respawn)   # Greater foes are set pieces: once each
+	a.play_once("die", 0.7)
+	w.get_tree().create_timer(0.35).timeout.connect(func() -> void:
+		Fx.motes_up(w, a.position + Vector3(0, 0.4, 0), Color("fff6d8"), 16, 1.2); Fx.ring(w, a.position, Color(1, 0.95, 0.75), 2.2, 0.5))
+	w.get_tree().create_timer(0.7).timeout.connect(func() -> void:
+		if not m.alive: a.visible = false)
+	if target == m:
+		target = null
+	slain += 1
+	G.say("You overcame the %s." % m.name, G.SYS)
+	_pay_kill(m)
+	if m.drop != "" and randf() < DROP_CHANCE:
+		w.kit._drop(m.drop, "bread" if m.drop == "Bread of Provision" else "equip", a.position)
+	w.quests.on_kill(m)
+	mob_slain.emit(m)
+
+## Kill XP is optional extra on top of the quest budget (ledger source "mob").
+func _pay_kill(m: Dictionary) -> void:
+	var xp := int(m.xp)
+	if xp > 0:
+		G.add_xp(xp, int(round(xp * float(G.PROG["mob"].job_share))), w.map_id, "mob")
 
 func _attack_pressed() -> void:
 	if dead:
@@ -207,71 +306,94 @@ func _nearest_mob(r: float) -> Variant:
 func skill(id: String) -> void:
 	if dead or w.cinema:
 		return
-	if not G.has_skill(id):
-		G.say("You have not learned %s yet (More → Skills)." % G.SKILL_INFO[id].name, G.WARN); return
-	if gcd > 0.0 and gcd < 0.3 and cd.get(id, 0.0) <= 0.0:
-		queued_skill = id  # buffer the press; fires when the global cooldown ends
-		return
 	var info: Dictionary = G.SKILL_INFO[id]
+	var lent: bool = G.trial_job != "" and G.JOBS[G.trial_job].skills[0] == id
+	if not (G.has_skill(id) or lent):
+		G.say("You have not learned %s yet (More → Skills)." % info.name, G.WARN); return
+	if gcd > 0.0 and gcd < SKILL_BUFFER_S and cd.get(id, 0.0) <= 0.0:
+		queued_skill = id
+		return
 	if cd.get(id, 0.0) > 0.0:
 		G.say("%s is recharging." % info.name, G.WARN); return
 	if G.zeal < int(info.zeal):
 		G.say("Not enough Zeal (the blue bar). It refills over time, faster while sitting.", G.WARN); return
-	match id:
-		"tend":
-			var best = null; var bd := 3.2
-			for l in w.map.lilies:
-				var dl := Vector2(w.player.position.x - l.pos.x, w.player.position.z - l.pos.z).length()
-				if not l.bloomed and dl < bd:
-					bd = dl; best = l
-			if best == null:
-				G.say("Stand next to a drooping lily, then use Tend and Keep.", G.WARN); return
-			G.zeal -= int(info.zeal); cd.tend = float(info.cd); gcd = 1.0
-			w.pact.play_once("cast", 0.5); w.pact.facing = (best.pos - w.player.position).normalized()
-			best.bloomed = true; best.actor.play("bloom")
-			best.actor.squash(0.2)
-			w.kit._sparkle(best.pos + Vector3(0, 0.6, 0), Color("dff7ff"))
-			Fx.ring(w, best.pos, Color(0.85, 1, 0.85), 1.6, 0.5)
-			w.map.lilies_done += 1
-			G.add_xp(10, 1, "eden")
-			G.say("The lily lifts its head and blooms.", G.SYS)
-			if w.quests.cur_obj() == "lilies":
-				w.quests.objectives[w.quests.obj_idx].text = "Tend the drooping lilies with your skill (%d/3)" % w.map.lilies_done
-				w.quests._update_quest()
-				if w.map.lilies_done >= 3:
-					w.quests.complete()
-		"steps":
-			var m = target if (target != null and target.alive) else _nearest_mob(10.0)
-			if m == null:
-				G.say("No target.", G.WARN); return
-			target = m
-			if m.actor.position.distance_to(w.player.position) > 2.2:
-				G.say("Too far. Moving closer…", G.WARN); return
-			G.zeal -= int(info.zeal); cd.steps = float(info.cd); gcd = 1.0
-			used_steps = true
-			var to_m: Vector3 = (m.actor.position - w.player.position); to_m.y = 0
-			w.pact.facing = to_m.normalized()
-			w.pact.play_once("attack", 0.35)
-			var from := w.player.position
-			var dest := w.player.position + to_m.normalized() * maxf(0.0, to_m.length() - 1.1)
-			Fx.afterimages(w, w.pact, from, dest, 3)
-			Fx.dust(w, from, Color(0.8, 0.76, 0.66, 0.6), 6)
-			var lunge := w.create_tween(); lunge.tween_property(w.player, "position", dest, 0.09).set_ease(Tween.EASE_OUT)
-			Fx.burst(w, m.actor.position + Vector3(0, 0.8, 0), Color("fff2b0"), 22)
-			Fx.ring(w, m.actor.position, Color(1, 0.95, 0.7), 1.8, 0.4)
-			hit_mob(m, int(G.skill_num("steps").dmg) + randi_range(-2, 2), true)
-			G.say("First Steps!", G.SYS)
-		"refuge":
-			G.zeal -= int(info.zeal); cd.refuge = float(info.cd); gcd = 1.0
-			var h := minf(G.hp_max - G.hp, float(G.skill_num("refuge").heal))
-			G.hp += h
-			w.pact.play_once("cast", 0.5)
-			w.pact.flash(Color("fff0b0"), 0.6)
-			w.kit._float_text(w.player.position + Vector3(0, 2.2, 0), "+%d" % int(h), Color("7cff7c"))
-			Fx.dome(w, w.player.position)
-			G.say("Take Refuge. [BSB: Psalm 9:9 · pulled at build time]", G.SYS)
+	var fx: Dictionary = info.fx
+	var num := G.skill_num(id)
+	var done := false
+	match String(fx.type):
+		"tend": done = _cast_tend()
+		"strike": done = _cast_strike(info, fx, int(num.dmg))
+		"aoe": done = _cast_aoe(fx, int(num.dmg))
+		"heal": done = _cast_heal(float(num.heal))
+		"regen": done = _cast_regen(fx, float(num.zeal))
+		"buff": done = _cast_buff(fx, float(num.add))
+	if not done:
+		return
+	G.zeal -= int(info.zeal); cd[id] = float(info.cd); gcd = GCD
+	G.say("%s!" % info.name, G.SYS); G.sfx("skill")
 	G.stats_changed.emit()
 
+func _cast_tend() -> bool:
+	if not w.map.has_method("tend_lily"):
+		return false
+	return w.map.tend_lily()
+
+func _cast_strike(info: Dictionary, fx: Dictionary, dmg: int) -> bool:
+	var m = target if (target != null and target.alive) else _nearest_mob(maxf(AOE_FALLBACK_RANGE, float(fx.range)))
+	if m == null:
+		G.say("No target.", G.WARN); return false
+	target = m
+	var to_m: Vector3 = m.actor.position - w.player.position; to_m.y = 0
+	if to_m.length() > float(fx.range):
+		G.say("Too far. Moving closer…", G.WARN); return false
+	used_steps = used_steps or info.job == G.PILGRIM
+	w.pact.facing = to_m.normalized()
+	w.pact.play_once("attack", 0.35)
+	if fx.get("lunge", false):
+		var from := w.player.position
+		var dest := from + to_m.normalized() * maxf(0.0, to_m.length() - 1.1)
+		Fx.afterimages(w, w.pact, from, dest, 3)
+		Fx.dust(w, from, Color(0.8, 0.76, 0.66, 0.6), 6)
+		w.create_tween().tween_property(w.player, "position", dest, 0.09).set_ease(Tween.EASE_OUT)
+	Fx.burst(w, m.actor.position + Vector3(0, 0.8, 0), Color("fff2b0"), 22)
+	Fx.ring(w, m.actor.position, Color(1, 0.95, 0.7), 1.8, 0.4)
+	hit_mob(m, dmg + randi_range(-2, 2), true)
+	return true
+
+func _cast_aoe(fx: Dictionary, dmg: int) -> bool:
+	var hit := false
+	for m in mobs:
+		if m.alive and m.actor.position.distance_to(w.player.position) <= float(fx.radius):
+			hit_mob(m, dmg + randi_range(-2, 2), false)
+			hit = true
+	if not hit:
+		G.say("No foe is close enough.", G.WARN); return false
+	w.pact.play_once("cast", 0.5)
+	Fx.ring(w, w.player.position, Color(1, 0.95, 0.7), float(fx.radius), 0.5)
+	w.shake(0.2)
+	return true
+
+func _cast_heal(amount: float) -> bool:
+	var h := minf(G.hp_max - G.hp, amount)
+	G.hp += h
+	w.pact.play_once("cast", 0.5)
+	w.pact.flash(Color("fff0b0"), 0.6)
+	w.kit._float_text(w.player.position + Vector3(0, 2.2, 0), "+%d" % int(h), Color("7cff7c"))
+	Fx.dome(w, w.player.position)
+	return true
+
+func _cast_regen(fx: Dictionary, zeal: float) -> bool:
+	regen_until = w.t + float(fx.secs); regen_rate = zeal / float(fx.secs)
+	w.pact.play_once("cast", 0.5)
+	Fx.ring(w, w.player.position, Color(0.7, 0.85, 1.0), 1.8, 0.6)
+	return true
+
+func _cast_buff(fx: Dictionary, add: float) -> bool:
+	buffs[String(fx.stat)] = {"add": add, "until": w.t + float(fx.secs)}
+	w.pact.play_once("cast", 0.5)
+	w.pact.flash(Color("bfe4ff"), 0.6)
+	Fx.spiral(w, w.player.position + Vector3(0, 0.2, 0), Color("b8e0ff"))
+	return true
 
 # ------------------------------------------------------------------ KO
 func _ko() -> void:
@@ -288,7 +410,7 @@ func _ko() -> void:
 
 func rise() -> void:
 	dead = false
-	G.hp = G.hp_max; G.zeal = G.zeal_max; G.weary = true
+	G.hp = G.hp_max; G.zeal = G.zeal_max
 	w.player.position = w.info("start")
 	w.pact.play("idle")
 	for m in mobs:
@@ -296,8 +418,20 @@ func rise() -> void:
 		if m.actor.position.distance_to(w.player.position) < 8.0:
 			m.actor.position = m.home
 	G.say("You rest, and rise again.", G.SYS)
+	make_weary()
+
+## Every foe loses interest and goes home (used when a quiet moment begins).
+func calm() -> void:
+	target = null
+	for m in mobs:
+		if not m.get("boss", false):
+			m.aggro = false
+
+## Weariness replaces death penalties: a short slowdown, never lost XP.
+func make_weary() -> void:
+	G.weary = true
 	G.stats_changed.emit()
-	w.get_tree().create_timer(25.0).timeout.connect(_weary_end)
+	w.get_tree().create_timer(WEARY_S).timeout.connect(_weary_end)
 
 
 func _any_aggro() -> bool:
@@ -312,10 +446,12 @@ func in_combat() -> bool:
 
 
 func cooldown_frac(id: String) -> float:
-	return cd.get(id, 0.0) / float(G.SKILL_INFO[id].cd)
-
+	var total := float(G.SKILL_INFO[id].cd)
+	return cd.get(id, 0.0) / total if total > 0.0 else 0.0
 
 func _weary_end() -> void:
+	if not G.weary:
+		return
 	G.weary = false
 	G.say("Your weariness has passed.", G.SYS)
 	G.stats_changed.emit()
@@ -345,10 +481,10 @@ func _boss_tick(delta: float) -> void:
 	if not boss.alive or w.ending:
 		return
 	var a: SpriteActor = boss.actor
-	w.hud.boss_bar("Giant Grim", boss.hp / boss.max)
+	w.hud.boss_bar(boss.name, boss.hp / boss.max)
 	if not boss_enraged and boss.hp < boss.max * 0.5:
 		boss_enraged = true
-		G.say("Giant Grim roars and lays about him faster!", G.WARN)
+		G.say("%s rages and strikes faster!" % boss.name, G.WARN)
 		w.kit._pop_mark(a, "!!", Color("ff6a3a")); w.shake(0.4); a.flash(Color("ff6a3a"), 0.7)
 	boss_atk_t -= delta * (1.35 if boss_enraged else 1.0)
 	var goal: Vector3 = boss.goal if boss.goal != Vector3.ZERO else w.player.position
@@ -367,8 +503,8 @@ func _boss_tick(delta: float) -> void:
 			# wide slam around the Giant: everyone must step out
 			var c := a.position
 			Fx.telegraph(w, c, 3.3, 1.5)
-			G.say("Giant Grim raises his club high!", G.WARN)
-			w.get_tree().create_timer(1.5).timeout.connect(_boss_resolve.bind(c, 3.3, 20, true))
+			G.say("%s gathers for a great blow!" % boss.name, G.WARN)
+			w.get_tree().create_timer(1.5).timeout.connect(_boss_resolve.bind(c, 3.3, int(boss.slam), true))
 			for al in allies:
 				var away: Vector3 = al.actor.position - c; away.y = 0
 				al["dodge"] = c + (away.normalized() if away.length() > 0.1 else Vector3(1, 0, 0)) * 4.4
@@ -377,7 +513,7 @@ func _boss_tick(delta: float) -> void:
 			boss.goal = tg.pos
 			var pos: Vector3 = tg.pos
 			Fx.telegraph(w, pos, 1.8, 1.1)
-			w.get_tree().create_timer(1.1).timeout.connect(_boss_resolve.bind(pos, 1.8, 14, false))
+			w.get_tree().create_timer(1.1).timeout.connect(_boss_resolve.bind(pos, 1.8, int(boss.atk), false))
 			if tg.who is Dictionary and randf() < 0.75:
 				var al2: Dictionary = tg.who
 				var side := Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized()
@@ -473,21 +609,29 @@ func _boss_down(m: Dictionary) -> void:
 	w.get_tree().create_timer(1.2).timeout.connect(w.kit._hide_node.bind(a))
 	if target == m:
 		target = null
-	var humans := 0
+	_pay_kill(m)
+	if m.drop != "":
+		G.bag_add(m.drop, 1)
+	if m.muster:
+		_muster_cleared(m)
+	else:
+		G.say("%s is overcome. The way is clear." % m.name, G.INFO)
+	if w.quests.cur().get("type", "") == "script":
+		w.quests.complete()     # the Muster arena's objective is finished by this fight
+	else:
+		w.quests.on_kill(m)
+
+func _muster_cleared(m: Dictionary) -> void:
+	var companions := 0
 	for al in allies:
-		if not al.ai: humans += 1
-	G.marks += humans
-	G.add_xp(200, 60)
-	G.bag_add("Grim's Broken Chain", 1)
-	G.say("Muster cleared! Giant Grim is driven from the way.", G.INFO)
-	G.say("Rewards: Grim's Broken Chain · Fellowship Marks +%d (one per pilgrim in your company)." % humans, G.INFO)
-	w.hud.muster_cleared(humans)
+		if not al.ai: companions += 1
+	G.marks += companions
+	G.say("Muster cleared! %s is driven from the way." % m.name, G.INFO)
+	G.say("Rewards: %s · Fellowship Marks +%d (one per named companion)." % [m.drop, companions], G.INFO)
+	w.hud.muster_cleared(companions)
 	for al in allies:
 		al.actor.play_once("cast", 0.8)
-	w.get_tree().create_timer(1.6).timeout.connect(func(): G.say("Lumen: Well fought, all! See you at the hearth.", G.CHAT))
-	w.show_ent("warp", true)
-	w.quests.complete()
-
+	w.get_tree().create_timer(1.6).timeout.connect(func() -> void: G.say("Lumen: Well fought, all! See you at the hearth.", G.CHAT))
 
 func _boss_fade_fx(p: Vector3) -> void:
 	Fx.motes_up(w, p + Vector3(0, 1.0, 0), Color("fff6d8"), 40, 1.8)

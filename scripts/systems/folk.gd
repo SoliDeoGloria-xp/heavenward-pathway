@@ -3,6 +3,8 @@ extends RefCounted
 ## Other pilgrims: passers-by on the Way and the people of a House.
 
 var w: World
+const FOLLOW_FAR := 3.2
+const FOLLOW_NEAR := 2.4
 
 func _init(world: World) -> void:
 	w = world
@@ -75,3 +77,17 @@ func _house_chat_tick(o: Dictionary, delta: float) -> void:
 		var line: String = HOUSE_CHAT[randi() % HOUSE_CHAT.size()]
 		G.say("[Local] %s: %s" % [o.name, line], G.CHAT)
 		w.kit._bubble(o.actor, line)
+
+## Companions on the road (entities with "follow" in map data) keep a few steps behind the player.
+func followers_tick(delta: float) -> void:
+	for e in w.ents:
+		if not e.get("follow", false) or e.hidden or w.cinema:
+			continue
+		var a: SpriteActor = e.node
+		var to := w.player.position - a.position; to.y = 0
+		if to.length() > FOLLOW_FAR:
+			a.position += to.normalized() * minf(World.SPEED * 0.95 * delta, to.length() - FOLLOW_NEAR)
+			a.facing = to.normalized(); a.play("walk")
+		else:
+			a.play("idle")
+		e.pos = a.position

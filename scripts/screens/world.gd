@@ -2,22 +2,26 @@ class_name World
 extends Node3D
 ## The 3D world: classic RO presentation (2D sprites on a lit 3D map, fixed three-quarter camera)
 ## with RO M / Origin phone controls (joystick, attack + skill arc, auto, context Act button).
-## Maps (GDD v0.3 world model): "eden" and "city" are the Way (solo, with traces of other pilgrims);
-## "palace" is the first House (shared hub, simulated in this offline demo); "lions" is a party Muster.
+## This script owns the loop, input and camera. Everything else lives in a system:
+## kit (geometry and feedback), combat, quests, lessons (coach), scene (story scenes), folk (other pilgrims).
+## A map is data (data/maps/<id>.json) plus, for hand-built places, a script in scripts/maps.
 
 const SPEED := 4.6
+const WEARY_SPEED := 0.8
 const PICK_PX := 70.0
+const HITSTOP_SCALE := 0.03
+const ACT_RANGE := 2.6
+const ARRIVE_RANGE := 2.4
+const MELEE_RANGE := 1.8
+const AUTO_SEEK_RANGE := 14.0
+const AUTO_HEAL_BELOW := 0.45
+const SIT_REGEN := 3.0
+const STEP_DUST_S := 0.34
+const WEARY_ON_ENTER_S := 15.0
+const MAP_SCRIPT := "res://scripts/maps/%s.gd"
 
 var map_id := "eden"
-const MAPS := {
-	"eden": {"name": "Eden Isle", "sub": "Prologue · The Garden", "code": "eden_isle", "combat": false, "layer": "The Way", "mini": Color("8cc062"), "start": Vector3(-14, 0, 6),
-		"bg": Color("2e4a2a"), "amb": Color("e8eef8"), "amb_e": 0.42, "tint": Color(1.03, 1.0, 0.93), "sun_e": 0.78, "sun_c": Color("fff3dc"), "post": [1.06, 1.05, Vector3(1.04, 1.01, 0.94)]},
-	"city": {"name": "City of Destruction", "sub": "Chapter 1 · Flee from the wrath to come", "code": "destruction", "combat": true, "layer": "The Way", "mini": Color("9c9484"), "start": Vector3(-12, 0, 3),
-		"bg": Color("2a2832"), "amb": Color("a8a4c0"), "amb_e": 0.38, "tint": Color(0.86, 0.87, 0.98), "sun_e": 0.55, "sun_c": Color("c8c4d8"), "post": [0.72, 1.08, Vector3(0.93, 0.95, 1.05)]},
-	"palace": {"name": "Palace Beautiful", "sub": "House · where pilgrims meet (online preview)", "code": "palace_beautiful", "combat": false, "layer": "House", "mini": Color("a8c48a"), "start": Vector3(0, 0, 11),
-		"bg": Color("3a4a30"), "amb": Color("f2eaf8"), "amb_e": 0.46, "tint": Color(1.04, 1.0, 0.94), "sun_e": 0.82, "sun_c": Color("ffeacc"), "post": [1.1, 1.05, Vector3(1.06, 1.0, 0.92)]},
-	"lions": {"name": "The Lions' Gate", "sub": "Muster · Party · Normal", "code": "lions_gate", "combat": true, "layer": "Muster", "mini": Color("b0a080"), "start": Vector3(0, 0, 10),
-		"bg": Color("342c24"), "amb": Color("dcc4ac"), "amb_e": 0.40, "tint": Color(1.0, 0.93, 0.87), "sun_e": 0.62, "sun_c": Color("ffc890"), "post": [0.92, 1.1, Vector3(1.06, 0.96, 0.88)]}}
+var def: Dictionary = {}          # this map's definition from data/maps/<id>.json
 var hud: Node
 var cam_rig: Node3D
 var cam: Camera3D
@@ -38,69 +42,77 @@ var bounds := Rect2(-26, -18, 52, 36)
 var snapshot_unlocked := false
 var t := 0.0
 var regen_t := 0.0
+var zone_t := 0.0
 var ending := false
 var post: ShaderMaterial
 var trauma := 0.0
 var step_t := 0.0
 var sun: DirectionalLight3D
 var env: Environment
-## Systems (each owns its state; see scripts/systems and scripts/world).
 var kit: MapKit
 var combat: Combat
 var quests: Quests
 var lessons: Lessons
 var scene: Cutscene
 var folk: Folk
-var map                          # the current map's script (scripts/maps/<id>.gd)
+var map                          # hand-built map script (scripts/maps/<id>.gd) or the DataMap builder
+
+## Map data stores ground positions as [x, z].
+static func v3(a: Variant) -> Vector3:
+	if a is Vector3:
+		return a
+	return Vector3(a[0], 0, a[1]) if a.size() == 2 else Vector3(a[0], a[1], a[2])
 
 func _ready() -> void:
 	map_id = get_meta("data").get("map", "eden")
-	G.base_cap = 5 if map_id == "eden" else 10
-	if not MAPS.has(map_id):
-		map_id = "eden"
+	def = G.data("maps/" + map_id)
+	G.cur_map = map_id; G.cur_act = def.act
+	G.base_cap = G.cap_for(int(def.get("base_cap", G.PROG["pilgrim_base_cap"])))
+	if def.has("burden"):
+		G.burden = def.burden and not G.flags.has("burden_gone")
 	kit = MapKit.new(self); combat = Combat.new(self); quests = Quests.new(self)
 	lessons = Lessons.new(self); scene = Cutscene.new(self); folk = Folk.new(self)
+	cam_dist = float(def.get("cam_dist", cam_dist))
 	_build_env()
 	_build_player()
-	if map_id == "lions":
-		cam_dist = 20.0
 	_build_camera()
-	map = load("res://scripts/maps/%s.gd" % map_id).new(self)
+	var builder := DataMap.new(self)
+	map = load(MAP_SCRIPT % map_id).new(self) if ResourceLoader.exists(MAP_SCRIPT % map_id) else builder
 	map.build()
+	builder.populate()
+	quests.load_map(def)
+	combat.spawn_group("")
 	hud = load("res://scripts/ui/hud.gd").new()
 	hud.world = self
 	add_child(hud)
 	G.level_up.connect(kit._on_level_up)
-	quests._update_quest()
 	hud.banner(info("name"), info("sub"))
 	if G.weary:
-		get_tree().create_timer(15.0).timeout.connect(combat._weary_end)
-	match map_id:
-		"eden":
-			G.say("Welcome to Eden Isle, the Dreamer's vision of the garden.", G.INFO)
-			get_tree().create_timer(1.6).timeout.connect(lessons._eden_intro)
-		"city":
-			G.burden = true
-			G.say("A great burden weighs upon your back.", G.WARN)
-			if get_meta("data").get("wake", false):
-				scene._wake_scene()
-			else:
-				get_tree().create_timer(1.0).timeout.connect(lessons._city_lessons)
-		"palace":
-			G.burden = false
-			G.say("The House Beautiful. Pilgrims who walked the Way alone meet here.", G.INFO)
-			G.say("Online preview: the other pilgrims here are simulated in this offline demo.", G.SYS)
-		"lions":
-			G.burden = false
-			G.say("Your company is mustered. Giant Grim backs the lions; drive him from the way.", G.WARN)
-			get_tree().create_timer(1.6).timeout.connect(func(): G.say("Step out of red circles. The big slam fills a wide ring around the Giant.", G.SYS))
+		get_tree().create_timer(WEARY_ON_ENTER_S).timeout.connect(combat._weary_end)
+	for line in def.get("enter_say", []):
+		G.say(line, G.INFO)
+	G.audio.music(String(def.get("music", "")))
+	G.save_game()   # chapter boundary: Continue returns to the start of this map (or its saved objective)
+	quests.begin()
 	hud.refresh()
 
 func info(k: String) -> Variant:
-	return MAPS[map_id][k]
+	if def.has(k):
+		return v3(def[k]) if k == "start" else def[k]
+	var v: Variant = def.look[k]
+	match k:
+		"bg", "amb", "sun_c", "mini": return Color(String(v))
+		"tint": return Color(v[0], v[1], v[2])
+		"post": return [v[0], v[1], Vector3(v[2][0], v[2][1], v[2][2])]
+	return v
 
 func is_combat() -> bool:
-	return MAPS[map_id].combat
+	return def.combat
+
+## The Calling changes the robe; swap the sheet on the player's sprite.
+func refresh_player_sheet() -> void:
+	pact.sprite.texture = G.player_sheet
+	pact.set_name_text("%s · %s" % [G.pname, G.job_name()])
 
 # ------------------------------------------------------------------ environment
 func _build_env() -> void:
@@ -141,7 +153,7 @@ func _build_player() -> void:
 	var sheet: Texture2D = G.player_sheet if G.player_sheet else G.build_player_sheet()
 	pact.setup({"tex": sheet, "hframes": 10, "vframes": 5, "pixel": 0.042, "rows": true,
 		"anims": {"idle": [0], "walk": [1, 2, 3, 4], "attack": [5, 6], "sit": [7], "rest": [8], "cast": [9]},
-		"fps": {"walk": 9.0, "attack": 6.0}}, G.pname, Color.WHITE)
+		"fps": {"walk": 9.0, "attack": 6.0}}, G.pname if G.job_id == G.PILGRIM else "%s · %s" % [G.pname, G.job_name()], Color.WHITE)
 	player.position = info("start")
 
 func _build_camera() -> void:
@@ -177,9 +189,9 @@ func shake(amount: float) -> void:
 func hitstop(dur: float) -> void:
 	if G.settings.reduce_motion:
 		dur *= 0.5
-	Engine.time_scale = 0.03
+	Engine.time_scale = HITSTOP_SCALE
 	await get_tree().create_timer(dur, true, false, true).timeout
-	Engine.time_scale = 1.0
+	Engine.time_scale = G.time_scale
 
 func _build_post() -> void:
 	var layer := CanvasLayer.new(); layer.layer = 5; add_child(layer)
@@ -292,7 +304,7 @@ func tap(screen_pos: Vector2) -> void:
 		if d < best_d:
 			best_d = d; best = {"mob": m}
 	for e in ents:
-		if e.hidden or e.fn == null:
+		if e.hidden:
 			continue
 		var sp2 := cam.unproject_position(e.pos + Vector3(0, 1.0, 0))
 		var d2 := sp2.distance_to(screen_pos)
@@ -328,12 +340,20 @@ func tap(screen_pos: Vector2) -> void:
 func act_pressed() -> void:
 	var n = nearest_ent()
 	if n != null:
-		n.fn.call()
+		use(n)
+
+## Use an interactable: objectives and data dialogue come first, then the entity's own action.
+func use(e: Dictionary) -> void:
+	if quests.use_ent(e):
+		return
+	var fn: Callable = e.fn
+	if fn.is_valid():
+		fn.call()
 
 func nearest_ent() -> Variant:
-	var best = null; var bd := 2.6
+	var best = null; var bd := ACT_RANGE
 	for e in ents:
-		if e.hidden or e.fn == null or e.get("kind", "") == "guide":
+		if e.hidden or e.get("kind", "") == "guide":
 			continue
 		var d := Vector2(player.position.x - e.pos.x, player.position.z - e.pos.z).length()
 		if d < bd:
@@ -363,124 +383,141 @@ func set_auto(on: bool) -> void:
 	auto_on = on
 	G.say("Auto battle %s." % ("on" if on else "off"), G.SYS)
 
-func _finish() -> void:
-	if ending:
-		return
-	ending = true
-	match map_id:
-		"city": G.goto("story", {"id": "onward"})
-		_: G.goto("end")
-
 # ------------------------------------------------------------------ main loop
 func _physics_process(delta: float) -> void:
 	t += delta
-	combat.gcd = maxf(0.0, combat.gcd - delta)
-	for k in combat.cd.keys():
-		combat.cd[k] = maxf(0.0, combat.cd[k] - delta)
+	combat.tick_cooldowns(delta)
 	if combat.dead or cinema or (hud and (hud.overlay_open() or hud.coach.blocking())):
 		player.velocity = Vector3.ZERO
 		if not combat.dead and pact.anim == "walk":
 			pact.play("idle")
 		_place_camera()
 		return
-	var v := Vector3.ZERO
-	var jv: Vector2 = hud.joy_vec() if hud else Vector2.ZERO
-	var basis_y := Basis(Vector3.UP, cam_yaw)
-	if jv.length() > 0.0:
-		v = basis_y * Vector3(jv.x, 0, jv.y)
-		move_target = null; pending = null
-		if combat.target != null and auto_on == false:
-			combat.target = null
-	elif combat.target != null and combat.target.alive:
-		var to: Vector3 = combat.target.actor.position - player.position; to.y = 0
-		if to.length() > 1.8:
-			v = to.normalized()
-		else:
-			pact.facing = to.normalized()
-			if t > combat.next_atk and combat.gcd <= 0.0:
-				# basic attack from attributes: Fortitude (damage), Diligence (speed), Sobriety (misses), Hope (crits)
-				combat.next_atk = t + float(G.d.interval)
-				pact.play_once("attack", 0.32)
-				var crit := randf() < float(G.d.crit)
-				var dmg := int(G.d.atk) + randi_range(-2, 2)
-				combat.hit_mob(combat.target, dmg * (2 if crit else 1), crit, randf() < float(G.d.miss))
-	elif move_target != null:
-		var to2: Vector3 = move_target - player.position; to2.y = 0
-		if to2.length() > 0.25:
-			v = to2.normalized()
-		else:
-			move_target = null
-	if v.length() > 0.0:
-		var spd := SPEED * (0.8 if G.weary else 1.0)
-		var frac := minf(1.0, maxf(v.length(), 0.35))
-		player.velocity = v.normalized() * spd * frac
-		pact.facing = v.normalized()
-		pact.play("walk")
-		pact.speed_mul = frac * (0.8 if G.weary else 1.0)   # no foot sliding
-		step_t += delta * frac
-		if step_t > 0.34:
-			step_t = 0.0
-			Fx.dust(self, player.position, Color(0.85, 0.82, 0.72, 0.45) if map_id == "eden" else Color(0.7, 0.68, 0.66, 0.45), 2)
-	else:
-		player.velocity = Vector3.ZERO
-		if not sitting and pact.anim == "walk":
-			pact.play("idle")
-	player.move_and_slide()
-	player.position.y = 0.0
-	# arrive at an interactable
-	if pending != null and Vector2(player.position.x - pending.pos.x, player.position.z - pending.pos.z).length() < 2.4:
-		var pe: Dictionary = pending; pending = null; move_target = null
-		pact.facing = (pe.pos - player.position).normalized()
-		if not pe.hidden:
-			pe.fn.call()
-	# zone objectives
-	if quests.obj_idx < quests.objectives.size() and quests.objectives[quests.obj_idx].has("zone"):
-		var z: Vector3 = quests.objectives[quests.obj_idx].zone
-		if Vector2(player.position.x - z.x, player.position.z - z.z).length() < 1.6:
-			if quests.cur_obj() in ["light", "return"]:
-				_finish()
-			else:
-				quests.complete()
-	# auto battle (within the Tier 1 auto scope: auto-attack and the auto-skill slots)
-	if auto_on and is_combat():
-		if combat.target == null or not combat.target.alive:
-			combat.target = combat._nearest_mob(14.0)
-		if G.has_skill("steps") and combat.target != null and combat.cd.steps <= 0.0 and G.zeal >= 10 and combat.target.actor.position.distance_to(player.position) < 2.2 and combat.gcd <= 0.0:
-			combat.skill("steps")
-		if G.has_skill("refuge") and G.hp < G.hp_max * 0.45 and combat.cd.refuge <= 0.0 and G.zeal >= 15:
-			combat.skill("refuge")
+	_move(_wanted_direction(), delta)
+	_arrive()
+	quests.tick(delta)
+	_auto_battle()
 	if is_combat():
 		combat._mob_tick(delta)
 	if combat.boss != null:
 		combat._boss_tick(delta)
 	combat._allies_tick(delta)
 	folk._others_tick(delta)
+	folk.followers_tick(delta)
 	quests._glint_tick()
 	if map.has_method("tick"):
 		map.tick(delta)
-	lessons._city_tips_tick()
 	kit._drop_tick()
-	# regeneration (faster while sitting)
-	regen_t += delta
-	if regen_t >= 1.0:
-		regen_t = 0.0
-		var mult := 3.0 if sitting else 1.0
-		G.zeal = minf(G.zeal_max, G.zeal + float(G.d.regen) * mult)
-		if not (is_combat() and combat._any_aggro()):
-			G.hp = minf(G.hp_max, G.hp + 1.0 * mult)
-		G.stats_changed.emit()
-	if combat.queued_skill != "" and combat.gcd <= 0.0:
-		var qs := combat.queued_skill; combat.queued_skill = ""
-		combat.skill(qs)
+	_regen(delta)
+	combat.fire_queued()
 	kit._ambient_tick(delta)
-	# camera
 	cam_yaw = lerp_angle(cam_yaw, cam_yaw_target, 0.12)
 	trauma = maxf(0.0, trauma - delta * 1.6)
 	_place_camera()
-	# warp spin
-	var w := ent("warp")
-	if not w.is_empty() and w.node.has_meta("spin"):
-		w.node.get_meta("spin").rotation.y += delta * 1.5
+
+## Joystick wins, then chasing the target, then tap-to-walk.
+func _wanted_direction() -> Vector3:
+	var jv: Vector2 = hud.joy_vec() if hud else Vector2.ZERO
+	if jv.length() > 0.0:
+		move_target = null; pending = null
+		if combat.target != null and not auto_on:
+			combat.target = null
+		return Basis(Vector3.UP, cam_yaw) * Vector3(jv.x, 0, jv.y)
+	if combat.target != null and combat.target.alive:
+		var to: Vector3 = combat.target.actor.position - player.position; to.y = 0
+		if to.length() > MELEE_RANGE:
+			return to.normalized()
+		pact.facing = to.normalized()
+		combat.basic_attack()
+	elif move_target != null:
+		var to2: Vector3 = move_target - player.position; to2.y = 0
+		if to2.length() > 0.25:
+			return to2.normalized()
+		move_target = null
+	return Vector3.ZERO
+
+func _move(v: Vector3, delta: float) -> void:
+	if v.length() > 0.0:
+		var slow := speed_factor()
+		var frac := minf(1.0, maxf(v.length(), 0.35))
+		player.velocity = v.normalized() * SPEED * slow * frac
+		pact.facing = v.normalized()
+		pact.play("walk")
+		pact.speed_mul = frac * slow   # no foot sliding
+		step_t += delta * frac
+		if step_t > STEP_DUST_S:
+			step_t = 0.0
+			Fx.dust(self, player.position, Color(0.78, 0.75, 0.69, 0.45), 2)
+	else:
+		player.velocity = Vector3.ZERO
+		if not sitting and pact.anim == "walk":
+			pact.play("idle")
+	player.move_and_slide()
+	player.position.y = 0.0
+	_zones(delta)
+
+## Weariness, the burden and bad ground (a map's "zones") all slow the pilgrim.
+func speed_factor() -> float:
+	var f := WEARY_SPEED if G.weary else 1.0
+	if G.burden:
+		f *= float(G.PROG["burden_slow"])
+	var z := _zone_here()
+	return f * float(z.get("slow", 1.0))
+
+func _zone_here() -> Dictionary:
+	var p := Vector2(player.position.x, player.position.z)
+	for z in def.get("zones", []):
+		var a: Array = z.area
+		if not Rect2(a[0], a[1], a[2], a[3]).has_point(p):
+			continue
+		for sp in z.get("safe", []):   # firm footing inside bad ground (the stepping stones)
+			if p.distance_to(Vector2(sp[0], sp[1])) < float(z.safe_r):
+				return {}
+		return z
+	return {}
+
+## Once a second, bad ground drains or hurts.
+func _zones(delta: float) -> void:
+	zone_t += delta
+	if zone_t < 1.0:
+		return
+	zone_t = 0.0
+	var z := _zone_here()
+	if z.has("hurt"):
+		combat._hurt_player(int(z.hurt))
+		G.say("You strayed into %s! Keep to the midst of the path." % z.name, G.WARN)
+	elif z.has("drain") and G.hp > G.hp_max * 0.3:   # the mire wears a pilgrim down but never fells one
+		G.hp -= float(z.drain); G.stats_changed.emit()
+
+func _arrive() -> void:
+	if pending == null or Vector2(player.position.x - pending.pos.x, player.position.z - pending.pos.z).length() >= ARRIVE_RANGE:
+		return
+	var pe: Dictionary = pending; pending = null; move_target = null
+	pact.facing = (pe.pos - player.position).normalized()
+	if not pe.hidden:
+		use(pe)
+
+## Auto battle stays within the Tier 1 scope: auto-attack and the first two Pilgrim skills, in fields only.
+func _auto_battle() -> void:
+	if not (auto_on and is_combat()):
+		return
+	if combat.target == null or not combat.target.alive:
+		combat.target = combat._nearest_mob(AUTO_SEEK_RANGE)
+	if combat.target != null and combat.ready("steps") and combat.target.actor.position.distance_to(player.position) < 2.2:
+		combat.skill("steps")
+	if G.hp < G.hp_max * AUTO_HEAL_BELOW and combat.ready("refuge"):
+		combat.skill("refuge")
+
+func _regen(delta: float) -> void:
+	regen_t += delta
+	if regen_t < 1.0:
+		return
+	regen_t = 0.0
+	var mult := SIT_REGEN if sitting else 1.0
+	G.zeal = minf(G.zeal_max, G.zeal + float(G.d.regen) * mult + combat.zeal_regen_bonus())
+	if not (is_combat() and combat._any_aggro()):
+		G.hp = minf(G.hp_max, G.hp + 1.0 * mult)
+	G.stats_changed.emit()
 
 func _process(_d: float) -> void:
 	for f in kit._followers:

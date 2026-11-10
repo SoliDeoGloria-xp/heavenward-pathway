@@ -1,0 +1,441 @@
+{
+ "order": [
+  "tend",
+  "steps",
+  "refuge",
+  "rest_prayer",
+  "watchful_eye",
+  "steady",
+  "shield_faith",
+  "good_fight",
+  "stand_firm",
+  "arrow_truth",
+  "keep_watch",
+  "sound_alarm",
+  "edge_word",
+  "lamp_feet",
+  "rightly_divide",
+  "still_waters",
+  "rod_staff",
+  "seek_lost",
+  "daily_bread",
+  "faithful_little",
+  "well_done",
+  "press_on",
+  "run_endurance",
+  "narrow_way"
+ ],
+ "skills": {
+  "tend": {
+   "name": "Tend and Keep",
+   "icon": "tend",
+   "max": 1,
+   "zeal": 8,
+   "cd": 3.0,
+   "eden": true,
+   "kind": "active",
+   "job": "pilgrim",
+   "fx": {
+    "type": "tend",
+    "text": "Brings one drooping plant back to bloom."
+   },
+   "does": "Tend a plant that needs care. Used only in Eden. [BSB: Genesis 2:15]"
+  },
+  "steps": {
+   "name": "First Steps",
+   "icon": "steps",
+   "max": 5,
+   "zeal": 10,
+   "cd": 6.0,
+   "kind": "active",
+   "job": "pilgrim",
+   "needs": "city_fight",
+   "fx": {
+    "type": "strike",
+    "mult": 1.5,
+    "per_lv": 4,
+    "range": 2.2,
+    "lunge": true
+   },
+   "does": "A sure lunge at your target for heavy damage."
+  },
+  "refuge": {
+   "name": "Take Refuge",
+   "icon": "refuge",
+   "max": 5,
+   "zeal": 15,
+   "cd": 12.0,
+   "kind": "active",
+   "job": "pilgrim",
+   "needs": "city_fight",
+   "fx": {
+    "type": "heal",
+    "base": 20,
+    "per_lv": 10
+   },
+   "does": "Restores Health. [BSB: Psalm 9:9]"
+  },
+  "rest_prayer": {
+   "name": "Prayer of Rest",
+   "icon": "library",
+   "max": 3,
+   "zeal": 0,
+   "cd": 30.0,
+   "kind": "active",
+   "job": "pilgrim",
+   "needs": "prayer_taught",
+   "fx": {
+    "type": "regen",
+    "base": 18,
+    "per_lv": 8,
+    "secs": 8
+   },
+   "does": "Be still a moment: Zeal returns. Taught in the Interpreter's reading room. [BSB: Matthew 11:28]"
+  },
+  "watchful_eye": {
+   "name": "Watchful Eye",
+   "icon": "eye",
+   "max": 3,
+   "zeal": 12,
+   "cd": 20.0,
+   "kind": "active",
+   "job": "pilgrim",
+   "needs": "hill_reached",
+   "fx": {
+    "type": "buff",
+    "stat": "crit",
+    "add": 0.15,
+    "per_lv": 0.05,
+    "secs": 10,
+    "show_mult": 100,
+    "text": "+%d%% critical hits for %d s."
+   },
+   "does": "Watch closely and strike where it counts. [BSB: 1 Peter 5:8]"
+  },
+  "steady": {
+   "name": "Steady Footing",
+   "icon": "sit",
+   "max": 3,
+   "zeal": 0,
+   "cd": 0.0,
+   "kind": "passive",
+   "job": "pilgrim",
+   "needs": "burden_gone",
+   "fx": {
+    "type": "passive",
+    "per_lv": 1,
+    "text": "Always on: every blow against you is reduced by %d."
+   },
+   "does": "With the burden gone you stand firmer. [BSB: Psalm 40:2]"
+  },
+  "shield_faith": {
+   "name": "Shield of Faith",
+   "icon": "refuge",
+   "max": 5,
+   "zeal": 12,
+   "cd": 14.0,
+   "kind": "active",
+   "job": "valiant",
+   "fx": {
+    "type": "buff",
+    "stat": "guard",
+    "add": 4,
+    "per_lv": 1,
+    "secs": 8,
+    "text": "Blocks %d more of every blow for %d s.",
+    "show_mult": 1
+   },
+   "does": "Raise the shield against every flaming arrow. [BSB: Ephesians 6:16]"
+  },
+  "good_fight": {
+   "name": "Good Fight",
+   "icon": "steps",
+   "max": 5,
+   "zeal": 14,
+   "cd": 7.0,
+   "kind": "active",
+   "job": "valiant",
+   "fx": {
+    "type": "strike",
+    "mult": 2.0,
+    "per_lv": 6,
+    "range": 2.4,
+    "lunge": true
+   },
+   "does": "A heavy, honest blow. [BSB: 1 Timothy 6:12]"
+  },
+  "stand_firm": {
+   "name": "Stand Firm",
+   "icon": "staff",
+   "max": 5,
+   "zeal": 18,
+   "cd": 12.0,
+   "kind": "active",
+   "job": "valiant",
+   "fx": {
+    "type": "aoe",
+    "mult": 1.2,
+    "per_lv": 4,
+    "radius": 3.2
+   },
+   "does": "Hold your ground and strike all who press in. [BSB: Ephesians 6:13]"
+  },
+  "arrow_truth": {
+   "name": "Arrow of Truth",
+   "icon": "eye",
+   "max": 5,
+   "zeal": 10,
+   "cd": 5.0,
+   "kind": "active",
+   "job": "watcher",
+   "fx": {
+    "type": "strike",
+    "mult": 1.7,
+    "per_lv": 5,
+    "range": 9.0,
+    "lunge": false
+   },
+   "does": "A true shot from far off. [BSB: Psalm 127:4]"
+  },
+  "keep_watch": {
+   "name": "Keep Watch",
+   "icon": "eye",
+   "max": 5,
+   "zeal": 12,
+   "cd": 18.0,
+   "kind": "active",
+   "job": "watcher",
+   "fx": {
+    "type": "buff",
+    "stat": "crit",
+    "add": 0.2,
+    "per_lv": 0.04,
+    "secs": 10,
+    "text": "+%d%% critical hits for %d s.",
+    "show_mult": 100
+   },
+   "does": "Stay awake and see clearly. [BSB: Mark 13:37]"
+  },
+  "sound_alarm": {
+   "name": "Sound the Alarm",
+   "icon": "talk",
+   "max": 5,
+   "zeal": 18,
+   "cd": 12.0,
+   "kind": "active",
+   "job": "watcher",
+   "fx": {
+    "type": "aoe",
+    "mult": 1.1,
+    "per_lv": 4,
+    "radius": 4.2
+   },
+   "does": "The trumpet warns, and every foe nearby is struck. [BSB: Ezekiel 33:6]"
+  },
+  "edge_word": {
+   "name": "Edge of the Word",
+   "icon": "scroll",
+   "max": 5,
+   "zeal": 12,
+   "cd": 5.0,
+   "kind": "active",
+   "job": "expositor",
+   "fx": {
+    "type": "strike",
+    "mult": 2.0,
+    "per_lv": 6,
+    "range": 8.0,
+    "lunge": false
+   },
+   "does": "Living and active, sharper than any two-edged sword. [BSB: Hebrews 4:12]"
+  },
+  "lamp_feet": {
+   "name": "Lamp to My Feet",
+   "icon": "library",
+   "max": 5,
+   "zeal": 14,
+   "cd": 20.0,
+   "kind": "active",
+   "job": "expositor",
+   "fx": {
+    "type": "buff",
+    "stat": "power",
+    "add": 0.2,
+    "per_lv": 0.05,
+    "secs": 12,
+    "text": "Skills are %d%% stronger for %d s.",
+    "show_mult": 100
+   },
+   "does": "The Word lights the next step. [BSB: Psalm 119:105]"
+  },
+  "rightly_divide": {
+   "name": "Rightly Divide",
+   "icon": "page",
+   "max": 5,
+   "zeal": 20,
+   "cd": 12.0,
+   "kind": "active",
+   "job": "expositor",
+   "fx": {
+    "type": "aoe",
+    "mult": 1.4,
+    "per_lv": 5,
+    "radius": 3.6
+   },
+   "does": "Truth handled accurately strikes every error at once. [BSB: 2 Timothy 2:15]"
+  },
+  "still_waters": {
+   "name": "Still Waters",
+   "icon": "refuge",
+   "max": 5,
+   "zeal": 14,
+   "cd": 8.0,
+   "kind": "active",
+   "job": "shepherd",
+   "fx": {
+    "type": "heal",
+    "base": 40,
+    "per_lv": 14
+   },
+   "does": "Lead beside quiet waters; Health is restored. [BSB: Psalm 23:2]"
+  },
+  "rod_staff": {
+   "name": "Rod and Staff",
+   "icon": "staff",
+   "max": 5,
+   "zeal": 12,
+   "cd": 16.0,
+   "kind": "active",
+   "job": "shepherd",
+   "fx": {
+    "type": "buff",
+    "stat": "guard",
+    "add": 3,
+    "per_lv": 1,
+    "secs": 10,
+    "text": "Blocks %d more of every blow for %d s.",
+    "show_mult": 1
+   },
+   "does": "Comfort and protection in the dark valley. [BSB: Psalm 23:4]"
+  },
+  "seek_lost": {
+   "name": "Seek the Lost",
+   "icon": "hand",
+   "max": 5,
+   "zeal": 12,
+   "cd": 6.0,
+   "kind": "active",
+   "job": "shepherd",
+   "fx": {
+    "type": "strike",
+    "mult": 1.5,
+    "per_lv": 5,
+    "range": 7.0,
+    "lunge": false
+   },
+   "does": "Go after the one that strayed; strike what holds it. [BSB: Luke 15:4]"
+  },
+  "daily_bread": {
+   "name": "Daily Bread",
+   "icon": "bread",
+   "max": 5,
+   "zeal": 12,
+   "cd": 10.0,
+   "kind": "active",
+   "job": "steward",
+   "fx": {
+    "type": "heal",
+    "base": 30,
+    "per_lv": 10
+   },
+   "does": "Provision enough for today. [BSB: Matthew 6:11]"
+  },
+  "faithful_little": {
+   "name": "Faithful in Little",
+   "icon": "bag",
+   "max": 5,
+   "zeal": 0,
+   "cd": 25.0,
+   "kind": "active",
+   "job": "steward",
+   "fx": {
+    "type": "regen",
+    "base": 22,
+    "per_lv": 8,
+    "secs": 8
+   },
+   "does": "Small things kept well; Zeal returns. [BSB: Luke 16:10]"
+  },
+  "well_done": {
+   "name": "Well Done",
+   "icon": "hand",
+   "max": 5,
+   "zeal": 14,
+   "cd": 18.0,
+   "kind": "active",
+   "job": "steward",
+   "fx": {
+    "type": "buff",
+    "stat": "haste",
+    "add": 0.2,
+    "per_lv": 0.04,
+    "secs": 10,
+    "text": "Attack %d%% faster for %d s.",
+    "show_mult": 100
+   },
+   "does": "Work heartily while there is time. [BSB: Matthew 25:21]"
+  },
+  "press_on": {
+   "name": "Press On",
+   "icon": "steps",
+   "max": 5,
+   "zeal": 10,
+   "cd": 5.0,
+   "kind": "active",
+   "job": "wayfarer",
+   "fx": {
+    "type": "strike",
+    "mult": 1.8,
+    "per_lv": 5,
+    "range": 3.2,
+    "lunge": true
+   },
+   "does": "Reach forward and strike. [BSB: Philippians 3:14]"
+  },
+  "run_endurance": {
+   "name": "Run with Endurance",
+   "icon": "warp",
+   "max": 5,
+   "zeal": 12,
+   "cd": 18.0,
+   "kind": "active",
+   "job": "wayfarer",
+   "fx": {
+    "type": "buff",
+    "stat": "haste",
+    "add": 0.25,
+    "per_lv": 0.05,
+    "secs": 10,
+    "text": "Attack %d%% faster for %d s.",
+    "show_mult": 100
+   },
+   "does": "Lay aside every weight. [BSB: Hebrews 12:1]"
+  },
+  "narrow_way": {
+   "name": "Narrow Way",
+   "icon": "quest",
+   "max": 5,
+   "zeal": 18,
+   "cd": 12.0,
+   "kind": "active",
+   "job": "wayfarer",
+   "fx": {
+    "type": "aoe",
+    "mult": 1.2,
+    "per_lv": 4,
+    "radius": 3.0
+   },
+   "does": "Keep to the path and sweep aside what blocks it. [BSB: Matthew 7:14]"
+  }
+ }
+}

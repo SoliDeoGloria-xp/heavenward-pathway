@@ -1,14 +1,27 @@
 extends Node
-## Scripted run used in CI/dev to smoke-test the whole first session and capture screenshots.
+## Scripted run used in CI/dev: plays the whole game from the title to the first Calling,
+## saves screenshots, prints [pacing] lines per act and asserts the design doc's XP budget.
 ## Run: godot --path . -- --autotest   (screens saved to user://autotest/ or $HPO_SHOTS)
+## Eden is driven step by step (it teaches the UI); every later map is played by a small bot
+## that reads the current objective from data, so new chapters are covered without new test code.
+
+const SPEED := 3.0                 # game runs faster than real time during the test
+const FIGHT_TIMEOUT_S := 400.0
+const TRIAL_JOB := "valiant"
+const FINAL_JOB := "shepherd"
+const ROUTE := ["city", "slough", "interpreter", "cross", "hill", "palace", "trial", "palace", "lions_path", "palace", "lions", "palace"]
 
 var dir := ""
+var failures: Array[String] = []
 
 func _ready() -> void:
 	dir = OS.get_environment("HPO_SHOTS")
 	if dir == "":
 		dir = OS.get_user_data_dir() + "/autotest"
 	DirAccess.make_dir_recursive_absolute(dir)
+	G.delete_save()
+	G.settings.lords_day_bypass = true   # the test must run on any day of the week
+	G.time_scale = SPEED; Engine.time_scale = SPEED; Engine.max_physics_steps_per_frame = 32
 	run()
 
 func wait(s: float) -> void:
@@ -18,6 +31,11 @@ func shot(n: String) -> void:
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [dir, n])
 	print("[autotest] shot ", n)
+
+func check(ok: bool, msg: String) -> void:
+	if not ok:
+		failures.append(msg)
+		push_error("[autotest] FAIL: " + msg)
 
 func cur() -> Node:
 	return G.main.current
@@ -43,14 +61,53 @@ func skip_info() -> void:
 		w.hud.coach.next(); guard += 1
 		await wait(0.15)
 
+## Dev shortcut: HPO_FROM=<map id> starts the bot on that map with the earlier acts' quest XP already paid.
+func _jump(from: String) -> void:
+	var acts: Dictionary = G.data("acts")
+	var act: String = G.data("maps/" + from).act
+	G.pname = "Steadfast"; G.lamb_name = "Meadow"; G.build_player_sheet(); G.base_cap = 10
+	for a in acts.order:
+		if a == act:
+			break
+		G.cur_act = a
+		G.add_xp(int(acts.acts[a].base), int(acts.acts[a].job))
+		G.flags["page_" + a] = true
+	for f in ["city_fight", "prayer_taught"] + (["burden_gone", "sealed", "hill_reached"] if act in ["hill", "palace"] else []):
+		G.flags[f] = true
+	G.flags.erase("page_eden")
+	G.goto("world", {"map": from})
+	var i := ROUTE.find(from)
+	for map_id in ROUTE.slice(i):
+		if not failures.is_empty():
+			break
+		await play_map(map_id)
+	print("[autotest] partial run from %s: %s" % [from, "PASS" if failures.is_empty() else str(failures)])
+	get_tree().quit(0 if failures.is_empty() else 1)
+
 func run() -> void:
+	if OS.get_environment("HPO_FROM") != "":
+		await wait(1.0)
+		await _jump(OS.get_environment("HPO_FROM"))
+		return
 	await wait(1.5); await shot("01_title")
-	cur().start_age(); await wait(0.5); await shot("02_age")
-	cur()._age_ok(); await wait(1.2)   # single-player: goes straight to create
+	cur().start(); await wait(0.5); await shot("02_age")
+	cur()._age_ok(); await wait(1.2)
 	cur().name_edit.text = "Steadfast"; await wait(0.6); await shot("04_create")
 	cur()._make(); await wait(1.4); await shot("05_dream")
 	cur().advance(); await wait(1.0); await shot("05b_dream_choice")
 	cur().advance(true); await wait(0.4); cur().advance(); await wait(0.4); cur().advance(true); await wait(3.0)
+	await _eden()
+	for map_id in ROUTE:
+		if failures.is_empty():
+			await play_map(map_id)
+	await wait(3.0)
+	await shot("90_end")
+	_final_checks()
+	print("[autotest] ", "PASS" if failures.is_empty() else "FAILED: %s" % [failures])
+	get_tree().quit(0 if failures.is_empty() else 1)
+
+# ------------------------------------------------------------------ Eden (step by step: it teaches the HUD)
+func _eden() -> void:
 	await shot("06_eden_intro")
 	var w = world()
 	await talk(1); await wait(0.6); await shot("06b_eden_choice")
@@ -63,12 +120,10 @@ func run() -> void:
 	w.hud.coach.next(); await wait(0.4); await shot("07c_tour_plate")
 	w.hud.coach.next(); await wait(0.3); w.hud.coach.next(); await wait(0.3); await shot("07d_tour_map")
 	await skip_info()
-	await shot("07e_coach_vine")
 	await tp("vine"); await shot("08_act_prompt"); w.act_pressed(); await wait(2.6)
 	await shot("08b_level_lesson")
 	await skip_info(); await wait(0.3)
-	w.move_target = w.quests.objectives[w.quests.obj_idx].zone; w.player.position = w.quests.objectives[w.quests.obj_idx].zone; await wait(1.0)   # E2 rivers
-	await shot("08c_coach_more")
+	w.player.position = w.quests.cur().zone; await wait(1.0)   # E2 rivers
 	w.hud.open_more(); await wait(0.6); await shot("08d_more")
 	w.hud.open_sheet("status"); await wait(0.6); await shot("08e_status")
 	G.raise_stat("ste"); w.hud.open_sheet("status"); G.raise_stat("for"); w.hud.open_sheet("status"); await wait(0.5); await shot("08f_status_spent")
@@ -97,86 +152,194 @@ func run() -> void:
 	await skip_info()
 	w.hud.open_sheet("bag"); await wait(0.5); await shot("12_sheet_bag")
 	w.hud.open_sheet("guide"); await wait(0.5); await shot("13_sheet_guide")
-	w.hud.clear_overlay(); w.hud.open_more(); await wait(0.4); await shot("14_more")
+	w.hud.open_sheet("settings"); await wait(0.5); await shot("14_settings")
 	w.hud.clear_overlay(); await skip_info(); w.hud.coach._finish()
 	await tp("trees"); w.act_pressed(); await wait(1.5); await shot("15_fall_trees")
-	print("[pacing] after Eden: Base ", G.lvl, " xp ", G.xp, " | Job ", G.job, " jxp ", G.jxp)
-	assert(G.lvl == 5 and G.xp >= 320 and G.xp <= 340, "Eden must end at Base 5 with ~330 XP")
+	_pacing("eden")
 	await talk(2); await wait(1.2); await shot("15b_fall_serpent")
 	await talk(2); await wait(2.0); await shot("15c_fall_hide")
 	await talk(1); await wait(1.8); await shot("15d_cherubim")
-	await talk(2); await wait(3.0)
-	w = world()
-	await shot("16_wake")
-	await talk(2); await wait(0.4); await shot("16b_wake_reply"); await talk(2); await wait(1.0)
-	await shot("17_city")
-	w.player.position = Vector3(-8.0, 0, 2.6); await wait(1.2); await shot("17b_passing_pilgrims")
-	w.act_pressed(); await wait(0.5); await shot("17c_waymark"); w.hud.clear_overlay()
-	var t0 := Time.get_ticks_msec(); var ko_done := false; var mid := false
-	var learned_shot := false
-	while w.combat.slain < 3 and Time.get_ticks_msec() - t0 < 90000:
-		w.combat.attack_pressed()
-		if w.combat.slain >= 1 and not G.has_skill("steps") and not learned_shot:
-			learned_shot = true
-			await wait(0.6); await shot("18a_coach_learn")
-			G.learn_skill("steps"); G.learn_skill("refuge"); w.hud.clear_overlay()
-		if w.combat.slain >= 1 and not mid:
-			mid = true; await wait(0.3); await shot("18_combat")
-		if w.combat.slain >= 1 and not ko_done:
-			ko_done = true; G.hp = 2.0
-			await wait(4.0)
-			if w.combat.dead:
-				await shot("19_ko"); w.hud.clear_overlay(); w.combat.rise()
-		w.combat.skill("steps")
-		await wait(0.6)
-	print("[autotest] slain ", w.combat.slain)
-	await wait(2.5); await shot("20_evangelist")
+	await talk(1); await wait(1.2); await shot("15e_lamb_stays")
+	await talk(2); await wait(1.0)
+
+# ------------------------------------------------------------------ the bot (plays any data-driven map)
+func play_map(map_id: String) -> void:
+	var guard := 0
+	while (world() == null or world().map_id != map_id or world().hud == null or world().ending) and guard < 300:
+		await wait(0.1); guard += 1
+	var w = world()
+	check(w != null and w.map_id == map_id, "expected to arrive on map '%s'" % map_id)
+	if w == null or w.map_id != map_id:
+		return
+	await wait(1.0)
+	await shot("%s_%d_enter" % [map_id, w.quests.obj_idx])
+	var steps := 0; var last := ""
+	while is_instance_valid(w) and not w.ending and not w.quests.cur().is_empty() and steps < 80:
+		steps += 1
+		await _settle(w)
+		if not is_instance_valid(w):
+			break
+		await _do_side(w)
+		if not is_instance_valid(w):
+			break
+		var o: Dictionary = w.quests.cur()
+		if o.is_empty() or w.ending:
+			break
+		if map_id == "slough" and o.id == "wiseman" and not G.flags.has("tested_continue"):
+			w = await _continue_check(w)
+			continue
+		if o.id != last:
+			last = o.id
+			await shot("%s_%d_%s" % [map_id, w.quests.obj_idx, o.id])
+		await _do(w, o)
+	check(steps < 80, "map '%s' did not finish (stuck on '%s')" % [map_id, last])
+	if map_id != "palace" and map_id in G.data("acts").order:
+		_pacing(map_id)
+
+## Save / Continue: reload the save mid-map and make sure the objective and the world state come back.
+func _continue_check(w) -> Node:
+	G.flags["tested_continue"] = true
+	G.save_game()
+	var idx: int = w.quests.obj_idx; var xp: int = G.xp
+	check(G.load_game(), "the save file must load")
+	check(G.cur_map == "slough" and G.xp == xp, "Continue must restore the map and XP")
+	G.goto("world", {"map": G.cur_map})
+	await wait(1.5)
+	while world() == null or world() == w or world().hud == null:
+		await wait(0.1)
+	var nw = world()
+	await wait(0.5)
+	check(nw.quests.obj_idx == idx, "Continue must resume at objective %d, got %d" % [idx, nw.quests.obj_idx])
+	check(not nw.ent("wiseman").hidden and not nw.ent("help").hidden and nw.ent("pliable").hidden, "Continue must replay earlier objectives' world changes")
+	await shot("slough_continued")
+	return nw
+
+## Clear coach tips and dialogue, and spend points like a player would.
+func _settle(w) -> void:
+	var guard := 0
+	while is_instance_valid(w) and not w.ending and guard < 60 and (w.hud.dialog_active() or w.hud.coach.blocking() or w.quests.busy):
+		guard += 1
+		if w.hud.dialog_active():
+			w.hud.dialog_next(0)
+		elif w.hud.coach.blocking():
+			w.hud.coach.next()
+		elif w.hud.overlay_open():
+			await _ui(w)
+		await wait(0.2)
+	if is_instance_valid(w) and w.hud.overlay_open() and not w.hud.dialog_active():
+		w.hud.clear_overlay()   # result windows such as "Muster cleared"
+	if not is_instance_valid(w):
+		return
+	if w.combat.dead:
+		w.hud.clear_overlay(); w.combat.rise()
 	w.hud.coach._finish()
-	if w.combat.dead:
-		w.hud.clear_overlay(); w.combat.rise()
-	G.hp = G.hp_max
-	await tp("evangelist"); w.act_pressed(); await wait(1.6); await shot("21_dialog")
-	w.hud.clear_overlay(); w.map.after_evangelist(); await wait(1.0)
-	await shot("22_warp")
-	w.hud.enter_snapshot(); await wait(0.5); await shot("23_snapshot"); w.hud.exit_snapshot()
-	if w.combat.dead:
-		w.hud.clear_overlay(); w.combat.rise()
-	G.hp = G.hp_max
-	w.player.position = Vector3(19.5, 0, 0); await wait(2.0)
-	await shot("24_onward")
-	for i in 4:
-		cur().advance(true); await wait(0.5)
-	await wait(2.5)
-	w = world()
-	await shot("25_palace")
-	await wait(4.0); await shot("26_palace_life")
-	await tp("watchful"); w.act_pressed(); await wait(0.5); await shot("27_watchful")
-	w.hud.clear_overlay(); w.map._watchful_done(); await wait(0.5)
-	await tp("hearth"); w.act_pressed(); await wait(1.0); await shot("28_hearth")
-	w.toggle_sit()
-	w.hud.waymark_place(); await wait(0.4); await shot("29_waymark_place")
-	w.hud.clear_overlay(); w.quests.place_waymark("Rest here"); await wait(0.6)
-	await tp("board"); w.act_pressed(); await wait(0.5); await shot("30_muster_board")
-	w.hud.muster_queue(w.hud.MUSTERS[0]); await wait(2.5); await shot("31_muster_queue")
-	await wait(4.5); await shot("32_muster_ready")
-	w.hud.muster_enter(); await wait(3.0)
-	w = world()
-	await shot("33_lions")
-	t0 = Time.get_ticks_msec(); mid = false
-	while w.combat.boss != null and w.combat.boss.alive and Time.get_ticks_msec() - t0 < 150000:
+	while G.stat_pts > 0:
+		G.raise_stat("for" if G.stat_pts % 2 == 0 else "ste")
+	for id in ["steps", "refuge", "steady", "watchful_eye", "rest_prayer", "steps", "refuge", "steps"] + G.JOBS[G.job_id].skills if G.job_id != G.PILGRIM else ["steps", "refuge", "steady", "watchful_eye", "rest_prayer", "steps", "refuge", "steps", "steps"]:
+		if G.skill_pts > 0 and G.skill_open(id):
+			G.learn_skill(id)
+
+## Windows opened by an objective (Calling, Muster, Word Study).
+func _ui(w) -> void:
+	var o: Dictionary = w.quests.cur()
+	match String(o.get("ui", "")):
+		"calling_trial":
+			await shot("ui_calling_trial"); w.hud.more_tiles["calling_" + TRIAL_JOB].pressed.emit()
+		"calling":
+			await shot("ui_calling"); w.hud.more_tiles["calling_" + FINAL_JOB].pressed.emit()
+		"muster":
+			await shot("ui_muster"); w.hud.muster_enter()
+		"word_study":
+			await shot("ui_word_study_%s" % w.map_id); w.hud.clear_overlay(); w.quests.complete()
+		_:
+			w.hud.clear_overlay()
+
+func _do_side(w) -> void:
+	for sd in w.quests.side:
+		if not is_instance_valid(w):
+			return
+		if sd.has("ent") and not sd.id in w.quests.done_side and not w.ent(sd.ent).is_empty() and not w.ent(sd.ent).hidden:
+			await _use(w, sd.ent)
+			if sd.get("page", false):
+				await wait(0.3); await shot("%s_page" % w.map_id)
+			await _settle(w)
+
+func _use(w, ent_id: String) -> void:
+	var e: Dictionary = w.ent(ent_id)
+	w.player.position = e.pos + Vector3(-1.2, 0, 1.0)
+	await wait(0.3)
+	w.use(e)
+	await wait(0.4)
+
+func _do(w, o: Dictionary) -> void:
+	match String(o.type):
+		"zone", "exit":
+			w.player.position = o.zone; await wait(0.5)
+		"path":
+			while w.quests.cur() == o and w.quests.path_i < o.points.size():
+				w.player.position = o.points[w.quests.path_i]; await wait(0.4)
+			if w.quests.cur() == o:
+				await _fight(w, o)
+		"kill":
+			await _fight(w, o)
+		"check":
+			if String(o.check) == "rested" and not w.sitting:
+				w.toggle_sit(); await shot("%s_resting" % w.map_id)
+			await wait(1.0)
+		"script":
+			if w.combat.boss != null and w.combat.boss.alive:
+				await _fight(w, o)
+			else:
+				await wait(0.5)
+		"boss":
+			if not w.quests.fighting:
+				await _use(w, o.ent); await _settle(w)
+			await _fight(w, o)
+		_:
+			await _use(w, o.ent)
+
+## Fight until the objective changes. The bot plays plainly: attack, use every ready skill, eat when low.
+func _fight(w, o: Dictionary) -> void:
+	var t0: float = w.t; var shot_done := false
+	while is_instance_valid(w) and w.quests.cur() == o and not w.ending and w.t - t0 < FIGHT_TIMEOUT_S:
+		if w.hud.dialog_active() or w.hud.coach.blocking():
+			await _settle(w)
 		if w.combat.dead:
-			w.hud.clear_overlay(); w.combat.rise()
-		G.hp = maxf(G.hp, G.hp_max * 0.5)
-		w.combat.attack_pressed()
-		if not mid and w.combat.boss.hp < w.combat.boss.max * 0.7:
-			mid = true; await shot("34_muster_fight")
-		w.combat.skill("steps")
-		await wait(0.6)
-	print("[autotest] boss alive=", w.combat.boss.alive, " hp=", w.combat.boss.hp)
-	await wait(1.4); await shot("35_muster_cleared")
-	w.hud.clear_overlay(); await wait(0.5)
-	w.player.position = Vector3(0, 0, -9.6); await wait(2.5)
-	await shot("36_end")
-	print("[autotest] marks ", G.marks, " secrets ", G.secrets)
-	print("[autotest] done")
-	get_tree().quit()
+			await shot("%s_ko" % w.map_id); w.hud.clear_overlay(); w.combat.rise()
+		if G.hp < G.hp_max * 0.4:
+			G.hp = G.hp_max * 0.8   # test only: the bot does not dodge, so it is kept on its feet
+		if w.combat.target == null or not w.combat.target.alive:
+			var boss = w.combat.boss
+			var m = boss if (boss != null and boss.alive) else w.combat._nearest_mob(999.0)
+			w.combat.target = m
+			if m != null and m.actor.position.distance_to(w.player.position) > 12.0:
+				w.player.position = m.actor.position + Vector3(1.5, 0, 0)
+		for page in 2:
+			for id in G.page_skills(page, false):
+				if w.combat.cd.get(id, 0.0) <= 0.0 and G.zeal >= int(G.SKILL_INFO[id].zeal) and w.combat.gcd <= 0.0:
+					w.combat.skill(id)
+		if not shot_done and w.combat.slain >= 1:
+			shot_done = true; await shot("%s_%d_fight" % [w.map_id, w.quests.obj_idx])
+		await wait(0.5)
+	check(not is_instance_valid(w) or w.quests.cur() != o or w.ending, "fight for '%s' on %s timed out" % [o.id, w.map_id])
+
+# ------------------------------------------------------------------ pacing and budget checks
+func _pacing(act: String) -> void:
+	var plan: Dictionary = G.data("acts").acts[act]
+	var got: Array = G.act_xp.get(act, [0, 0])
+	print("[pacing] %-12s quest XP %4d/%-4d base, %3d/%-3d job | Base %d Job %d | mob XP so far %d | plan %d min" % [act, got[0], plan.base, got[1], plan.job, G.lvl, G.job, G.ledger.mob[0], plan.minutes])
+	check(int(got[0]) == int(plan.base) and int(got[1]) == int(plan.job), "%s quest XP %s differs from the design budget %d/%d" % [act, got, plan.base, plan.job])
+	check(G.lvl >= int(plan.end_base) and (G.job >= int(plan.end_job) or G.job_id != G.PILGRIM),   # the Calling restarts Job Level at 1
+		 "%s should end at Base %d / Job %d or above, got %d / %d" % [act, plan.end_base, plan.end_job, G.lvl, G.job])
+
+func _final_checks() -> void:
+	_pacing("palace")
+	var q: Array = G.ledger.quest; var m: Array = G.ledger.mob
+	var share := float(m[0]) / float(q[0])
+	print("[pacing] total quest XP %d base / %d job (design: 2210 / 855) | mob XP %d (%.0f%% extra) | %s, Base %d, Job %d" % [q[0], q[1], m[0], share * 100.0, G.job_name(), G.lvl, G.job])
+	check(int(q[0]) == G.base_total(10) and int(q[1]) == 855, "quest XP must total 2210 base / 855 job, got %s" % [q])
+	check(G.job_id == FINAL_JOB and G.job == 1 and G.lvl >= 10, "the first job change must leave Base >= 10 and the new job at Job Level 1")
+	check(cur() != null and cur().name == "End", "the run must finish on the end screen")
+	check(G.has_save() and G.load_game() and G.cur_map == "palace" and G.job_id == FINAL_JOB, "the final save must hold the Calling")
+	check(G.armor and not G.burden and Quests.pages_found() == 6, "story state: armor given, burden gone, six Dreamer's Pages (got %d)" % Quests.pages_found())
+	print("[autotest] marks ", G.marks, " secrets ", G.secrets, " kos ", G.kos)

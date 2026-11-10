@@ -2,6 +2,7 @@ extends RefCounted
 ## Eden Isle: geometry and the garden's interactions.
 
 var w: World
+const LILY_REACH := 3.2
 
 func _init(world: World) -> void:
 	w = world
@@ -104,23 +105,7 @@ func build() -> void:
 	w.quests._add_waymark(Vector3(-12.0, 0, -2.0), "Read slowly [BSB: Psalm 119:105]", "Psalter", 57)
 	w.folk._add_passerby([Vector3(-24, 0, 4), Vector3(-6, 0, 8), Vector3(10, 0, 7), Vector3(24, 0, 5)], "Marigold", "walking in the garden", [1, 2, 2], true)
 	_build_eden_guides()
-	## Six chapters of the Prologue (see data/progression.json and the story doc):
-	## E1 The Orchard (walk, tend) · E2 The Four Rivers (rivers, stats) · E3 The Fields (gather, learn)
-	## E4 The Garden (name, lilies) · E5 The Midst (read) · E6 The Fall (trees). Base XP sums to 330, Job to 35.
-	w.quests.objectives = [
-		{"id": "walk", "text": "Walk to the glowing circle by the Dreamer's lamp", "zone": Vector3(-8, 0, 7), "xp": [20, 5]},
-		{"id": "tend", "text": "Tend the Young Vine (tap Act when close)", "ent": "vine", "xp": [20, 2]},
-		{"id": "rivers", "text": "Follow the water to the river's edge", "zone": Vector3(0, 0, -15), "xp": [35, 5], "chapter": "The Four Rivers"},
-		{"id": "stats", "text": "Spend your attribute points (More → Status)"},
-		{"id": "gather", "text": "Gather figs from the Fig Tree", "ent": "fig", "xp": [60, 8], "chapter": "The Fields"},
-		{"id": "learn", "text": "Learn Tend and Keep (More → Skills)"},
-		{"id": "lilies", "text": "Tend the drooping lilies with your skill (0/3)", "chapter": "The Garden"},
-		{"id": "name", "text": "Give the Lamb a name", "ent": "lamb", "xp": [55, 7]},
-		{"id": "read", "text": "Read the Stone Tablet (Word Study)", "ent": "stone", "xp": [20, 2], "chapter": "The Midst of the Garden"},
-		{"id": "trees", "text": "Behold the two trees in the midst of the garden", "ent": "trees"}]
 
-
-# ------------------------------------------------------------------ interaction handlers
 func _act_vine() -> void:
 	if w.quests.cur_obj() != "tend":
 		G.say("The vine is flourishing.", G.SYS); return
@@ -146,6 +131,7 @@ func _act_lamb() -> void:
 
 
 func _lamb_named(n: String) -> void:
+	G.lamb_name = n
 	w.ent("lamb").name = n
 	_lamb_actor.set_name_text(n)
 	G.say("You named the lamb %s." % n, G.SYS)
@@ -155,7 +141,7 @@ func _lamb_named(n: String) -> void:
 func _act_stone() -> void:
 	if w.quests.cur_obj() != "read":
 		G.say("Words are carved upon the stone.", G.SYS); return
-	w.hud.word_study(_stone_read)
+	w.hud.word_study(_stone_read, "eden")
 
 
 func _stone_read() -> void:
@@ -172,8 +158,9 @@ func _act_trees() -> void:
 	if w.ending:
 		return
 	w.ending = true
-	G.add_xp(70, 0, "eden")   # E6 The Fall
-	w.scene._fall_scene()
+	var xv: Array = w.quests.cur().xp   # E6 The Fall: paid as the scene begins, since the map ends with it
+	G.add_xp(int(xv[0]), int(xv[1]), "eden")
+	w.scene.fall()
 
 
 func _build_eden_guides() -> void:
@@ -205,16 +192,29 @@ func _dreamer_tick(delta: float) -> void:
 
 
 ## Objectives that finish by themselves (spend points, learn a skill).
-func _eden_obj_tick() -> void:
-	match w.quests.cur_obj():
-		"stats":
-			if G.stat_pts == 0:
-				w.quests.complete()
-		"learn":
-			if G.has_skill("tend"):
-				w.quests.complete()
-
 ## Per-frame hook called by the world loop.
 func tick(delta: float) -> void:
 	_dreamer_tick(delta)
-	_eden_obj_tick()
+
+## Tend and Keep: bring the nearest drooping lily back to bloom. Returns false when none is in reach.
+func tend_lily() -> bool:
+	var best = null; var bd := LILY_REACH
+	for l in lilies:
+		var dl := Vector2(w.player.position.x - l.pos.x, w.player.position.z - l.pos.z).length()
+		if not l.bloomed and dl < bd:
+			bd = dl; best = l
+	if best == null:
+		G.say("Stand next to a drooping lily, then use Tend and Keep.", G.WARN)
+		return false
+	w.pact.play_once("cast", 0.5); w.pact.facing = (best.pos - w.player.position).normalized()
+	best.bloomed = true; best.actor.play("bloom"); best.actor.squash(0.2)
+	w.kit._sparkle(best.pos + Vector3(0, 0.6, 0), Color("dff7ff"))
+	Fx.ring(w, best.pos, Color(0.85, 1, 0.85), 1.6, 0.5)
+	lilies_done += 1
+	G.say("The lily lifts its head and blooms.", G.SYS)
+	if w.quests.cur_obj() == "lilies":
+		w.quests.cur().text = "Tend the drooping lilies with your skill (%d/%d)" % [lilies_done, lilies.size()]
+		w.quests._update_quest()
+		if lilies_done >= lilies.size():
+			w.quests.complete()
+	return true

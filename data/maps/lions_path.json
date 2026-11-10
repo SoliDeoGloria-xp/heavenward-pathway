@@ -1,0 +1,215 @@
+{
+ "id": "lions_path",
+ "act": "palace",
+ "name": "The Lions' Path",
+ "sub": "Dungeon · Shades that turn pilgrims back",
+ "layer": "The Way",
+ "combat": true,
+ "repeat_flag": "lions_path_done",
+ "start": [
+  0,
+  17
+ ],
+ "bounds": [
+  -7,
+  -20,
+  14,
+  40
+ ],
+ "music": "hill",
+ "look": {
+  "bg": "#2c2a30",
+  "amb": "#c8c0d0",
+  "amb_e": 0.36,
+  "tint": [
+   0.94,
+   0.92,
+   1.0
+  ],
+  "sun_e": 0.5,
+  "sun_c": "#d8c8e0",
+  "post": [
+   0.82,
+   1.1,
+   [
+    0.98,
+    0.95,
+    1.04
+   ]
+  ],
+  "mini": "#908898",
+  "ground": "grass",
+  "ground_tint": "#8a8878",
+  "weather": ""
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    4,
+    40
+   ],
+   "tile": "dirt",
+   "tint": "#a89880"
+  },
+  {
+   "t": "wall",
+   "from": [
+    -7.6,
+    -20
+   ],
+   "to": [
+    -7.6,
+    20
+   ],
+   "h": 2.4,
+   "tint": "#b8b0a8"
+  },
+  {
+   "t": "wall",
+   "from": [
+    7.6,
+    -20
+   ],
+   "to": [
+    7.6,
+    20
+   ],
+   "h": 2.4,
+   "tint": "#b8b0a8"
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -6.5,
+    -18,
+    13,
+    34
+   ],
+   "n": 14,
+   "seed": 31
+  },
+  {
+   "t": "lamp",
+   "at": [
+    -2.6,
+    8
+   ],
+   "color": "#c8b0ff"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    2.6,
+    -6
+   ],
+   "color": "#c8b0ff"
+  },
+  {
+   "t": "light",
+   "at": [
+    0,
+    -19
+   ],
+   "y": 3,
+   "color": "#ffe9b0",
+   "e": 2.4,
+   "range": 8
+  }
+ ],
+ "ents": [
+  {
+   "id": "warp",
+   "kind": "warp",
+   "name": "The way onward",
+   "at": [
+    0,
+    -18.6
+   ],
+   "act": "Go on",
+   "icon": "warp",
+   "hidden": true
+  }
+ ],
+ "spawns": [
+  {
+   "mob": "mistrust",
+   "count": 4,
+   "area": [
+    -5,
+    4,
+    10,
+    8
+   ]
+  },
+  {
+   "mob": "timorous",
+   "count": 4,
+   "area": [
+    -5,
+    -6,
+    10,
+    8
+   ]
+  },
+  {
+   "mob": "mistrust",
+   "count": 3,
+   "area": [
+    -5,
+    -15,
+    10,
+    7
+   ]
+  },
+  {
+   "mob": "timorous",
+   "count": 2,
+   "area": [
+    -5,
+    -16,
+    10,
+    6
+   ]
+  }
+ ],
+ "objectives": [
+  {
+   "id": "clear",
+   "type": "kill",
+   "count": 10,
+   "dialog_start": "lions_path.intro",
+   "text": "Drive off the Shades on the Lions' Path",
+   "xp": [
+    150,
+    120
+   ],
+   "on_done": {
+    "flag": "lions_path_done",
+    "show": [
+     "warp"
+    ]
+   }
+  },
+  {
+   "id": "exit",
+   "type": "exit",
+   "text": "Return to the House",
+   "zone": [
+    0,
+    -18.6
+   ],
+   "to": "palace",
+   "xp": [
+    0,
+    0
+   ],
+   "ent": "warp"
+  }
+ ],
+ "side": []
+}

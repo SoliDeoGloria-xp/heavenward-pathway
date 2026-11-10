@@ -1,0 +1,581 @@
+{
+ "id": "slough",
+ "act": "slough",
+ "name": "The Slough of Despond",
+ "sub": "Chapter 2 · Toward the Wicket Gate",
+ "layer": "The Way",
+ "combat": true,
+ "start": [
+  -23,
+  0
+ ],
+ "bounds": [
+  -26,
+  -10,
+  52,
+  20
+ ],
+ "music": "slough",
+ "burden": true,
+ "resumable": true,
+ "look": {
+  "bg": "#28302a",
+  "amb": "#a8b0a8",
+  "amb_e": 0.36,
+  "tint": [
+   0.88,
+   0.92,
+   0.9
+  ],
+  "sun_e": 0.5,
+  "sun_c": "#c8d0c8",
+  "post": [
+   0.7,
+   1.06,
+   [
+    0.94,
+    0.98,
+    0.98
+   ]
+  ],
+  "mini": "#7a8a6a",
+  "ground": "grass",
+  "ground_tint": "#9aa58a",
+  "weather": "drizzle"
+ },
+ "enter_say": [
+  "The plain is wide and wet. Pliable walks beside you, full of questions."
+ ],
+ "zones": [
+  {
+   "area": [
+    -15,
+    -9,
+    22,
+    18
+   ],
+   "slow": 0.45,
+   "drain": 1.5,
+   "safe": [
+    [
+     -13,
+     1
+    ],
+    [
+     -10,
+     -1.5
+    ],
+    [
+     -7,
+     0.5
+    ],
+    [
+     -4,
+     2
+    ],
+    [
+     -1,
+     0
+    ],
+    [
+     2,
+     -1.5
+    ],
+    [
+     5,
+     0
+    ]
+   ],
+   "safe_r": 1.25,
+   "name": "the mire"
+  }
+ ],
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    -21,
+    0
+   ],
+   "size": [
+    10,
+    3
+   ],
+   "tile": "dirt",
+   "tint": "#b0a590"
+  },
+  {
+   "t": "path",
+   "at": [
+    -4,
+    0
+   ],
+   "size": [
+    22,
+    18
+   ],
+   "tile": "dirt",
+   "tint": "#5a5a48"
+  },
+  {
+   "t": "water",
+   "at": [
+    -4,
+    0
+   ],
+   "size": [
+    20,
+    16
+   ],
+   "y": 0.04,
+   "tint": "#5c6a4c"
+  },
+  {
+   "t": "stone",
+   "at": [
+    -13,
+    1
+   ]
+  },
+  {
+   "t": "stone",
+   "at": [
+    -10,
+    -1.5
+   ]
+  },
+  {
+   "t": "stone",
+   "at": [
+    -7,
+    0.5
+   ]
+  },
+  {
+   "t": "stone",
+   "at": [
+    -4,
+    2
+   ]
+  },
+  {
+   "t": "stone",
+   "at": [
+    -1,
+    0
+   ]
+  },
+  {
+   "t": "stone",
+   "at": [
+    2,
+    -1.5
+   ]
+  },
+  {
+   "t": "stone",
+   "at": [
+    5,
+    0
+   ]
+  },
+  {
+   "t": "path",
+   "at": [
+    15,
+    0
+   ],
+   "size": [
+    16,
+    3
+   ],
+   "tile": "dirt",
+   "tint": "#b0a590"
+  },
+  {
+   "t": "wall",
+   "from": [
+    24,
+    -10
+   ],
+   "to": [
+    24,
+    -2.2
+   ],
+   "h": 3.4,
+   "tint": "#d8d2c4"
+  },
+  {
+   "t": "wall",
+   "from": [
+    24,
+    2.2
+   ],
+   "to": [
+    24,
+    10
+   ],
+   "h": 3.4,
+   "tint": "#d8d2c4"
+  },
+  {
+   "t": "gate",
+   "at": [
+    24,
+    0
+   ]
+  },
+  {
+   "t": "light",
+   "at": [
+    23,
+    0
+   ],
+   "y": 3.4,
+   "color": "#fff0c0",
+   "e": 2.6,
+   "range": 9
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    -10,
+    52,
+    1.5
+   ],
+   "n": 12,
+   "seed": 3,
+   "tint": "#8a9a7a"
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    8.8,
+    52,
+    1.2
+   ],
+   "n": 12,
+   "seed": 4,
+   "tint": "#8a9a7a"
+  },
+  {
+   "t": "rocks",
+   "area": [
+    8,
+    -8,
+    14,
+    16
+   ],
+   "n": 8,
+   "seed": 5
+  },
+  {
+   "t": "house",
+   "at": [
+    13,
+    -8.4
+   ],
+   "w": 5.0
+  }
+ ],
+ "ents": [
+  {
+   "id": "pliable",
+   "kind": "npc",
+   "name": "Pliable",
+   "at": [
+    -21.5,
+    1.2
+   ],
+   "look": [
+    0,
+    2,
+    2
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "follow": true
+  },
+  {
+   "id": "help",
+   "kind": "npc",
+   "name": "Help",
+   "at": [
+    7.6,
+    0.4
+   ],
+   "look": [
+    2,
+    5,
+    0
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true
+  },
+  {
+   "id": "wiseman",
+   "kind": "npc",
+   "name": "Mr. Worldly Wiseman",
+   "at": [
+    11.5,
+    -4.5
+   ],
+   "look": [
+    0,
+    4,
+    1
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true
+  },
+  {
+   "id": "goodwill",
+   "kind": "npc",
+   "name": "Goodwill",
+   "at": [
+    22.2,
+    1.4
+   ],
+   "look": [
+    1,
+    5,
+    3
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true
+  },
+  {
+   "id": "knock",
+   "kind": "spot",
+   "name": "The Wicket Gate",
+   "at": [
+    22.6,
+    0
+   ],
+   "act": "Knock",
+   "icon": "hand",
+   "hidden": true
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    -18,
+    -7.5
+   ],
+   "act": "Search",
+   "icon": "eye"
+  },
+  {
+   "id": "warp",
+   "kind": "warp",
+   "name": "The way onward",
+   "at": [
+    25,
+    0
+   ],
+   "act": "Go on",
+   "icon": "warp",
+   "hidden": true
+  }
+ ],
+ "spawns": [
+  {
+   "mob": "mire_sloth",
+   "count": 5,
+   "area": [
+    9,
+    -7,
+    12,
+    14
+   ],
+   "at": "mire"
+  },
+  {
+   "mob": "glutton_grub",
+   "count": 3,
+   "area": [
+    10,
+    -6,
+    10,
+    12
+   ],
+   "at": "mire"
+  },
+  {
+   "mob": "despondling",
+   "count": 2,
+   "area": [
+    15,
+    -5,
+    6,
+    10
+   ],
+   "at": "mire"
+  }
+ ],
+ "objectives": [
+  {
+   "id": "sink",
+   "type": "zone",
+   "zone": [
+    -15.5,
+    0.5
+   ],
+   "dialog": "slough.sink",
+   "text": "Walk on across the plain with Pliable",
+   "xp": [
+    20,
+    0
+   ],
+   "on_done": {
+    "hide": [
+     "pliable"
+    ]
+   }
+  },
+  {
+   "id": "stones",
+   "type": "path",
+   "points": [
+    [
+     -10,
+     -1.5
+    ],
+    [
+     -4,
+     2
+    ],
+    [
+     2,
+     -1.5
+    ],
+    [
+     6.6,
+     0.2
+    ]
+   ],
+   "text": "Cross the Slough by the stepping stones",
+   "xp": [
+    40,
+    10
+   ],
+   "on_done": {
+    "show": [
+     "help"
+    ]
+   }
+  },
+  {
+   "id": "help",
+   "type": "talk",
+   "ent": "help",
+   "dialog": "slough.help",
+   "text": "Take Help's hand",
+   "xp": [
+    20,
+    0
+   ],
+   "on_done": {
+    "show": [
+     "wiseman"
+    ],
+    "heal": true
+   }
+  },
+  {
+   "id": "wiseman",
+   "type": "choice",
+   "ent": "wiseman",
+   "dialog": "slough.wiseman",
+   "text": "A gentleman hails you from the roadside",
+   "xp": [
+    30,
+    10
+   ],
+   "on_done": {
+    "hide": [
+     "wiseman"
+    ],
+    "branch": {
+     "flag": "ww_detour",
+     "then": {
+      "weary": true,
+      "say": "You return to the way, weary from the detour."
+     }
+    }
+   }
+  },
+  {
+   "id": "mire",
+   "type": "kill",
+   "count": 10,
+   "text": "Clear the mire's edge: Sloths, Grubs and Despondlings",
+   "xp": [
+    50,
+    30
+   ],
+   "on_done": {
+    "show": [
+     "knock"
+    ]
+   }
+  },
+  {
+   "id": "gate",
+   "type": "talk",
+   "ent": "knock",
+   "dialog": "slough.gate",
+   "text": "Knock at the Wicket Gate",
+   "xp": [
+    20,
+    10
+   ],
+   "on_done": {
+    "hide": [
+     "knock"
+    ],
+    "show": [
+     "warp",
+     "goodwill"
+    ],
+    "flag": "gate_passed"
+   }
+  },
+  {
+   "id": "exit",
+   "type": "exit",
+   "text": "Go in at the Gate",
+   "zone": [
+    25,
+    0
+   ],
+   "to": "interpreter",
+   "xp": [
+    0,
+    0
+   ],
+   "ent": "warp"
+  }
+ ],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "slough.page",
+   "xp": [
+    20,
+    0
+   ],
+   "text": "The Dreamer's Page: the Slough",
+   "page": true
+  }
+ ]
+}

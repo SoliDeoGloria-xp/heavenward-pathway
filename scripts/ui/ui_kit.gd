@@ -8,6 +8,9 @@ const INK := Color("1b1d26")
 const SUB := Color("4a5472")
 const GOLD := Color("b8933e")
 
+## Smallest touch target (48 dp on a 160 dpi baseline; the 720-high canvas maps 1 unit to about 1 dp on phones).
+const MIN_TOUCH := 48.0
+
 static func sb(path: String, margin: int, pad: int = 8) -> StyleBoxTexture:
 	var s := StyleBoxTexture.new()
 	s.texture = G.tex(path)

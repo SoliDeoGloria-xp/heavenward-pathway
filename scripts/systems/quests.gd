@@ -1,101 +1,381 @@
 class_name Quests
 extends RefCounted
-## Objective runner, secrets and Waymarks.
+## Objective runner. Objectives, side objectives and their XP come from data/maps/<id>.json, so a
+## chapter is added by writing data. Types: zone, path, exit, talk, interact, choice, kill, boss,
+## check, travel, and script (finished by a map script calling complete()).
+## Also owns secrets and Waymarks.
+
+const ZONE_RADIUS := 1.6
+const REST_SECONDS := 4.0          # how long "sit and rest" must be held
+const MARK_HEIGHT := 2.6
+const TIP_SECONDS := 7.0
+const ENT_TYPES := ["talk", "interact", "choice", "travel", "boss", "script", "exit"]
 
 var w: World
+var def: Dictionary = {}
+var objectives: Array = []
+var side: Array = []
+var done_side: Array = []
+var obj_idx := 0
+var kills := 0                     # kills counted toward the current objective
+var path_i := 0                    # next waypoint of a path objective
+var rest_t := 0.0
+var busy := false                  # a dialogue or UI for the current objective is open
+var fighting := false              # the current boss objective's fight has begun
+var secret_ids: Array = []
+var quest_mark: Label3D
+var zone_fx: Node3D
 
 func _init(world: World) -> void:
 	w = world
 
-var secret_ids: Array = []
+# ------------------------------------------------------------------ loading and progress
+func load_map(map_def: Dictionary) -> void:
+	def = map_def
+	objectives = def.get("objectives", []).duplicate(true)
+	side = def.get("side", []).duplicate(true)
+	var repeat: bool = def.has("repeat_flag") and G.flags.has(def.repeat_flag)
+	for o in objectives + side:
+		if repeat:
+			o.xp = [0, 0]   # a cleared side-map can be walked again, but pays its quest XP once
+		for k in ["zone", "at"]:
+			if o.has(k):
+				o[k] = World.v3(o[k])
+		if o.has("points"):
+			o.points = o.points.map(World.v3)
+		o["base_text"] = o.text
+	var st: Dictionary = G.map_state.get(w.map_id, {}) if def.get("resumable", false) else {}
+	obj_idx = mini(int(st.get("idx", 0)), objectives.size())
+	done_side = st.get("side", []).duplicate()
 
-var objectives: Array = []
+## Called once the HUD exists: replays finished objectives' world changes, then starts the current one.
+func begin() -> void:
+	for i in obj_idx:
+		apply(objectives[i].get("on_start", {}), true)
+		apply(objectives[i].get("on_fight", {}), true)
+		apply(objectives[i].get("on_done", {}), true)
+	for sd in side:
+		if sd.id in done_side:
+			apply(sd.get("on_done", {}), true)
+			if sd.get("page", false):
+				w.show_ent(sd.ent, false)
+	_start()
 
-var obj_idx := 0
+func cur() -> Dictionary:
+	return objectives[obj_idx] if obj_idx < objectives.size() else {}
 
-var quest_mark: Label3D
-
-var zone_fx: Node3D
-
-
-# ------------------------------------------------------------------ objectives
 func cur_obj() -> String:
-	return objectives[obj_idx].id if obj_idx < objectives.size() else ""
+	return cur().get("id", "")
 
-
-func complete() -> void:
-	if obj_idx < objectives.size() and objectives[obj_idx].has("xp"):
-		var xv: Array = objectives[obj_idx].xp
-		G.add_xp(int(xv[0]), int(xv[1]), w.map_id)
-	obj_idx += 1
-	if obj_idx < objectives.size() and objectives[obj_idx].has("chapter") and w.map_id == "eden":
-		G.say("Chapter: %s" % objectives[obj_idx].chapter, G.INFO)
-	if cur_obj() == "trees":
-		w.show_ent("trees", true)
-		var tw := w.create_tween().set_parallel(true)
-		tw.tween_property(w.sun, "light_color", Color("ffcf9a"), 4.0)
-		tw.tween_property(w.sun, "light_energy", 0.62, 4.0)
-		tw.tween_property(w.env, "ambient_light_energy", 0.34, 4.0)
-		w.post.set_shader_parameter("tint", Vector3(1.06, 0.98, 0.88))
+func _start() -> void:
+	kills = 0; path_i = 0; rest_t = 0.0; busy = false; fighting = false
+	var o := cur()
+	if o.is_empty():
+		_update_quest(); return
+	if o.has("chapter"):
+		G.say("Chapter: %s" % o.chapter, G.INFO)
+	apply(o.get("on_start", {}))
+	w.combat.spawn_group(o.id)
+	_refresh_text()
 	_update_quest()
-	if obj_idx < objectives.size():
-		G.say("Quest: " + objectives[obj_idx].text, G.INFO)
-		w.hud.quest_toast(objectives[obj_idx].text)
-	G.haptic(18)
+	_lesson(o)
 	w.lessons._on_new_obj()
+	if o.type == "travel" and G.flags.has(o.until):
+		complete.call_deferred()
+	elif o.type == "boss" and not o.has("ent"):
+		_begin_fight(o)
+	elif o.has("dialog_start"):
+		busy = true
+		w.scene.play(o.dialog_start, func() -> void: busy = false)
 
+func _lesson(o: Dictionary) -> void:
+	var tips: Dictionary = G.data("lessons").get(w.map_id, {})
+	if tips.has(o.id) and G.tip_once("lesson_%s_%s" % [w.map_id, o.id]):
+		var tip: Dictionary = tips[o.id]
+		w.hud.coach.tip(tip.text, func() -> Variant: return w.hud.get(tip.target), TIP_SECONDS)
 
+## Finish the current objective: pay its XP, apply its effects, move on.
+func complete() -> void:
+	var o := cur()
+	if o.is_empty():
+		return
+	busy = false
+	var xv: Array = o.get("xp", [0, 0])
+	if int(xv[0]) > 0 or int(xv[1]) > 0:
+		G.add_xp(int(xv[0]), int(xv[1]), w.map_id)
+	G.haptic(18); G.sfx("quest")
+	var fx: Dictionary = o.get("on_done", {})
+	apply(fx)
+	obj_idx += 1
+	_save()
+	if o.type == "exit":
+		leave(o.to)
+	elif fx.has("dialog"):
+		busy = true
+		w.scene.play(fx.dialog, _after_done.bind(fx))
+	else:
+		_after_done(fx)
+
+func _after_done(fx: Dictionary) -> void:
+	if fx.has("screen"):
+		w.ending = true
+		G.goto(fx.screen)
+		return
+	_start()
+	var o := cur()
+	if not o.is_empty():
+		G.say("Quest: " + o.text, G.INFO)
+		w.hud.quest_toast(o.text)
+
+func _save() -> void:
+	if def.get("resumable", false):
+		G.map_state[w.map_id] = {"idx": obj_idx, "side": done_side}
+		G.save_game()
+
+func leave(to: String) -> void:
+	w.ending = true
+	G.goto("world", {"map": to})
+
+# ------------------------------------------------------------------ effects (declarative, so progress can be replayed after a load)
+func apply(fx: Dictionary, replay: bool = false) -> void:
+	for id in fx.get("show", []):
+		w.show_ent(id, true)
+	for id in fx.get("hide", []):
+		w.show_ent(id, false)
+	if fx.has("flag"):
+		G.flags[fx.flag] = true
+	if fx.has("burden"):
+		G.burden = fx.burden
+	if fx.has("armor"):
+		G.armor = true; G.recalc()
+	if fx.get("unlock", "") == "snapshot":
+		w.snapshot_unlocked = true
+	if replay:
+		return
+	if fx.has("say"):
+		G.say(fx.say, G.INFO)
+	for item in fx.get("give", {}).keys():
+		G.bag_add(item, int(fx.give[item])); G.say("You got %s." % item, G.INFO)
+	if fx.has("manna"):
+		G.manna += float(fx.manna)
+	if fx.get("heal", false):
+		G.hp = G.hp_max; G.zeal = G.zeal_max
+	if fx.get("weary", false):
+		w.combat.make_weary()
+	if fx.has("call"):
+		_call(fx.call)
+	if fx.has("branch") and G.flags.has(fx.branch.flag):
+		apply(fx.branch.get("then", {}))
+	elif fx.has("branch"):
+		apply(fx.branch.get("else", {}))
+	G.stats_changed.emit()
+	if w.hud:
+		w.hud.refresh()
+
+## "call" effects name a method on the map's script, the coach, or the scene player.
+func _call(method: String) -> void:
+	for target in [w.map, w.lessons, w.scene, w.combat]:
+		if target != null and target.has_method(method):
+			target.call(method)
+			return
+	push_warning("Objective effect calls unknown method: " + method)
+
+# ------------------------------------------------------------------ per-frame checks
+func tick(delta: float) -> void:
+	var o := cur()
+	if o.is_empty() or busy or w.ending:
+		return
+	match o.type:
+		"zone", "exit":
+			if _near(o.zone):
+				_trigger(o)
+		"path":
+			if path_i < o.points.size() and _near(o.points[path_i]):
+				path_i += 1
+				w.kit._sparkle(w.player.position + Vector3(0, 0.6, 0))
+				_refresh_text(); _update_quest()
+			_check_path(o)
+		"check":
+			if _check(String(o.check), delta):
+				complete()
+
+func _near(p: Vector3) -> bool:
+	return Vector2(w.player.position.x - p.x, w.player.position.z - p.z).length() < ZONE_RADIUS
+
+func _check_path(o: Dictionary) -> void:
+	if path_i >= o.points.size() and kills >= int(o.get("kills", 0)):
+		_trigger(o)
+
+func _check(what: String, delta: float) -> bool:
+	if what == "stat_pts":
+		return G.stat_pts == 0
+	if what == "rested":
+		if w.sitting:   # total time counts, so a Slothling's interruption does not waste the rest
+			rest_t += delta
+		return rest_t >= REST_SECONDS
+	if what.begins_with("skill:"):
+		return G.has_skill(what.trim_prefix("skill:"))
+	push_warning("Unknown objective check: " + what)
+	return false
+
+## The objective's condition is met: play its dialogue (if any), then complete.
+func _trigger(o: Dictionary) -> void:
+	if o.has("dialog"):
+		busy = true
+		w.scene.play(o.dialog, complete)
+	else:
+		complete()
+
+func on_kill(m: Dictionary) -> void:
+	var o := cur()
+	if o.is_empty():
+		return
+	if o.type == "kill" or (o.type == "path" and o.has("kills")):
+		kills += 1
+		_refresh_text(); _update_quest()
+		if o.type == "kill" and kills >= int(o.count):
+			complete()
+	if o.type == "boss" and m.get("boss", false):
+		complete()
+
+func _refresh_text() -> void:
+	var o := cur()
+	match o.type:
+		"kill": o.text = "%s (%d/%d)" % [o.base_text, mini(kills, int(o.count)), int(o.count)]
+		"path":
+			o.text = "%s (%d/%d)" % [o.base_text, path_i, o.points.size()]
+			if o.has("kills"):
+				o.text += " · foes %d/%d" % [mini(kills, int(o.kills)), int(o.kills)]
+
+# ------------------------------------------------------------------ entities
+## An interactable was used. Returns true when an objective, side objective or idle dialogue handled it.
+func use_ent(e: Dictionary) -> bool:
+	if busy:
+		return true
+	var o := cur()
+	if not o.is_empty() and o.get("ent", "") == e.id and o.type in ENT_TYPES and o.type != "script":
+		_use_objective(o)
+		return true
+	for sd in side:
+		if sd.get("ent", "") == e.id and not sd.id in done_side:
+			busy = true
+			w.scene.play(sd.dialog, _side_done.bind(sd))
+			return true
+	if e.has("dialog"):
+		busy = true
+		w.scene.play(e.dialog, func() -> void: busy = false)
+		return true
+	return false
+
+func _use_objective(o: Dictionary) -> void:
+	if o.type == "exit":
+		return   # reached by walking into its zone
+	if o.type == "boss" and fighting:
+		return
+	if o.get("needs", "") == "first_job" and not G.first_job_ready():
+		busy = true
+		w.scene.play("palace.not_ready", func() -> void: busy = false)
+		return
+	busy = true
+	var next := func() -> void: _after_dialog(o)
+	if o.has("dialog") and not (o.type == "travel" and G.flags.has("seen_" + o.id)):
+		G.flags["seen_" + o.id] = true
+		w.scene.play(o.dialog, next)
+	else:
+		next.call()
+
+func _after_dialog(o: Dictionary) -> void:
+	match o.get("ui", ""):
+		"word_study": w.hud.word_study(complete, w.map_id)
+		"calling_trial": w.hud.calling(true, func(id: String) -> void: G.trial_job = id; travel_go())
+		"calling": w.hud.calling(false, func(id: String) -> void: G.change_job(id); w.refresh_player_sheet(); complete())
+		"muster": w.hud.muster_board()
+		_:
+			if o.type == "travel":
+				travel_go()
+			elif o.type == "boss":
+				_begin_fight(o)
+			else:
+				complete()
+
+## The UI closed without a choice (for example the player backed out of the Calling window).
+func ui_cancelled() -> void:
+	busy = false
+
+func _begin_fight(o: Dictionary) -> void:
+	busy = false; fighting = true
+	apply(o.get("on_fight", {}))
+	w.combat.spawn_boss(String(o.mob), o.at)
+	_update_quest()
+
+func travel_go() -> void:
+	_save()
+	leave(cur().to)
+
+func _side_done(sd: Dictionary) -> void:
+	busy = false
+	done_side.append(sd.id)
+	var xv: Array = sd.get("xp", [0, 0])
+	G.add_xp(int(xv[0]), int(xv[1]), w.map_id)
+	apply(sd.get("on_done", {}))
+	if sd.get("page", false):
+		w.show_ent(sd.ent, false)
+		G.flags["page_" + w.map_id] = true
+		G.say("Dreamer's Page found (%d of %d). They are kept in More → The Way." % [pages_found(), G.data("acts").order.size() - 1], G.INFO)
+	else:
+		G.say("Done: %s" % sd.text, G.INFO)
+	_save()
+	_update_quest()
+
+static func pages_found() -> int:
+	var n := 0
+	for k in G.flags.keys():
+		if String(k).begins_with("page_"):
+			n += 1
+	return n
+
+# ------------------------------------------------------------------ quest marker and auto-path
 func _update_quest() -> void:
 	if quest_mark:
 		quest_mark.queue_free(); quest_mark = null
 	if zone_fx:
 		zone_fx.queue_free(); zone_fx = null
-	if obj_idx >= objectives.size():
+	var o := cur()
+	if o.is_empty():
 		w.hud.set_quest(""); return
-	var o: Dictionary = objectives[obj_idx]
 	w.hud.set_quest(o.text)
-	if o.has("ent"):
-		var e := w.ent(o.ent)
-		if not e.is_empty() and not e.hidden:
-			quest_mark = w.kit._label3d("!", e.pos + Vector3(0, 3.3 if o.ent in ["fig", "trees"] else 2.6, 0), Color("ffd400"), 90)
-			quest_mark.outline_modulate = Color("3a2a00")
-	if o.has("zone"):
-		zone_fx = Node3D.new(); w.add_child(zone_fx); zone_fx.position = o.zone
-		var g := Sprite3D.new(); g.texture = G.tex("res://assets/fx/glow.png"); g.pixel_size = 0.07; g.rotation_degrees.x = -90; g.position.y = 0.05; g.shaded = false
-		zone_fx.add_child(g)
-		var p := CPUParticles3D.new(); p.amount = 16; p.lifetime = 2.0; p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE; p.emission_sphere_radius = 1.0
-		p.direction = Vector3.UP; p.spread = 10; p.initial_velocity_min = 0.6; p.initial_velocity_max = 1.0; p.gravity = Vector3.ZERO
-		var q := QuadMesh.new(); q.size = Vector2(0.15, 0.15)
-		var m := StandardMaterial3D.new(); m.albedo_texture = G.tex("res://assets/fx/mote.png"); m.albedo_color = Color("fff3c0"); m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-		q.material = m; p.mesh = q; zone_fx.add_child(p)
+	var q: Variant = quest_target()
+	if q is Dictionary:
+		var tall: bool = q.id in ["fig", "trees"]
+		quest_mark = w.kit._label3d("!", q.pos + Vector3(0, MARK_HEIGHT + (0.7 if tall else 0.0), 0), Color("ffd400"), 90)
+		quest_mark.outline_modulate = Color("3a2a00")
+	elif q is Vector3:
+		zone_fx = w.kit.zone_marker(q)
 
-
+## Where the current objective wants the player: an entity (Dictionary), a point (Vector3) or null.
 func quest_target() -> Variant:
-	if obj_idx >= objectives.size():
+	var o := cur()
+	if o.is_empty() or (o.type == "boss" and fighting):
 		return null
-	var o: Dictionary = objectives[obj_idx]
-	if o.has("ent") and not w.ent(o.ent).is_empty() and not w.ent(o.ent).hidden:
+	if o.type == "path":
+		if path_i < o.points.size():
+			return o.points[path_i]
+		return null
+	if o.has("ent") and not w.ent(o.ent).is_empty() and not w.ent(o.ent).hidden and o.type != "exit":
 		return w.ent(o.ent)
 	if o.has("zone"):
 		return o.zone
 	return null
 
-
 func auto_path_quest() -> void:
-	var q = quest_target()
+	var q: Variant = quest_target()
 	if q is Dictionary:
 		w.pending = q; w.move_target = w._approach_point(q.pos)
 		G.say("Auto-path: %s" % q.name, G.SYS)
 	elif q is Vector3:
 		w.move_target = q; w.pending = null
-	elif cur_obj() in ["fight", "boss"]:
-		w.combat._attack_pressed()
-
-
-# ======================================================================
-# World model (GDD v0.3): Way traces, the House, the Muster
-# ======================================================================
+	elif w.is_combat():
+		w.combat.attack_pressed()
 
 # ------------------------------------------------------------------ secrets on the Way
 func _add_secret(id: String, pos: Vector3, title: String, text: String, reward: Dictionary) -> void:
@@ -123,6 +403,8 @@ func _find_secret(id: String, title: String, text: String, reward: Dictionary) -
 		G.bag_add(reward.item, 1); w.kit._item_pop("scroll")
 	if reward.has("xp"):
 		G.add_xp(int(reward.xp), int(reward.get("jxp", -1)), w.map_id)
+	if reward.has("manna"):
+		G.manna += float(reward.manna)
 	G.say("Secret found (%d/%d): %s" % [found.size(), secret_ids.size(), title], G.INFO)
 	w.hud.secret_card(title, text, found.size(), secret_ids.size())
 	G.haptic(30)
@@ -135,7 +417,7 @@ func secrets_text() -> String:
 
 
 # ------------------------------------------------------------------ Waymarks (after the pillar at the By-path stile)
-var waymark_phrases := ["Beware: danger ahead", "Rest here", "Look closely here", "Keep to the narrow way", "Well done, pilgrim!",
+var waymark_phrases: Array = ["Beware: danger ahead", "Rest here", "Look closely here", "Keep to the narrow way", "Well done, pilgrim!",
 	"Remember [BSB: Psalm 46:1]", "Read slowly [BSB: Psalm 119:105]"]
 
 

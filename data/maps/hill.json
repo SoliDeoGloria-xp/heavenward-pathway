@@ -1,0 +1,549 @@
+{
+ "id": "hill",
+ "act": "hill",
+ "name": "The Hill Difficulty",
+ "sub": "Chapter 5 · The narrow way goes up",
+ "layer": "The Way",
+ "combat": true,
+ "start": [
+  -25,
+  0
+ ],
+ "bounds": [
+  -28,
+  -12,
+  56,
+  24
+ ],
+ "music": "hill",
+ "resumable": true,
+ "look": {
+  "bg": "#34302a",
+  "amb": "#d8ccb8",
+  "amb_e": 0.4,
+  "tint": [
+   1.0,
+   0.95,
+   0.88
+  ],
+  "sun_e": 0.66,
+  "sun_c": "#ffd8a0",
+  "post": [
+   0.88,
+   1.06,
+   [
+    1.03,
+    0.99,
+    0.94
+   ]
+  ],
+  "mini": "#a89878",
+  "ground": "grass",
+  "ground_tint": "#b0a880",
+  "weather": ""
+ },
+ "enter_say": [
+  "A spring, and three ways. Only one of them goes up."
+ ],
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    54,
+    3
+   ],
+   "tile": "dirt",
+   "tint": "#b4aa98"
+  },
+  {
+   "t": "water",
+   "at": [
+    -24,
+    -3.4
+   ],
+   "size": [
+    3,
+    3
+   ],
+   "y": 0.05
+  },
+  {
+   "t": "path",
+   "at": [
+    -14,
+    6
+   ],
+   "size": [
+    3,
+    10
+   ],
+   "tile": "dirt",
+   "tint": "#8a7a68"
+  },
+  {
+   "t": "path",
+   "at": [
+    -14,
+    -6
+   ],
+   "size": [
+    3,
+    10
+   ],
+   "tile": "dirt",
+   "tint": "#6a6258"
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -22,
+    -11,
+    44,
+    6
+   ],
+   "n": 16,
+   "seed": 11
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -22,
+    5,
+    44,
+    6
+   ],
+   "n": 16,
+   "seed": 12
+  },
+  {
+   "t": "trees",
+   "area": [
+    -28,
+    10.5,
+    56,
+    1.4
+   ],
+   "n": 12,
+   "seed": 13,
+   "tint": "#a8a880"
+  },
+  {
+   "t": "trees",
+   "area": [
+    -28,
+    -12,
+    56,
+    1.4
+   ],
+   "n": 12,
+   "seed": 14,
+   "tint": "#8a8a78"
+  },
+  {
+   "t": "arbour",
+   "at": [
+    2,
+    3.6
+   ]
+  },
+  {
+   "t": "lion",
+   "at": [
+    21,
+    -3.4
+   ],
+   "side": 1
+  },
+  {
+   "t": "lion",
+   "at": [
+    21,
+    3.4
+   ],
+   "side": -1
+  },
+  {
+   "t": "wall",
+   "from": [
+    26.5,
+    -12
+   ],
+   "to": [
+    26.5,
+    -2.4
+   ],
+   "h": 3,
+   "tint": "#f4eee0"
+  },
+  {
+   "t": "wall",
+   "from": [
+    26.5,
+    2.4
+   ],
+   "to": [
+    26.5,
+    12
+   ],
+   "h": 3,
+   "tint": "#f4eee0"
+  },
+  {
+   "t": "light",
+   "at": [
+    26,
+    0
+   ],
+   "y": 3.2,
+   "color": "#ffe9b0",
+   "e": 2.4,
+   "range": 8
+  }
+ ],
+ "ents": [
+  {
+   "id": "formalist",
+   "kind": "npc",
+   "name": "Formalist",
+   "at": [
+    -13,
+    4.2
+   ],
+   "look": [
+    0,
+    0,
+    3
+   ],
+   "act": "Talk",
+   "icon": "talk"
+  },
+  {
+   "id": "hypocrisy",
+   "kind": "npc",
+   "name": "Hypocrisy",
+   "at": [
+    -11.8,
+    4.8
+   ],
+   "look": [
+    2,
+    1,
+    1
+   ],
+   "act": "Talk",
+   "icon": "talk"
+  },
+  {
+   "id": "arbour",
+   "kind": "spot",
+   "name": "The Arbour",
+   "at": [
+    2,
+    2.2
+   ],
+   "act": "Rest",
+   "icon": "sit"
+  },
+  {
+   "id": "sleepers",
+   "kind": "spot",
+   "name": "Three sleepers",
+   "at": [
+    10,
+    -5
+   ],
+   "act": "Wake",
+   "icon": "talk",
+   "hidden": true
+  },
+  {
+   "id": "watchful",
+   "kind": "npc",
+   "name": "Watchful the Porter",
+   "at": [
+    24.6,
+    1.6
+   ],
+   "look": [
+    0,
+    4,
+    3
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "hidden": true,
+   "color": "#ffe9a0"
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    -20,
+    8.6
+   ],
+   "act": "Search",
+   "icon": "eye"
+  },
+  {
+   "id": "warp",
+   "kind": "warp",
+   "name": "The way onward",
+   "at": [
+    27,
+    0
+   ],
+   "act": "Go on",
+   "icon": "warp",
+   "hidden": true
+  }
+ ],
+ "spawns": [
+  {
+   "mob": "stumbler",
+   "count": 3,
+   "area": [
+    -20,
+    -3,
+    8,
+    6
+   ],
+   "at": "climb"
+  },
+  {
+   "mob": "loiterer",
+   "count": 3,
+   "area": [
+    -10,
+    -3,
+    10,
+    6
+   ],
+   "at": "climb"
+  },
+  {
+   "mob": "pretender",
+   "count": 2,
+   "area": [
+    4,
+    -3,
+    8,
+    6
+   ],
+   "at": "climb"
+  },
+  {
+   "mob": "simple",
+   "count": 1,
+   "area": [
+    8,
+    -6.5,
+    1,
+    1
+   ],
+   "at": "presumption"
+  },
+  {
+   "mob": "sloth",
+   "count": 1,
+   "area": [
+    12,
+    -6.5,
+    1,
+    1
+   ],
+   "at": "presumption"
+  }
+ ],
+ "objectives": [
+  {
+   "id": "climb",
+   "type": "path",
+   "points": [
+    [
+     -18,
+     0
+    ],
+    [
+     -8,
+     0
+    ],
+    [
+     0,
+     0
+    ]
+   ],
+   "kills": 6,
+   "dialog_start": "hill.foot",
+   "text": "Climb the Hill: three waypoints, six foes",
+   "xp": [
+    90,
+    50
+   ],
+   "on_start": {
+    "flag": "hill_reached"
+   }
+  },
+  {
+   "id": "byways",
+   "type": "boss",
+   "mob": "formalist",
+   "at": [
+    -13,
+    6.5
+   ],
+   "ent": "formalist",
+   "dialog": "hill.byways",
+   "text": "Formalist and Hypocrisy at the by-ways",
+   "xp": [
+    120,
+    60
+   ],
+   "on_fight": {
+    "hide": [
+     "formalist",
+     "hypocrisy"
+    ]
+   }
+  },
+  {
+   "id": "arbour",
+   "type": "choice",
+   "ent": "arbour",
+   "dialog": "hill.arbour",
+   "text": "Rest at the Arbour, midway up",
+   "xp": [
+    40,
+    10
+   ],
+   "on_done": {
+    "heal": true,
+    "flag": "roll_lost",
+    "show": [
+     "sleepers"
+    ]
+   }
+  },
+  {
+   "id": "presumption",
+   "type": "boss",
+   "mob": "presumption",
+   "at": [
+    10,
+    -6.5
+   ],
+   "ent": "sleepers",
+   "dialog": "hill.presumption",
+   "text": "Three sleepers in irons: Simple, Sloth and Presumption",
+   "xp": [
+    120,
+    60
+   ],
+   "on_fight": {
+    "hide": [
+     "sleepers"
+    ]
+   }
+  },
+  {
+   "id": "roll",
+   "type": "zone",
+   "zone": [
+    2,
+    2.2
+   ],
+   "dialog_start": "hill.roll",
+   "text": "Your roll is gone! Go back to the Arbour",
+   "xp": [
+    40,
+    20
+   ],
+   "on_done": {
+    "say": "You found your roll.",
+    "show": [
+     "watchful"
+    ]
+   }
+  },
+  {
+   "id": "lions",
+   "type": "path",
+   "points": [
+    [
+     17,
+     0
+    ],
+    [
+     23.5,
+     0
+    ]
+   ],
+   "dialog_start": "hill.lions",
+   "text": "Pass between the lions: keep to the midst of the path",
+   "xp": [
+    40,
+    20
+   ],
+   "on_done": {
+    "show": [
+     "warp"
+    ]
+   }
+  },
+  {
+   "id": "exit",
+   "type": "exit",
+   "text": "Come to the Palace Beautiful",
+   "zone": [
+    27,
+    0
+   ],
+   "to": "palace",
+   "xp": [
+    0,
+    0
+   ],
+   "ent": "warp"
+  }
+ ],
+ "zones": [
+  {
+   "area": [
+    18.5,
+    -4.6,
+    5,
+    3.2
+   ],
+   "hurt": 9,
+   "name": "the lion's reach"
+  },
+  {
+   "area": [
+    18.5,
+    1.4,
+    5,
+    3.2
+   ],
+   "hurt": 9,
+   "name": "the lion's reach"
+  }
+ ],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "hill.page",
+   "xp": [
+    20,
+    10
+   ],
+   "text": "The Dreamer's Page: the Hill",
+   "page": true
+  }
+ ]
+}

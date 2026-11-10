@@ -6,6 +6,8 @@ var year_lbl: Label
 var age_msg: Label
 var panel_holder: CenterContainer
 var tap_lbl: Label
+const MIN_AGE := 13
+const ADULT_AGE := 18
 var phase := "start"
 var t := 0.0
 
@@ -34,7 +36,7 @@ func _ready() -> void:
 	tap_lbl.position = Vector2(-150, -110); tap_lbl.size = Vector2(300, 50)
 	tap_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(tap_lbl)
-	var ver := UIKit.outlined("Demo build 0.1 · placeholder art", 16, Color(1, 1, 1, 0.8))
+	var ver := UIKit.outlined("Version %s · placeholder art" % ProjectSettings.get_setting("application/config/version"), 16, Color(1, 1, 1, 0.8))
 	ver.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 	ver.position = Vector2(-330, -36); add_child(ver)
 	panel_holder = CenterContainer.new(); UIKit.full_rect(panel_holder)
@@ -48,15 +50,53 @@ func _process(delta: float) -> void:
 
 func _gui_input(e: InputEvent) -> void:
 	if phase == "start" and e is InputEventScreenTouch and e.pressed:
+		start()
+
+## First tap: Lord's Day reading, Continue / New game when a save exists, otherwise the age gate.
+func start() -> void:
+	if G.lords_day():
+		_lords_day_panel()
+	elif G.has_save():
+		_continue_panel()
+	else:
 		start_age()
+
+func _panel(title: String, width: float) -> VBoxContainer:
+	phase = "panel"
+	tap_lbl.visible = false
+	for c in panel_holder.get_children():
+		c.queue_free()
+	var w := UIKit.window(title, Vector2(width, 0))
+	panel_holder.add_child(w.root)
+	return w.body
+
+func _continue_panel() -> void:
+	var b := _panel("Welcome back, pilgrim", 560)
+	b.add_child(UIKit.label("Your journey is saved on this device.", 20, UIKit.SUB, false, true))
+	b.add_child(UIKit.button("Continue", _continue, 0, true))
+	b.add_child(UIKit.button("New game (replaces the save)", func() -> void: phase = "start"; start_age(), 0))
+
+func _continue() -> void:
+	if G.load_game():
+		G.goto("world", {"map": G.cur_map})
+	else:
+		G.delete_save(); phase = "start"; start_age()
+
+## Lord's Day Mode: the road rests; only quiet reading is offered, with no rewards.
+func _lords_day_panel() -> void:
+	var b := _panel("The Lord's Day", 640)
+	b.add_child(UIKit.label("Today the road rests. Nothing is earned or lost. Read, be with your church, and come back tomorrow.", 20, UIKit.INK, false, true))
+	for ref in G.data("lords_day").readings:
+		b.add_child(UIKit.parchment("[BSB: %s]" % ref))
+	if G.DEV_UNLOCK:
+		b.add_child(UIKit.button("Tester: play anyway", func() -> void:
+			G.settings.lords_day_bypass = true; G.save_settings(); phase = "start"; start(), 0))
 
 func start_age() -> void:
 	if phase != "start":
 		return
+	var b := _panel("Before you begin", 560)
 	phase = "age"
-	tap_lbl.visible = false
-	var w := UIKit.window("Before you begin", Vector2(560, 0))
-	var b: VBoxContainer = w.body
 	b.add_child(UIKit.label("Year of birth", 22, UIKit.BLUE_INK, true))
 	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_CENTER; row.add_theme_constant_override("separation", 8)
 	row.add_child(UIKit.button("−10", func(): _yr(-10), 76))
@@ -71,22 +111,25 @@ func start_age() -> void:
 	age_msg.custom_minimum_size = Vector2(500, 0)
 	b.add_child(age_msg)
 	b.add_child(UIKit.button("Continue", _age_ok, 0, true))
-	panel_holder.add_child(w.root)
 
 func _yr(d: int) -> void:
-	year = clampi(year + d, 1930, 2026)
+	year = clampi(year + d, 1930, _this_year())
 	year_lbl.text = str(year)
 
 func _age_ok() -> void:
-	var age := 2026 - year
-	if age < 13:
+	var age := _this_year() - year
+	if age < MIN_AGE:
 		age_msg.text = "Heavenward Pathway Online is for players 13 and older. Thank you for your interest; please come back when you are older."
 		age_msg.add_theme_color_override("font_color", Color("a8342a"))
 		return
-	G.minor = age < 18
+	G.minor = age < ADULT_AGE
 	for c in panel_holder.get_children():
 		c.queue_free()
+	G.delete_save()
 	G.goto("create")   # single-player: no server screen
+
+func _this_year() -> int:
+	return int(Time.get_datetime_dict_from_system().year)
 
 
 class KeyArt extends Control:

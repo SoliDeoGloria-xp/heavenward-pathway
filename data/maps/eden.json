@@ -1,0 +1,173 @@
+{
+ "id": "eden",
+ "act": "eden",
+ "name": "Eden Isle",
+ "sub": "Prologue · The Garden",
+ "layer": "The Way",
+ "combat": false,
+ "base_cap": 5,
+ "start": [
+  -14,
+  6
+ ],
+ "music": "eden",
+ "look": {
+  "bg": "#2e4a2a",
+  "amb": "#e8eef8",
+  "amb_e": 0.42,
+  "tint": [
+   1.03,
+   1.0,
+   0.93
+  ],
+  "sun_e": 0.78,
+  "sun_c": "#fff3dc",
+  "post": [
+   1.06,
+   1.05,
+   [
+    1.04,
+    1.01,
+    0.94
+   ]
+  ],
+  "mini": "#8cc062",
+  "ground": "grass",
+  "ground_tint": "#ffffff",
+  "weather": ""
+ },
+ "enter_say": [
+  "Welcome to Eden Isle, the Dreamer's vision of the garden."
+ ],
+ "objectives": [
+  {
+   "id": "walk",
+   "type": "zone",
+   "text": "Walk to the glowing circle by the Dreamer's lamp",
+   "on_start": {"call": "eden_intro"},
+   "zone": [
+    -8,
+    7
+   ],
+   "xp": [
+    20,
+    5
+   ],
+   "chapter": "The Orchard"
+  },
+  {
+   "id": "tend",
+   "type": "script",
+   "text": "Tend the Young Vine (tap Act when close)",
+   "ent": "vine",
+   "xp": [
+    20,
+    2
+   ]
+  },
+  {
+   "id": "rivers",
+   "type": "zone",
+   "text": "Follow the water to the river's edge",
+   "zone": [
+    0,
+    -15
+   ],
+   "xp": [
+    35,
+    5
+   ],
+   "chapter": "The Four Rivers"
+  },
+  {
+   "id": "stats",
+   "type": "check",
+   "check": "stat_pts",
+   "text": "Spend your attribute points (More → Status)",
+   "xp": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "gather",
+   "type": "script",
+   "text": "Gather figs from the Fig Tree",
+   "ent": "fig",
+   "xp": [
+    60,
+    8
+   ],
+   "chapter": "The Fields"
+  },
+  {
+   "id": "learn",
+   "type": "check",
+   "check": "skill:tend",
+   "text": "Learn Tend and Keep (More → Skills)",
+   "xp": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "lilies",
+   "type": "script",
+   "text": "Tend the drooping lilies with your skill (0/3)",
+   "xp": [
+    30,
+    3
+   ],
+   "chapter": "The Garden"
+  },
+  {
+   "id": "name",
+   "type": "script",
+   "text": "Give the Lamb a name",
+   "ent": "lamb",
+   "xp": [
+    55,
+    7
+   ]
+  },
+  {
+   "id": "read",
+   "type": "script",
+   "text": "Read the Stone Tablet (Word Study)",
+   "ent": "stone",
+   "xp": [
+    20,
+    2
+   ],
+   "chapter": "The Midst of the Garden"
+  },
+  {
+   "id": "trees",
+   "type": "script",
+   "text": "Behold the two trees in the midst of the garden",
+   "ent": "trees",
+   "xp": [
+    70,
+    0
+   ],
+   "on_start": {
+    "show": [
+     "trees"
+    ],
+    "call": "dusk"
+   },
+   "chapter": "The Fall"
+  }
+ ],
+ "side": [
+  {
+   "id": "dreamer_note",
+   "type": "secret",
+   "text": "The Dreamer's Note",
+   "xp": [
+    20,
+    3
+   ]
+  }
+ ]
+}

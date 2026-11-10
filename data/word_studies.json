@@ -1,0 +1,50 @@
+{
+ "eden": {
+  "title": "Stone Tablet",
+  "ref": "Genesis 2:15",
+  "questions": [
+   {
+    "p": "Where is this passage found?",
+    "o": [
+     "Genesis 2",
+     "Exodus 16",
+     "Psalm 23"
+    ],
+    "a": 0
+   },
+   {
+    "p": "Why was the man placed in the garden?",
+    "o": [
+     "To build a great city",
+     "To tend it and keep it",
+     "To rest and do nothing"
+    ],
+    "a": 1
+   }
+  ]
+ },
+ "interpreter": {
+  "title": "The Reading Room",
+  "ref": "Psalm 119:105",
+  "questions": [
+   {
+    "p": "Where is this passage found?",
+    "o": [
+     "Proverbs 3",
+     "Psalm 119",
+     "Isaiah 40"
+    ],
+    "a": 1
+   },
+   {
+    "p": "What is the Word called in this verse?",
+    "o": [
+     "A sword and a shield",
+     "A lamp and a light",
+     "A river and a tree"
+    ],
+    "a": 1
+   }
+  ]
+ }
+}

@@ -1,0 +1,78 @@
+{
+ "order": [
+  "valiant",
+  "watcher",
+  "expositor",
+  "shepherd",
+  "steward",
+  "wayfarer"
+ ],
+ "jobs": {
+  "valiant": {
+   "name": "Valiant",
+   "role": "Defender · stands in front",
+   "tint": "#a8423a",
+   "blurb": "Stands between the flock and the foe. Sturdy, close-in, hard to move.",
+   "skills": [
+    "shield_faith",
+    "good_fight",
+    "stand_firm"
+   ]
+  },
+  "watcher": {
+   "name": "Watcher",
+   "role": "Ranged · strikes from afar",
+   "tint": "#4e8f55",
+   "blurb": "Keeps watch on the wall and sees danger first. Fights at a distance.",
+   "skills": [
+    "arrow_truth",
+    "keep_watch",
+    "sound_alarm"
+   ]
+  },
+  "expositor": {
+   "name": "Expositor",
+   "role": "Caster · the Word rightly handled",
+   "tint": "#7a5aa6",
+   "blurb": "Opens the Word carefully and plainly. Strong skills, light armor.",
+   "skills": [
+    "edge_word",
+    "lamp_feet",
+    "rightly_divide"
+   ]
+  },
+  "shepherd": {
+   "name": "Shepherd",
+   "role": "Healer · tends the flock",
+   "tint": "#d0a85e",
+   "blurb": "Feeds, guards and seeks the sheep. The best healing in a company.",
+   "skills": [
+    "still_waters",
+    "rod_staff",
+    "seek_lost"
+   ]
+  },
+  "steward": {
+   "name": "Steward",
+   "role": "Support · faithful with what is given",
+   "tint": "#4f79b8",
+   "blurb": "Manages what belongs to another, faithfully. Keeps a company supplied.",
+   "skills": [
+    "daily_bread",
+    "faithful_little",
+    "well_done"
+   ]
+  },
+  "wayfarer": {
+   "name": "Wayfarer",
+   "role": "Skirmisher · quick on the road",
+   "tint": "#b8642e",
+   "blurb": "A stranger and exile passing through. Light, fast, hard to pin down.",
+   "skills": [
+    "press_on",
+    "run_endurance",
+    "narrow_way"
+   ]
+  }
+ }
+}

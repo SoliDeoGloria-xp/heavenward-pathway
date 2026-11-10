@@ -3,6 +3,8 @@ extends RefCounted
 ## Map-building primitives and world feedback (float text, sparkles, drops, ambience).
 
 var w: World
+var bobbers: Array = []          # nodes that float gently (tableau orbs)
+var spinners: Array = []         # [node, radians per second]
 
 func _init(world: World) -> void:
 	w = world
@@ -107,12 +109,13 @@ func _walls() -> void:
 	_solid_box(Vector3(1, h, w.bounds.size.y + 2), Vector3(w.bounds.end.x + 0.5, h / 2, w.bounds.get_center().y))
 
 
-func _water(size: Vector2, pos: Vector3) -> void:
+func _water(size: Vector2, pos: Vector3, tint: Color = Color(0.95, 1.0, 1.05)) -> void:
 	var sh := Shader.new()
 	sh.code = """shader_type spatial;
 render_mode unshaded;
 uniform sampler2D tex : source_color, filter_linear, repeat_enable;
 uniform vec2 scale = vec2(8.0, 2.0);
+uniform vec3 tint = vec3(0.95, 1.0, 1.05);
 void fragment(){
 	vec2 uv = UV * scale;
 	vec3 a = texture(tex, uv + vec2(TIME * 0.05, TIME * 0.02)).rgb;
@@ -120,11 +123,12 @@ void fragment(){
 	vec2 cell = floor(uv * 7.0);
 	float rnd = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
 	float glint = step(0.93, fract(rnd + TIME * 0.35)) * step(0.6, fract(uv.x * 7.0)) * 0.35;
-	ALBEDO = mix(a, b, 0.5) * vec3(0.95, 1.0, 1.05) + vec3(glint);
+	ALBEDO = mix(a, b, 0.5) * tint + vec3(glint) * tint;
 }"""
 	var m := ShaderMaterial.new(); m.shader = sh
 	m.set_shader_parameter("tex", G.tex("res://assets/tiles/water.png"))
 	m.set_shader_parameter("scale", Vector2(size.x / 4.0, size.y / 4.0))
+	m.set_shader_parameter("tint", Vector3(tint.r, tint.g, tint.b))
 	_plane(size, m, pos)
 
 
@@ -260,9 +264,10 @@ func _ambient_tick(delta: float) -> void:
 			h.light_energy = 2.0 + sin(w.t * 1.6) * 0.5
 		elif h is Sprite3D:
 			h.modulate.a = 0.45 + sin(w.t * 1.6) * 0.15
-	var warp := w.ent("warp")
-	if not warp.is_empty() and warp.node.has_meta("spin2"):
-		warp.node.get_meta("spin2").rotation.y -= delta * 2.4
+	for sp in spinners:
+		sp[0].rotation.y += delta * float(sp[1])
+	for b in bobbers:
+		b.position.y += sin(w.t * 2.0 + b.position.x) * 0.003
 	# target ring + outline on the current target
 	var tgt = w.combat.target if (w.combat.target != null and w.combat.target.alive) else null
 	if tgt != last_target:
@@ -392,3 +397,27 @@ func _bubble(a: SpriteActor, text: String) -> void:
 	l.outline_modulate = Color(1, 1, 1, 0.95); l.outline_size = 16; l.width = 360; l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.reparent(a); l.position = Vector3(0, 2.45, 0)
 	var tw := w.create_tween(); tw.tween_interval(3.2); tw.tween_method(_label_alpha.bind(l), 1.0, 0.0, 0.4); tw.tween_callback(l.queue_free)
+
+## Glowing circle on the ground that marks where an objective wants the player.
+func zone_marker(at: Vector3) -> Node3D:
+	var n := Node3D.new(); w.add_child(n); n.position = at
+	var g := Sprite3D.new(); g.texture = G.tex("res://assets/fx/glow.png"); g.pixel_size = 0.07; g.rotation_degrees.x = -90; g.position.y = 0.05; g.shaded = false
+	n.add_child(g)
+	Fx.particles(n, at + Vector3(0, 0.2, 0), {"amount": 16, "life": 2.0, "one_shot": false, "explode": 0.0, "sphere": 1.0, "vmin": 0.6, "vmax": 1.0, "spread": 10.0,
+		"gravity": Vector3.ZERO, "color": Color("fff3c0"), "size": 0.15, "local": true})
+	return n
+
+## The shining portal that leads on to the next map.
+func warp(at: Vector3) -> Node3D:
+	var n := Node3D.new(); n.position = at; w.add_child(n)
+	for spec in [[0.014, 0.06, 1.5, Color.WHITE], [0.011, 0.08, -2.4, Color(1, 0.95, 0.7, 0.8)]]:
+		var ring := Sprite3D.new(); ring.texture = G.tex("res://assets/fx/warp.png"); ring.pixel_size = spec[0]; ring.rotation_degrees.x = -90
+		ring.position.y = spec[1]; ring.shaded = false; ring.transparent = true; ring.modulate = spec[3]; n.add_child(ring)
+		spinners.append([ring, spec[2]])
+	var beam := Sprite3D.new(); beam.texture = G.tex("res://assets/fx/glow.png"); beam.pixel_size = 0.09; beam.scale = Vector3(1, 3, 1)
+	beam.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y; beam.shaded = false; beam.position.y = 3.0; beam.modulate = Color(1, 0.95, 0.75, 0.75); n.add_child(beam)
+	var wl := OmniLight3D.new(); wl.light_color = Color("fff0c0"); wl.light_energy = 3.0; wl.omni_range = 8.0; wl.position.y = 2.0; n.add_child(wl)
+	holy_lights.append(wl)
+	Fx.particles(n, at + Vector3(0, 0.2, 0), {"amount": 24, "life": 2.2, "one_shot": false, "explode": 0.0, "sphere": 1.2, "vmin": 0.8, "vmax": 1.6, "spread": 8.0,
+		"gravity": Vector3.ZERO, "color": Color("fff0c0"), "size": 0.14, "local": true})
+	return n
