@@ -18,8 +18,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  validate:
+    name: Validate data and scripts
+    runs-on: ubuntu-22.04
+    container:
+      image: barichello/godot-ci:4.3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Data validator (XP budget, exits, BSB cites, reserved names)
+        run: python3 tools/validate_data.py
+      - name: Scripts parse
+        run: |
+          godot --headless --import 2>&1 | tee /tmp/import.log
+          if grep -q "SCRIPT ERROR\|Parse Error" /tmp/import.log; then echo "::error::GDScript errors"; exit 1; fi
+
+  # Plays the whole game with the autotest bot. Software rendering is slow, so this takes a while;
+  # it does not block the builds, and its screenshots are not stored (Actions storage is limited).
+  playthrough:
+    name: Autotest playthrough (title to first Calling)
+    needs: validate
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    timeout-minutes: 45
+    container:
+      image: barichello/godot-ci:4.3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install a virtual display
+        run: apt-get update && apt-get install -y --no-install-recommends xvfb libgl1-mesa-dri libglx-mesa0 xauth
+      - name: Play
+        run: |
+          godot --headless --import || true
+          HPO_SHOTS=/tmp/shots xvfb-run -a godot --path . --rendering-driver opengl3 -- --autotest 2>&1 | grep -E "pacing|autotest\] (PASS|FAILED|marks)|FAIL|SCRIPT ERROR" | tee /tmp/run.log
+          grep -q "\[autotest\] PASS" /tmp/run.log
+
   web:
     name: Web export
+    needs: validate
     runs-on: ubuntu-22.04
     container:
       image: barichello/godot-ci:4.3
@@ -57,6 +92,9 @@ jobs:
 
   android:
     name: Android debug APK
+    needs: validate
+    permissions:
+      contents: write
     runs-on: ubuntu-22.04
     container:
       image: barichello/godot-ci:4.3
@@ -73,8 +111,14 @@ jobs:
           mkdir -v -p build/android
           godot --headless --export-debug "Android" build/android/hpo-debug.apk
           ls -la build/android
-      - uses: actions/upload-artifact@v4
+      # Published to a draft GitHub Release, never an Actions artifact: release assets do not count
+      # against the repository's Actions storage. The same draft is replaced on every push.
+      - name: Publish debug APK to the "debug-latest" draft Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: hpo-android-debug-apk
-          path: build/android/hpo-debug.apk
-          retention-days: 3
+          tag_name: debug-latest
+          name: "HPO debug APK (latest main)"
+          body: "Debug build of the latest commit on main, for sideloading. Not for Play Console."
+          draft: true
+          prerelease: true
+          files: build/android/hpo-debug.apk

@@ -13,11 +13,11 @@ on:
       version_code:
         description: "Android versionCode (integer, must increase each upload)"
         required: true
-        default: "1"
+        default: "2"
       version_name:
         description: "Version name shown to players"
         required: true
-        default: "0.1.0"
+        default: "0.2.0"
 
 env:
   GODOT_VERSION: "4.3"
