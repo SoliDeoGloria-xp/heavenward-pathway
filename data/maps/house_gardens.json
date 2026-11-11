@@ -1,0 +1,380 @@
+{
+ "id": "house_gardens",
+ "act": "interpreter",
+ "name": "The House Gardens",
+ "sub": "Field · Recommended Level 6-9",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "interpreter",
+ "resumable": true,
+ "look": {
+  "bg": "#34382a",
+  "amb": "#f0e8d8",
+  "amb_e": 0.44,
+  "tint": [
+   1.03,
+   1.0,
+   0.92
+  ],
+  "sun_e": 0.78,
+  "sun_c": "#fff0d0",
+  "post": [
+   0.88,
+   1.04,
+   [
+    1.02,
+    1.0,
+    0.96
+   ]
+  ],
+  "mini": "#b0c088",
+  "ground": "grass",
+  "ground_b": "grass_dry",
+  "weather": "petals",
+  "flora": "green",
+  "rock": "stone",
+  "flowers": 18
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 312,
+   "tint": "#a09a8a",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 412,
+   "tint": "#a09a8a",
+   "n": 12
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 481
+  },
+  {
+   "t": "blooms",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 482,
+   "color": "#fff0a0"
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 483
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 488
+  },
+  {
+   "t": "blooms",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 489,
+   "color": "#e0704a"
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 490
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 495
+  },
+  {
+   "t": "blooms",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 496,
+   "color": "#9a7cc4"
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 497
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 502
+  },
+  {
+   "t": "blooms",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 503,
+   "color": "#f4efe4"
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 504
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "The Sundial",
+   "at": [
+    8,
+    -7
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "house_gardens.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "pedestal"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    21,
+    10.5
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "house_gardens.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: The House Gardens",
+   "page": true
+  }
+ ],
+ "burden": true,
+ "enter_say": [
+  "The House Gardens. The foes here suit Base Level 6 to 9. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "weedling",
+   "count": 7,
+   "lv": [
+    6,
+    7
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "dust_mote",
+   "count": 5,
+   "lv": [
+    6,
+    8
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "weedling",
+   "count": 5,
+   "lv": [
+    7,
+    9
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "dust_mote",
+   "count": 5,
+   "lv": [
+    8,
+    9
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "weedling",
+   "count": 1,
+   "lv": [
+    9,
+    9
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    -17,
+    9
+   ],
+   "title": "A Gardener's Tin",
+   "text": "Tucked under a bench: twine, a pruning knife, and the gardener's small savings, left for whoever weeds this bed. Denarii +40.",
+   "reward": {
+    "denarii": 40
+   }
+  }
+ ]
+}

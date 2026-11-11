@@ -1,0 +1,411 @@
+{
+ "id": "slough_deeps",
+ "act": "slough",
+ "name": "The Slough Deeps",
+ "sub": "Field · Recommended Level 9-13",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "slough",
+ "resumable": true,
+ "look": {
+  "bg": "#1a201c",
+  "amb": "#98a898",
+  "amb_e": 0.38,
+  "tint": [
+   0.82,
+   0.9,
+   0.86
+  ],
+  "sun_e": 0.4,
+  "sun_c": "#b0c0b0",
+  "post": [
+   0.66,
+   1.08,
+   [
+    0.92,
+    0.98,
+    0.96
+   ]
+  ],
+  "mini": "#4a5a48",
+  "ground": "marsh",
+  "ground_b": "mire",
+  "weather": "drizzle",
+  "flora": "dark",
+  "rock": "dark",
+  "tufts": 40,
+  "flowers": 0
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 308,
+   "tint": "#4a5448",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 408,
+   "tint": "#4a5448",
+   "n": 12
+  },
+  {
+   "t": "reeds",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 9,
+   "seed": 333
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 334
+  },
+  {
+   "t": "fog",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 336
+  },
+  {
+   "t": "reeds",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 9,
+   "seed": 340
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 341
+  },
+  {
+   "t": "water",
+   "at": [
+    16.1,
+    -8.25
+   ],
+   "size": [
+    7,
+    4.5
+   ],
+   "y": 0.04,
+   "tint": "#5c6a4c"
+  },
+  {
+   "t": "fog",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 343
+  },
+  {
+   "t": "reeds",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 9,
+   "seed": 347
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 348
+  },
+  {
+   "t": "water",
+   "at": [
+    -13.899999999999999,
+    8.25
+   ],
+   "size": [
+    7,
+    4.5
+   ],
+   "y": 0.04,
+   "tint": "#5c6a4c"
+  },
+  {
+   "t": "fog",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 350
+  },
+  {
+   "t": "reeds",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 9,
+   "seed": 354
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 355
+  },
+  {
+   "t": "fog",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 357
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "A Sunken Cart",
+   "at": [
+    9,
+    7
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "slough_deeps.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "crate"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    20,
+    -10.5
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "slough_deeps.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: The Slough Deeps",
+   "page": true
+  }
+ ],
+ "burden": true,
+ "enter_say": [
+  "The Slough Deeps. The foes here suit Base Level 9 to 13. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "bog_lurker",
+   "count": 6,
+   "lv": [
+    9,
+    10
+   ],
+   "aggro": "aggressive",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "despondling",
+   "count": 5,
+   "lv": [
+    9,
+    11
+   ],
+   "aggro": "aggressive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "sinker",
+   "count": 5,
+   "lv": [
+    11,
+    12
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "bog_lurker",
+   "count": 5,
+   "lv": [
+    11,
+    13
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "sinker",
+   "count": 1,
+   "lv": [
+    13,
+    13
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    -19,
+    9
+   ],
+   "title": "A Reed Basket",
+   "text": "Wedged in the reeds above the waterline, and dry inside. Denarii +50.",
+   "reward": {
+    "denarii": 50
+   }
+  }
+ ]
+}

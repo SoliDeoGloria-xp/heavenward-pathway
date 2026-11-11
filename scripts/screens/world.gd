@@ -24,6 +24,7 @@ const PLAYER_HEIGHT := 2.0          # world units for a full 96 px sheet cell (4
 const MAP_SCRIPT := "res://scripts/maps/%s.gd"
 
 var map_id := "eden"
+var kind := "story"              # this map's kind in the world graph: story, town, field, danger, instance
 var def: Dictionary = {}          # this map's definition from data/maps/<id>.json
 var hud: Node
 var cam_rig: Node3D
@@ -75,10 +76,11 @@ func _ready() -> void:
 	G.cur_at = at if at != null else []
 	if not map_id in G.visited:
 		G.visited.append(map_id)
-	if Portals.node(map_id).get("kind", "") == "town":
+	kind = String(Portals.node(map_id).get("kind", "story"))
+	if kind == "town":
 		G.last_town = map_id
-		if not map_id in G.waymarks_found:
-			G.waymarks_found.append(map_id)
+		if not map_id in G.milestones:
+			G.milestones.append(map_id)
 	G.base_cap = G.cap_for(int(def.get("base_cap", G.PROG["pilgrim_base_cap"])))
 	if def.has("burden"):
 		G.burden = def.burden and not G.flags.has("burden_gone")
@@ -108,6 +110,7 @@ func _ready() -> void:
 	G.save_game()   # chapter boundary: Continue returns to the start of this map (or its saved objective)
 	quests.begin()
 	portals.build()
+	combat.lair_ready()
 	hud.refresh()
 
 func info(k: String) -> Variant:
@@ -440,6 +443,7 @@ func _physics_process(delta: float) -> void:
 	_auto_battle()
 	if is_combat():
 		combat._mob_tick(delta)
+	combat.lair_tick()
 	if combat.boss != null:
 		combat._boss_tick(delta)
 	combat._allies_tick(delta)

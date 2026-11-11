@@ -1,0 +1,330 @@
+{
+ "id": "arbour_rest",
+ "act": "hill",
+ "name": "The Arbour Rest",
+ "sub": "Town · a safe place",
+ "layer": "House",
+ "combat": false,
+ "start": [
+  0.0,
+  -7.4
+ ],
+ "bounds": [
+  -18,
+  -12,
+  36,
+  24
+ ],
+ "music": "hill",
+ "resumable": true,
+ "look": {
+  "bg": "#34302a",
+  "amb": "#d8ccb8",
+  "amb_e": 0.4,
+  "tint": [
+   1.0,
+   0.95,
+   0.88
+  ],
+  "sun_e": 0.66,
+  "sun_c": "#ffd8a0",
+  "post": [
+   0.88,
+   1.06,
+   [
+    1.03,
+    0.99,
+    0.94
+   ]
+  ],
+  "mini": "#a89878",
+  "ground": "grass_dry",
+  "ground_b": "dirt",
+  "weather": "",
+  "flora": "dry",
+  "rock": "earth"
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    36,
+    3.4
+   ],
+   "tile": "cobble_warm",
+   "ragged": 0.25
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3.4,
+    24
+   ],
+   "tile": "cobble_warm",
+   "ragged": 0.25
+  },
+  {
+   "t": "house",
+   "at": [
+    -13,
+    -11
+   ],
+   "kind": "a",
+   "flip": false
+  },
+  {
+   "t": "house",
+   "at": [
+    -6.5,
+    -11
+   ],
+   "kind": "b",
+   "flip": false
+  },
+  {
+   "t": "house",
+   "at": [
+    6.5,
+    -11
+   ],
+   "kind": "c",
+   "flip": true
+  },
+  {
+   "t": "house",
+   "at": [
+    13,
+    -11
+   ],
+   "kind": "a",
+   "flip": true
+  },
+  {
+   "t": "lamp",
+   "at": [
+    -3.5,
+    -3.5
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    3.5,
+    -3.5
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    -3.5,
+    3.5
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    3.5,
+    3.5
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "trees",
+   "area": [
+    -17,
+    8,
+    6,
+    3
+   ],
+   "n": 2,
+   "seed": 67
+  },
+  {
+   "t": "trees",
+   "area": [
+    11,
+    8,
+    6,
+    3
+   ],
+   "n": 2,
+   "seed": 77
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -17,
+    -7,
+    4,
+    4
+   ],
+   "n": 3,
+   "seed": 87
+  },
+  {
+   "t": "banner",
+   "at": [
+    -2.4,
+    -8.2
+   ],
+   "color": "#2f4f8f"
+  },
+  {
+   "t": "banner",
+   "at": [
+    2.4,
+    -8.2
+   ],
+   "color": "#2f4f8f"
+  }
+ ],
+ "ents": [
+  {
+   "id": "keeper",
+   "kind": "npc",
+   "name": "Hillside Provisioner",
+   "at": [
+    -8,
+    -5
+   ],
+   "standee": "shepherd",
+   "look": [
+    0,
+    0,
+    0
+   ],
+   "act": "Trade",
+   "icon": "bag",
+   "ui": "shop"
+  },
+  {
+   "id": "storage",
+   "kind": "spot",
+   "name": "Storage Chest",
+   "at": [
+    -12,
+    -5.5
+   ],
+   "act": "Open",
+   "icon": "bag",
+   "ui": "storage",
+   "prop": {
+    "t": "kit",
+    "name": "crate"
+   }
+  },
+  {
+   "id": "rest",
+   "kind": "spot",
+   "name": "The Arbour",
+   "at": [
+    9,
+    -5.5
+   ],
+   "act": "Rest",
+   "icon": "sit",
+   "ui": "rest_point",
+   "prop": {
+    "t": "arbour"
+   }
+  },
+  {
+   "id": "board",
+   "kind": "spot",
+   "name": "Town Board",
+   "at": [
+    6,
+    6.5
+   ],
+   "act": "Read",
+   "icon": "scroll",
+   "ui": "board",
+   "prop": {
+    "t": "kit",
+    "name": "signpost"
+   }
+  },
+  {
+   "id": "milestone",
+   "kind": "milestone",
+   "name": "Milestone",
+   "at": [
+    -6,
+    -1.8
+   ],
+   "act": "Travel",
+   "icon": "warp",
+   "ui": "milestone"
+  },
+  {
+   "id": "folk0",
+   "kind": "npc",
+   "name": "Weary Pilgrim",
+   "at": [
+    -5,
+    5
+   ],
+   "look": [
+    1,
+    3,
+    0
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "dialog": "arbour_rest.folk0",
+   "color": "#dfe9ff"
+  },
+  {
+   "id": "folk1",
+   "kind": "npc",
+   "name": "Water Carrier",
+   "at": [
+    10,
+    5.5
+   ],
+   "look": [
+    2,
+    2,
+    2
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "dialog": "arbour_rest.folk1",
+   "color": "#dfe9ff"
+  },
+  {
+   "id": "folk2",
+   "kind": "npc",
+   "name": "Old Climber",
+   "at": [
+    -12,
+    3.5
+   ],
+   "look": [
+    0,
+    5,
+    5
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "dialog": "arbour_rest.folk2",
+   "color": "#dfe9ff"
+  }
+ ],
+ "objectives": [],
+ "side": [],
+ "enter_say": [
+  "The Arbour Rest. No foe comes here. Trade, rest, read the board, and use the Milestone to return to any town you have reached."
+ ]
+}

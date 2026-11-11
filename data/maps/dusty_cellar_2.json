@@ -1,0 +1,262 @@
+{
+ "id": "dusty_cellar_2",
+ "act": "interpreter",
+ "name": "The Dusty Cellar: the Unswept Room",
+ "sub": "Danger · Recommended Level 18-20",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -19.4,
+  0.0
+ ],
+ "bounds": [
+  -24,
+  -9,
+  48,
+  18
+ ],
+ "music": "interpreter",
+ "resumable": true,
+ "look": {
+  "bg": "#1c1814",
+  "amb": "#c8b8a0",
+  "amb_e": 0.4,
+  "tint": [
+   0.98,
+   0.92,
+   0.84
+  ],
+  "sun_e": 0.35,
+  "sun_c": "#e8d0a8",
+  "post": [
+   0.78,
+   1.06,
+   [
+    1.02,
+    0.98,
+    0.92
+   ]
+  ],
+  "mini": "#6a5c48",
+  "ground": "plank",
+  "ground_b": "dirt_dark",
+  "weather": "",
+  "flora": "dry",
+  "rock": "earth",
+  "tufts": 0,
+  "flowers": 0,
+  "patches": 10
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    48,
+    3
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "wall",
+   "from": [
+    -24,
+    -9
+   ],
+   "to": [
+    24,
+    -9
+   ],
+   "h": 3.6,
+   "tint": "#8a8494"
+  },
+  {
+   "t": "wall",
+   "from": [
+    -24,
+    9
+   ],
+   "to": [
+    24,
+    9
+   ],
+   "h": 1.2,
+   "tint": "#8a8494"
+  },
+  {
+   "t": "stairs",
+   "at": [
+    -23.4,
+    0
+   ],
+   "steps": 3,
+   "w": 4
+  },
+  {
+   "t": "pillars",
+   "points": [
+    [
+     -12,
+     -7.4
+    ],
+    [
+     0,
+     -7.4
+    ],
+    [
+     12,
+     -7.4
+    ]
+   ],
+   "ruined": true,
+   "seed": 36
+  },
+  {
+   "t": "torch",
+   "at": [
+    -18,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "torch",
+   "at": [
+    -6,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "torch",
+   "at": [
+    6,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "torch",
+   "at": [
+    18,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "path",
+   "at": [
+    -1.0,
+    -4.5
+   ],
+   "size": [
+    4,
+    7
+   ],
+   "tile": "dirt_dark",
+   "y": 0.02,
+   "ragged": 0.2
+  },
+  {
+   "t": "path",
+   "at": [
+    -1.0,
+    5.0
+   ],
+   "size": [
+    4,
+    6
+   ],
+   "tile": "dirt_dark",
+   "y": 0.02,
+   "ragged": 0.2
+  },
+  {
+   "t": "menhirs",
+   "at": [
+    15,
+    0
+   ],
+   "r": 5.5,
+   "n": 5
+  }
+ ],
+ "ents": [],
+ "objectives": [],
+ "side": [],
+ "cam_dist": 15,
+ "enter_say": [
+  "The Dusty Cellar: the Unswept Room. A dangerous place: the foes here attack on sight and suit Base Level 18 to 20."
+ ],
+ "zones": [
+  {
+   "area": [
+    -3,
+    -8,
+    4,
+    7
+   ],
+   "name": "choking dust",
+   "slow": 0.7,
+   "drain": 3.0
+  },
+  {
+   "area": [
+    -3,
+    2,
+    4,
+    6
+   ],
+   "name": "choking dust",
+   "slow": 0.7,
+   "drain": 3.0
+  }
+ ],
+ "spawns": [
+  {
+   "mob": "dust_wraith",
+   "count": 6,
+   "lv": [
+    18,
+    19
+   ],
+   "aggro": "aggressive",
+   "area": [
+    -16,
+    -6,
+    18,
+    12
+   ]
+  },
+  {
+   "mob": "dust_mote",
+   "count": 3,
+   "lv": [
+    19,
+    20
+   ],
+   "aggro": "aggressive",
+   "area": [
+    -10,
+    -6,
+    12,
+    12
+   ]
+  }
+ ],
+ "boss": {
+  "mob": "stirred_dust",
+  "at": [
+   15,
+   0
+  ],
+  "lv": 20
+ }
+}

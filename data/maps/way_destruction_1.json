@@ -1,0 +1,251 @@
+{
+ "id": "way_destruction_1",
+ "act": "hill",
+ "name": "The Way called Destruction",
+ "sub": "Danger · Recommended Level 22-24",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -19.4,
+  0.0
+ ],
+ "bounds": [
+  -24,
+  -9,
+  48,
+  18
+ ],
+ "music": "shadow",
+ "resumable": true,
+ "look": {
+  "bg": "#14141e",
+  "amb": "#9090c0",
+  "amb_e": 0.5,
+  "tint": [
+   0.82,
+   0.84,
+   1.0
+  ],
+  "sun_e": 0.5,
+  "sun_c": "#a0a0e0",
+  "post": [
+   0.7,
+   1.05,
+   [
+    0.9,
+    0.92,
+    1.08
+   ]
+  ],
+  "mini": "#3a3a50",
+  "ground": "rock_dark",
+  "ground_b": "pit",
+  "weather": "",
+  "flora": "dark",
+  "rock": "dark",
+  "tufts": 30,
+  "flowers": 0
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    48,
+    3
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "wall",
+   "from": [
+    -24,
+    -9
+   ],
+   "to": [
+    24,
+    -9
+   ],
+   "h": 3.6,
+   "tint": "#8a8494"
+  },
+  {
+   "t": "wall",
+   "from": [
+    -24,
+    9
+   ],
+   "to": [
+    24,
+    9
+   ],
+   "h": 1.2,
+   "tint": "#8a8494"
+  },
+  {
+   "t": "stairs",
+   "at": [
+    -23.4,
+    0
+   ],
+   "steps": 3,
+   "w": 4
+  },
+  {
+   "t": "pillars",
+   "points": [
+    [
+     -12,
+     -7.4
+    ],
+    [
+     0,
+     -7.4
+    ],
+    [
+     12,
+     -7.4
+    ]
+   ],
+   "ruined": true,
+   "seed": 41
+  },
+  {
+   "t": "torch",
+   "at": [
+    -18,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "torch",
+   "at": [
+    -6,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "torch",
+   "at": [
+    6,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "torch",
+   "at": [
+    18,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "stairs",
+   "at": [
+    21.6,
+    0
+   ],
+   "steps": 3,
+   "w": 4
+  },
+  {
+   "t": "path",
+   "at": [
+    -4.0,
+    -5.0
+   ],
+   "size": [
+    4,
+    6
+   ],
+   "tile": "pit",
+   "y": 0.02,
+   "ragged": 0.2
+  },
+  {
+   "t": "path",
+   "at": [
+    8.0,
+    5.0
+   ],
+   "size": [
+    4,
+    6
+   ],
+   "tile": "pit",
+   "y": 0.02,
+   "ragged": 0.2
+  }
+ ],
+ "ents": [],
+ "objectives": [],
+ "side": [],
+ "cam_dist": 15,
+ "enter_say": [
+  "The Way called Destruction. A dangerous place: the foes here attack on sight and suit Base Level 22 to 24."
+ ],
+ "zones": [
+  {
+   "area": [
+    -6,
+    -8,
+    4,
+    6
+   ],
+   "name": "a sheer drop",
+   "hurt": 16
+  },
+  {
+   "area": [
+    6,
+    2,
+    4,
+    6
+   ],
+   "name": "a sheer drop",
+   "hurt": 16
+  }
+ ],
+ "spawns": [
+  {
+   "mob": "ruin",
+   "count": 5,
+   "lv": [
+    22,
+    23
+   ],
+   "aggro": "aggressive",
+   "area": [
+    -16,
+    -6,
+    14,
+    12
+   ]
+  },
+  {
+   "mob": "dark_stumbler",
+   "count": 4,
+   "lv": [
+    23,
+    24
+   ],
+   "aggro": "aggressive",
+   "area": [
+    2,
+    -6,
+    16,
+    12
+   ]
+  }
+ ]
+}

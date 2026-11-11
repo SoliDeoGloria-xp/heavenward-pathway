@@ -1,0 +1,381 @@
+{
+ "id": "neighbours_lane",
+ "act": "city",
+ "name": "Neighbours' Lane",
+ "sub": "Field · Recommended Level 3-6",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "city",
+ "resumable": true,
+ "look": {
+  "bg": "#2a2832",
+  "amb": "#a8a4c0",
+  "amb_e": 0.38,
+  "tint": [
+   0.86,
+   0.87,
+   0.98
+  ],
+  "sun_e": 0.55,
+  "sun_c": "#c8c4d8",
+  "post": [
+   0.72,
+   1.08,
+   [
+    0.93,
+    0.95,
+    1.05
+   ]
+  ],
+  "mini": "#8c9484",
+  "ground": "grass_dark",
+  "ground_b": "dirt_dark",
+  "weather": "drizzle",
+  "flora": "dark",
+  "rock": "stone",
+  "tufts": 60,
+  "flowers": 2
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 302,
+   "tint": "#5a5a64",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 402,
+   "tint": "#5a5a64",
+   "n": 12
+  },
+  {
+   "t": "house",
+   "at": [
+    -22.5,
+    -12.4
+   ],
+   "kind": "a"
+  },
+  {
+   "t": "house",
+   "at": [
+    -15.0,
+    -12.4
+   ],
+   "kind": "b"
+  },
+  {
+   "t": "house",
+   "at": [
+    -7.5,
+    -12.4
+   ],
+   "kind": "c"
+  },
+  {
+   "t": "crates",
+   "area": [
+    -24,
+    -11,
+    18,
+    3
+   ],
+   "n": 3,
+   "seed": 112
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 113
+  },
+  {
+   "t": "house",
+   "at": [
+    7.5,
+    -12.4
+   ],
+   "kind": "b"
+  },
+  {
+   "t": "house",
+   "at": [
+    15.0,
+    -12.4
+   ],
+   "kind": "c"
+  },
+  {
+   "t": "house",
+   "at": [
+    22.5,
+    -12.4
+   ],
+   "kind": "a"
+  },
+  {
+   "t": "crates",
+   "area": [
+    6,
+    -11,
+    18,
+    3
+   ],
+   "n": 3,
+   "seed": 119
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 120
+  },
+  {
+   "t": "crates",
+   "area": [
+    -24,
+    5.5,
+    18,
+    3
+   ],
+   "n": 3,
+   "seed": 126
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 127
+  },
+  {
+   "t": "crates",
+   "area": [
+    6,
+    5.5,
+    18,
+    3
+   ],
+   "n": 3,
+   "seed": 133
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 134
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "The Guild Notice",
+   "at": [
+    10,
+    -7
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "neighbours_lane.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "signpost"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    21,
+    11
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "neighbours_lane.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: Neighbours' Lane",
+   "page": true
+  }
+ ],
+ "burden": true,
+ "enter_say": [
+  "Neighbours' Lane. The foes here suit Base Level 3 to 6. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "gossip",
+   "count": 6,
+   "lv": [
+    3,
+    4
+   ],
+   "aggro": "alert",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "scoffling",
+   "count": 4,
+   "lv": [
+    3,
+    5
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "mocker",
+   "count": 5,
+   "lv": [
+    4,
+    6
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "gossip",
+   "count": 5,
+   "lv": [
+    4,
+    6
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "mocker",
+   "count": 1,
+   "lv": [
+    6,
+    6
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    -18,
+    -9
+   ],
+   "title": "A Dropped Letter",
+   "text": "A letter never sent, begging a brother to come back from the road. A few coins were folded into it for his journey home. Denarii +30.",
+   "reward": {
+    "denarii": 30
+   }
+  }
+ ]
+}

@@ -100,7 +100,8 @@ var cur_map := "eden"
 var cur_at: Array = []          # [x, z] where the pilgrim entered cur_map ([] = the map's own start)
 var visited: Array = []         # map ids the pilgrim has stood on (the world map draws these)
 var last_town := ""             # the last House or town entered
-var waymarks_found: Array = []  # towns whose fast-travel point is known
+var milestones: Array = []      # towns whose Milestone (fast-travel point) has been reached
+var lairs := {}                 # danger-zone map id -> unix time its boss was last overcome
 var lamb_name := ""
 var ledger := {"quest": [0, 0], "mob": [0, 0]}   # [base, job] XP by source, for pacing checks
 var act_xp := {}                # act id -> [base, job] quest XP earned there
@@ -172,7 +173,7 @@ func reset() -> void:
 	for k in STATS: stat[k] = STAT_START
 	stat_pts = 0; skill_pts = 0; skill_lv = {}; tips_seen = {}
 	job_id = PILGRIM; trial_job = ""; armor = false; flags = {}; map_state = {}; cur_map = "eden"; lamb_name = ""
-	cur_at = []; visited = []; last_town = ""; waymarks_found = []
+	cur_at = []; visited = []; last_town = ""; milestones = []; lairs = {}
 	ledger = {"quest": [0, 0], "mob": [0, 0]}; act_xp = {}; cur_act = "eden"; played_ms = 0
 	gear = []; gear_uid = 0; equipped = {}; storage = []; denarii = 0; stones = {}; fruit_stone = ""; bestiary = {}; daily = {}
 	Gear.equip(int(Gear.add("wooden_staff").uid))
@@ -490,7 +491,7 @@ func lords_day() -> bool:
 # ------------------------------------------------------------------ save / continue (one local slot)
 const SAVED := ["pname", "hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "manna", "bag", "weary", "burden", "kos", "snaps",
 	"stat", "stat_pts", "skill_lv", "skill_pts", "guide", "tips_seen", "minor", "marks", "secrets", "house_rested",
-	"job_id", "armor", "flags", "map_state", "cur_map", "cur_at", "visited", "last_town", "waymarks_found", "lamb_name", "ledger", "act_xp", "cur_act",
+	"job_id", "armor", "flags", "map_state", "cur_map", "cur_at", "visited", "last_town", "milestones", "lairs", "lamb_name", "ledger", "act_xp", "cur_act",
 	"gear", "gear_uid", "equipped", "storage", "denarii", "stones", "fruit_stone", "bestiary", "daily"]
 const SAVED_INTS := ["hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "kos", "snaps", "stat_pts", "skill_pts", "marks", "gear_uid", "denarii"]
 
@@ -564,8 +565,8 @@ func _world_state(old_save: bool) -> void:
 				visited.append(m2)
 			if data("world").nodes[m2].kind == "town":
 				last_town = m2
-				if not m2 in waymarks_found:
-					waymarks_found.append(m2)
+				if not m2 in milestones:
+					milestones.append(m2)
 		if not cur_map in visited:
 			visited.append(cur_map)
 	for m3 in map_state.keys():

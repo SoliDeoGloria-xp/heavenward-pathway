@@ -1,0 +1,253 @@
+{
+ "id": "old_cellars_1",
+ "act": "city",
+ "name": "The Old Cellars",
+ "sub": "Danger · Recommended Level 7-9",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -19.4,
+  0.0
+ ],
+ "bounds": [
+  -24,
+  -9,
+  48,
+  18
+ ],
+ "music": "city",
+ "resumable": true,
+ "look": {
+  "bg": "#16141a",
+  "amb": "#9890a8",
+  "amb_e": 0.42,
+  "tint": [
+   0.84,
+   0.82,
+   0.94
+  ],
+  "sun_e": 0.35,
+  "sun_c": "#b0a8c0",
+  "post": [
+   0.7,
+   1.08,
+   [
+    0.94,
+    0.92,
+    1.04
+   ]
+  ],
+  "mini": "#4a4650",
+  "ground": "cobble_dark",
+  "ground_b": "dirt_dark",
+  "weather": "",
+  "flora": "dark",
+  "rock": "dark",
+  "tufts": 0,
+  "flowers": 0,
+  "patches": 8
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    48,
+    3
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "wall",
+   "from": [
+    -24,
+    -9
+   ],
+   "to": [
+    24,
+    -9
+   ],
+   "h": 3.6,
+   "tint": "#8a8494"
+  },
+  {
+   "t": "wall",
+   "from": [
+    -24,
+    9
+   ],
+   "to": [
+    24,
+    9
+   ],
+   "h": 1.2,
+   "tint": "#8a8494"
+  },
+  {
+   "t": "stairs",
+   "at": [
+    -23.4,
+    0
+   ],
+   "steps": 3,
+   "w": 4
+  },
+  {
+   "t": "pillars",
+   "points": [
+    [
+     -12,
+     -7.4
+    ],
+    [
+     0,
+     -7.4
+    ],
+    [
+     12,
+     -7.4
+    ]
+   ],
+   "ruined": true,
+   "seed": 24
+  },
+  {
+   "t": "torch",
+   "at": [
+    -18,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "torch",
+   "at": [
+    -6,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "torch",
+   "at": [
+    6,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "torch",
+   "at": [
+    18,
+    -7.6
+   ],
+   "color": "#ffb050",
+   "light": true
+  },
+  {
+   "t": "stairs",
+   "at": [
+    21.6,
+    0
+   ],
+   "steps": 3,
+   "w": 4
+  },
+  {
+   "t": "path",
+   "at": [
+    -2.5,
+    -5.0
+   ],
+   "size": [
+    3,
+    6
+   ],
+   "tile": "pit",
+   "y": 0.02,
+   "ragged": 0.2
+  },
+  {
+   "t": "path",
+   "at": [
+    9.5,
+    5.0
+   ],
+   "size": [
+    3,
+    6
+   ],
+   "tile": "pit",
+   "y": 0.02,
+   "ragged": 0.2
+  }
+ ],
+ "ents": [],
+ "objectives": [],
+ "side": [],
+ "burden": true,
+ "cam_dist": 15,
+ "enter_say": [
+  "The Old Cellars. A dangerous place: the foes here attack on sight and suit Base Level 7 to 9."
+ ],
+ "zones": [
+  {
+   "area": [
+    -4,
+    -8,
+    3,
+    6
+   ],
+   "name": "a rotten floor",
+   "hurt": 6
+  },
+  {
+   "area": [
+    8,
+    2,
+    3,
+    6
+   ],
+   "name": "a rotten floor",
+   "hurt": 6
+  }
+ ],
+ "spawns": [
+  {
+   "mob": "hoarder",
+   "count": 5,
+   "lv": [
+    7,
+    8
+   ],
+   "aggro": "aggressive",
+   "area": [
+    -16,
+    -6,
+    14,
+    12
+   ]
+  },
+  {
+   "mob": "miser",
+   "count": 4,
+   "lv": [
+    8,
+    9
+   ],
+   "aggro": "aggressive",
+   "area": [
+    2,
+    -6,
+    16,
+    12
+   ]
+  }
+ ]
+}

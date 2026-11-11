@@ -420,6 +420,120 @@
    "act": "Go on",
    "icon": "warp",
    "hidden": true
+  },
+  {
+   "id": "keeper",
+   "kind": "npc",
+   "name": "Keeper of the House",
+   "at": [
+    7.5,
+    5.5
+   ],
+   "standee": "steward",
+   "look": [
+    0,
+    0,
+    0
+   ],
+   "act": "Trade",
+   "icon": "bag",
+   "ui": "shop"
+  },
+  {
+   "id": "rest",
+   "kind": "spot",
+   "name": "A Quiet Table",
+   "at": [
+    -8.5,
+    4.5
+   ],
+   "act": "Rest",
+   "icon": "sit",
+   "ui": "rest_point",
+   "prop": {
+    "t": "kit",
+    "name": "table"
+   }
+  },
+  {
+   "id": "board",
+   "kind": "spot",
+   "name": "Town Board",
+   "at": [
+    -12.5,
+    1.5
+   ],
+   "act": "Read",
+   "icon": "scroll",
+   "ui": "board",
+   "prop": {
+    "t": "kit",
+    "name": "signpost"
+   }
+  },
+  {
+   "id": "storage",
+   "kind": "spot",
+   "name": "Storage Chest",
+   "at": [
+    14,
+    -5.5
+   ],
+   "act": "Open",
+   "icon": "bag",
+   "ui": "storage",
+   "prop": {
+    "t": "kit",
+    "name": "crate"
+   }
+  },
+  {
+   "id": "milestone",
+   "kind": "milestone",
+   "name": "Milestone",
+   "at": [
+    -10,
+    7
+   ],
+   "act": "Travel",
+   "icon": "warp",
+   "ui": "milestone"
+  },
+  {
+   "id": "lampkeeper",
+   "kind": "npc",
+   "name": "Keeper of the Lamp",
+   "at": [
+    4,
+    2.5
+   ],
+   "look": [
+    1,
+    4,
+    3
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "dialog": "interpreter.folk0",
+   "color": "#dfe9ff"
+  },
+  {
+   "id": "sweeper",
+   "kind": "npc",
+   "name": "Sweeper of the Parlor",
+   "at": [
+    -3.5,
+    2.5
+   ],
+   "look": [
+    2,
+    1,
+    5
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "dialog": "interpreter.folk1",
+   "color": "#dfe9ff"
   }
  ],
  "objectives": [

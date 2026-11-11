@@ -1018,5 +1018,250 @@
    "who": "Steward of the House",
    "text": "Bread, honey, and plain gear for the road. Nothing here will make you more a pilgrim than you are, but a good cloak keeps off the rain."
   }
+ ],
+ "city_square.folk0": [
+  {
+   "who": "Old Neighbour",
+   "text": "My father built this house, and his father before him. Evangelist says the whole street stands on sand. I have begun to look at the foundations at night.",
+   "src": "[BSB: Matthew 7:26]"
+  }
+ ],
+ "city_square.folk1": [
+  {
+   "who": "Lamplighter",
+   "text": "I light every lamp on this square, and by midnight the street is dark again. They say there is a lamp for the feet that does not go out.",
+   "src": "[BSB: Psalm 119:105]"
+  }
+ ],
+ "city_square.folk2": [
+  {
+   "who": "Woman at the Well",
+   "text": "Draw from this well and you thirst again by noon. I have heard there is water of another kind, and I mean to ask where.",
+   "src": "[BSB: John 4:13–14]"
+  }
+ ],
+ "sloth_meadow.landmark": [
+  {
+   "who": "A Broken Wall",
+   "text": "A field wall, fallen in and grown over with thorns. Someone has scratched the proverb into it: a little sleep, a little slumber, a little folding of the hands to rest.",
+   "src": "[BSB: Proverbs 6:10]"
+  }
+ ],
+ "sloth_meadow.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page caught in the long grass. I had written of the sluggard's field: all grown over with thorns, its stone wall broken down. I looked at it, and took instruction.",
+   "src": "[BSB: Proverbs 24:30–32]"
+  }
+ ],
+ "neighbours_lane.landmark": [
+  {
+   "who": "The Guild Notice",
+   "text": "A notice nailed up by the guild: whoever sets out for the Gate forfeits his seat. Under it, in another hand: what does it profit a man to gain the whole world?",
+   "src": "[BSB: Mark 8:36]"
+  }
+ ],
+ "neighbours_lane.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page blown against a doorstep. I had written how his neighbours came out to see him run: some mocked, some threatened, and some called after him to return.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "evangelists_road.landmark": [
+  {
+   "who": "The Fingerpost",
+   "text": "The post points one way only: across the wide plain, toward a light. Beneath it are the words from his parchment roll: flee from the wrath to come.",
+   "src": "[BSB: Matthew 3:7]"
+  }
+ ],
+ "evangelists_road.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page on the road out of the city. I wrote down the question he was asked, whether he saw yonder shining light, and his answer: I think I do. It was enough to walk by.",
+   "src": "[BSB: 2 Peter 1:19]"
+  }
+ ],
+ "wicket_gate.folk0": [
+  {
+   "who": "Pilgrim at Rest",
+   "text": "I knocked more than once before I had the courage to knock loudly. It was opened. Whoever comes is not cast out, the keeper told me.",
+   "src": "[BSB: John 6:37]"
+  }
+ ],
+ "wicket_gate.folk1": [
+  {
+   "who": "Mender of the Road",
+   "text": "Cartloads of good instruction have gone into that slough, and it is a slough still. But there are steps through the midst of it, for those who look.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "wicket_gate.folk2": [
+  {
+   "who": "Watcher on the Wall",
+   "text": "From up here I have seen arrows shot from the castle yonder at those who stand knocking. That is why the keeper pulled you in so quickly.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "slough_shallows.landmark": [
+  {
+   "who": "A Leaning Marker",
+   "text": "A marker, half sunk: the steps are in the midst of the slough. Look for them. Fear makes men miss them.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "slough_shallows.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page drying on a reed. I had written why the ground is so bad here: the fears and doubts of one newly awakened settle in this place. It is not the pleasure of the Lord of the way that it should stay so.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "slough_deeps.landmark": [
+  {
+   "who": "A Sunken Cart",
+   "text": "A cart of good instructions, sunk to the axle. Thousands like it lie under this ground. The mending of this place was never going to be done by cartloads.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678)"
+  }
+ ],
+ "slough_deeps.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page weighted with a stone on the one dry hummock. I wrote the prayer of one sinking in deep mire where there is no foothold: rescue me from the mire, and do not let me sink.",
+   "src": "[BSB: Psalm 69:14]"
+  }
+ ],
+ "sinai_foot.landmark": [
+  {
+   "who": "A Scorched Stone",
+   "text": "Burned into the stone: whoever keeps the whole law and yet stumbles at one point is guilty of breaking all of it.",
+   "src": "[BSB: James 2:10]"
+  }
+ ],
+ "sinai_foot.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page scorched at the edges. I wrote how the hill hung so far over the road that he feared it would fall on his head, and fire flashed out of it. Under it I wrote: no one is justified by works of the law.",
+   "src": "[BSB: Galatians 2:16]"
+  }
+ ],
+ "house_gardens.landmark": [
+  {
+   "who": "The Sundial",
+   "text": "Cut around the rim of the dial: make the most of the time, because the days are evil.",
+   "src": "[BSB: Ephesians 5:16]"
+  }
+ ],
+ "house_gardens.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page pressed between two flowerpots. I wrote that one plants and another waters, and neither is anything: the increase is given.",
+   "src": "[BSB: 1 Corinthians 3:7]"
+  }
+ ],
+ "wall_road.landmark": [
+  {
+   "who": "The Wall called Salvation",
+   "text": "The highway is fenced on either side with a wall, and the wall is called Salvation. Cut small beneath the name: not by works, so that no one may boast.",
+   "src": "[BSB: Ephesians 2:9]"
+  }
+ ],
+ "wall_road.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page held in a crack of the wall. I had written that the wall was called Salvation, and beside it the prophet's word: salvation is set up for walls and ramparts.",
+   "src": "[BSB: Isaiah 26:1]"
+  }
+ ],
+ "cross_hill.landmark": [
+  {
+   "who": "A Plain Stone",
+   "text": "A plain stone by the path, with one line: let us run with endurance, fixing our eyes on the author and perfecter of our faith.",
+   "src": "[BSB: Hebrews 12:1–2]"
+  }
+ ],
+ "cross_hill.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page lying face up in the grass. I wrote how he ran till he came to a place somewhat ascending. And beside it only this: far be it from me to boast, except in the cross.",
+   "src": "[BSB: Galatians 6:14]"
+  }
+ ],
+ "arbour_rest.folk0": [
+  {
+   "who": "Weary Pilgrim",
+   "text": "The arbour was made for refreshing, not for sleeping. I learned the difference the hard way, and went back down the hill for what I dropped.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: 1 Thessalonians 5:6]"
+  }
+ ],
+ "arbour_rest.folk1": [
+  {
+   "who": "Water Carrier",
+   "text": "I carry the spring up from the foot of the hill. Drink. The way does not grow flatter, but those who wait and hope are given new strength.",
+   "src": "[BSB: Isaiah 40:31]"
+  }
+ ],
+ "arbour_rest.folk2": [
+  {
+   "who": "Old Climber",
+   "text": "Two men went round this hill by easier ways, one to the left and one to the right. I have not seen either of them since.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Proverbs 14:12]"
+  }
+ ],
+ "hill_slopes.landmark": [
+  {
+   "who": "A Climber's Cairn",
+   "text": "A cairn of small stones, one for each who passed. On the top stone: the end of a matter is better than its beginning, and patience is better than pride.",
+   "src": "[BSB: Ecclesiastes 7:8]"
+  }
+ ],
+ "hill_slopes.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page under a stone on the slope. I wrote how he fell from running to going, and from going to clambering upon his hands and his knees, because of the steepness of the place.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  }
+ ],
+ "spring_foot.landmark": [
+  {
+   "who": "The Spring",
+   "text": "Clear water rises here at the bottom of the hill. Someone has set a cup on the stone, and cut a line from the shepherd's psalm about being led beside quiet waters.",
+   "src": "[BSB: Psalm 23:2]"
+  }
+ ],
+ "spring_foot.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page weighted with a river stone. I wrote how he went to the spring and drank to refresh himself, and then began to go up the hill.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Isaiah 49:10]"
+  }
+ ],
+ "way_danger.landmark": [
+  {
+   "who": "A Warning Board",
+   "text": "A board at the mouth of the wood, the paint long gone. The proverb is cut into it instead: there is a way that seems right to a man, but its end is the way of death.",
+   "src": "[BSB: Proverbs 14:12]"
+  }
+ ],
+ "way_danger.page": [
+  {
+   "who": "The Dreamer",
+   "text": "A page nailed to a tree by a thorn. I wrote of the two who would not climb: one took the way which is called Danger, which led him into a great wood.",
+   "src": "John Bunyan, The Pilgrim's Progress (1678) · public domain"
+  }
+ ],
+ "interpreter.folk0": [
+  {
+   "who": "Keeper of the Lamp",
+   "text": "He lit the candle before he showed you anything. Without light the pictures are only pictures. The unfolding of the word gives light.",
+   "src": "[BSB: Psalm 119:130]"
+  }
+ ],
+ "interpreter.folk1": [
+  {
+   "who": "Sweeper of the Parlor",
+   "text": "Dust is not laid by sweeping harder; that only raises it. Where the law made the trespass increase, grace increased all the more.",
+   "src": "After John Bunyan, The Pilgrim's Progress (1678) · [BSB: Romans 5:20]"
+  }
  ]
 }

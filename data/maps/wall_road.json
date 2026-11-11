@@ -1,0 +1,378 @@
+{
+ "id": "wall_road",
+ "act": "cross",
+ "name": "The Road by the Wall called Salvation",
+ "sub": "Field · Recommended Level 14-17",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "cross",
+ "resumable": true,
+ "look": {
+  "bg": "#3a3a2c",
+  "amb": "#f0e8d8",
+  "amb_e": 0.44,
+  "tint": [
+   1.04,
+   1.0,
+   0.92
+  ],
+  "sun_e": 0.8,
+  "sun_c": "#fff0d0",
+  "post": [
+   0.86,
+   1.04,
+   [
+    1.02,
+    1.0,
+    0.96
+   ]
+  ],
+  "mini": "#b8c08a",
+  "ground": "grass",
+  "ground_b": "grass_dry",
+  "weather": "",
+  "flora": "green",
+  "rock": "stone"
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 313,
+   "tint": "#a09a8a",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 413,
+   "tint": "#a09a8a",
+   "n": 12
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 518
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 519
+  },
+  {
+   "t": "blooms",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 520,
+   "color": "#fff0a0"
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 525
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 526
+  },
+  {
+   "t": "blooms",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 527,
+   "color": "#e0704a"
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 532
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 533
+  },
+  {
+   "t": "blooms",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 534,
+   "color": "#9a7cc4"
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 539
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 540
+  },
+  {
+   "t": "blooms",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 541,
+   "color": "#f4efe4"
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "The Wall called Salvation",
+   "at": [
+    0,
+    -8
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "wall_road.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "wall"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    22,
+    -10
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "wall_road.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: The Road by the Wall called Salvation",
+   "page": true
+  }
+ ],
+ "enter_say": [
+  "The Road by the Wall called Salvation. The foes here suit Base Level 14 to 17. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "self_trust",
+   "count": 6,
+   "lv": [
+    14,
+    15
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "scorner",
+   "count": 5,
+   "lv": [
+    14,
+    16
+   ],
+   "aggro": "aggressive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "self_trust",
+   "count": 5,
+   "lv": [
+    15,
+    17
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "scorner",
+   "count": 5,
+   "lv": [
+    16,
+    17
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "self_trust",
+   "count": 1,
+   "lv": [
+    17,
+    17
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    -20,
+    9
+   ],
+   "title": "A Mason's Mark",
+   "text": "Behind a loose stone at the foot of the wall, a mason's wage left long ago. Denarii +70.",
+   "reward": {
+    "denarii": 70
+   }
+  }
+ ]
+}

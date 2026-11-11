@@ -1,0 +1,374 @@
+{
+ "id": "hill_slopes",
+ "act": "hill",
+ "name": "The Hill Slopes",
+ "sub": "Field · Recommended Level 7-10",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "hill",
+ "resumable": true,
+ "look": {
+  "bg": "#34302a",
+  "amb": "#d8ccb8",
+  "amb_e": 0.4,
+  "tint": [
+   1.0,
+   0.95,
+   0.88
+  ],
+  "sun_e": 0.66,
+  "sun_c": "#ffd8a0",
+  "post": [
+   0.88,
+   1.06,
+   [
+    1.03,
+    0.99,
+    0.94
+   ]
+  ],
+  "mini": "#a89878",
+  "ground": "grass_dry",
+  "ground_b": "dirt",
+  "weather": "",
+  "flora": "dry",
+  "rock": "earth"
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 318,
+   "tint": "#8a8478",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 418,
+   "tint": "#8a8478",
+   "n": 12
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 703
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 704
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 705
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 710
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 711
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 712
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 717
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 718
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 719
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 724
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 725
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 726
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "A Climber's Cairn",
+   "at": [
+    -9,
+    7
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "hill_slopes.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "rock_b"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    -21,
+    -10
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "hill_slopes.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: The Hill Slopes",
+   "page": true
+  }
+ ],
+ "enter_say": [
+  "The Hill Slopes. The foes here suit Base Level 7 to 10. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "stumbler",
+   "count": 6,
+   "lv": [
+    7,
+    8
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "loiterer",
+   "count": 5,
+   "lv": [
+    8,
+    9
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "pretender",
+   "count": 5,
+   "lv": [
+    8,
+    10
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "stumbler",
+   "count": 5,
+   "lv": [
+    9,
+    10
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "loiterer",
+   "count": 1,
+   "lv": [
+    10,
+    10
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    18,
+    -9.5
+   ],
+   "title": "A Staff in the Scree",
+   "text": "A walking staff wedged between two rocks, and a purse tied to it. Denarii +45.",
+   "reward": {
+    "denarii": 45
+   }
+  }
+ ]
+}

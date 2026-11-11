@@ -80,3 +80,14 @@ Play on a phone in landscape. Note the time at each ★.
 - [ ] Does any portal take you when you did not mean it to? Does the label say clearly where it leads?
 - [ ] At the Palace after the Calling: the yard, the Lions' Path and the Muster board each lead to their side map again and bring you back beside them.
 - [ ] Continue a save made in 0.5.0: you are where you were, and the way back is open.
+
+## Added in 0.6.0 phase 2: towns, fields and danger zones
+
+- [ ] From the City, take the south road to the City Square. Trade, open the chest, rest at the well, read the board, speak to the three townsfolk.
+- [ ] Use the Milestone to go to another town and back. Is it clear what a Milestone is and that it is free?
+- [ ] Walk into Sloth Meadow at a low level, then into a field far above you. Do the portal sign and the nameplate colours warn you in time?
+- [ ] Strike one foe in a pack marked alert (Gossips in Neighbours' Lane): do its fellows come? Do passive foes leave you alone?
+- [ ] Find a field's landmark, its hidden cache and its Dreamer's Page. Are they too easy or too hard to notice?
+- [ ] In a danger zone, step on the bad ground, go down the stairs, wake the boss. Fall on purpose: you should wake in the last town, weary, with no XP lost.
+- [ ] Note every new map that looks empty, and every prop that blocks a road or hides a portal. These maps are plain kit-built placeholders.
+- [ ] Theology review: the names and lines listed under "Awaiting theological review" in DECISIONS.md.

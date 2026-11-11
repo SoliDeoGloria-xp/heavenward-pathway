@@ -1,0 +1,377 @@
+{
+ "id": "sloth_meadow",
+ "act": "city",
+ "name": "Sloth Meadow",
+ "sub": "Field · Recommended Level 1-4",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "city",
+ "resumable": true,
+ "look": {
+  "bg": "#2a2832",
+  "amb": "#a8a4c0",
+  "amb_e": 0.38,
+  "tint": [
+   0.86,
+   0.87,
+   0.98
+  ],
+  "sun_e": 0.55,
+  "sun_c": "#c8c4d8",
+  "post": [
+   0.72,
+   1.08,
+   [
+    0.93,
+    0.95,
+    1.05
+   ]
+  ],
+  "mini": "#8c9484",
+  "ground": "grass_dark",
+  "ground_b": "dirt_dark",
+  "weather": "drizzle",
+  "flora": "dark",
+  "rock": "stone",
+  "tufts": 60,
+  "flowers": 2
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 301,
+   "tint": "#5a5a64",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 401,
+   "tint": "#5a5a64",
+   "n": 12
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 74
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 75
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 76
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 81
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 82
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 83
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 88
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 89
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 90
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 95
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 96
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 97
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "A Broken Wall",
+   "at": [
+    -12,
+    -8
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "sloth_meadow.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "wall_low"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    -20,
+    10.5
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "sloth_meadow.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: Sloth Meadow",
+   "page": true
+  }
+ ],
+ "burden": true,
+ "enter_say": [
+  "Sloth Meadow. The foes here suit Base Level 1 to 4. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "slothling",
+   "count": 7,
+   "lv": [
+    1,
+    2
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "slothling",
+   "count": 5,
+   "lv": [
+    2,
+    3
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "whelp",
+   "count": 5,
+   "lv": [
+    2,
+    4
+   ],
+   "aggro": "passive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "whelp",
+   "count": 4,
+   "lv": [
+    3,
+    4
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "whelp",
+   "count": 1,
+   "lv": [
+    4,
+    4
+   ],
+   "aggro": "passive",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    17,
+    9
+   ],
+   "title": "A Rusted Sickle",
+   "text": "Left in the long grass at the edge of a harvest that was never brought in. A few coins lie under it, as forgotten as the work. Denarii +25.",
+   "reward": {
+    "denarii": 25
+   }
+  }
+ ]
+}

@@ -16,7 +16,7 @@ func _ready() -> void:
 	var secrets := 0
 	for k in G.secrets.keys(): secrets += G.secrets[k].size()
 	var rows := [["Time", "%d min" % G.minutes_played()], ["Base Level", str(G.lvl)], ["Calling", "%s (Job %d)" % [G.job_name(), G.job]],
-		["Dreamer's Pages", "%d / %d" % [Quests.pages_found(), G.data("acts").order.size() - 1]], ["Secrets found", str(secrets)], ["Manna", str(snappedf(G.manna, 0.1))],
+		["Dreamer's Pages", "%d / %d" % [Quests.pages_found(), Quests.pages_total()]], ["Secrets found", str(secrets)], ["Manna", str(snappedf(G.manna, 0.1))],
 		["Rests (KO)", str(G.kos)], ["Fellowship Marks", str(G.marks)], ["Snapshots", str(G.snaps)]]
 	for kv in rows:
 		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/card.png", 4, 10)); p.custom_minimum_size = Vector2(264, 0)

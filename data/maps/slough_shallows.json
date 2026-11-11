@@ -1,0 +1,409 @@
+{
+ "id": "slough_shallows",
+ "act": "slough",
+ "name": "The Slough Shallows",
+ "sub": "Field · Recommended Level 5-8",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "slough",
+ "resumable": true,
+ "look": {
+  "bg": "#28302a",
+  "amb": "#a8b0a8",
+  "amb_e": 0.36,
+  "tint": [
+   0.88,
+   0.92,
+   0.9
+  ],
+  "sun_e": 0.5,
+  "sun_c": "#c8d0c8",
+  "post": [
+   0.7,
+   1.06,
+   [
+    0.94,
+    0.98,
+    0.98
+   ]
+  ],
+  "mini": "#7a8a6a",
+  "ground": "marsh",
+  "ground_b": "grass_dark",
+  "weather": "drizzle",
+  "flora": "dark",
+  "rock": "stone"
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 307,
+   "tint": "#6a7264",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 407,
+   "tint": "#6a7264",
+   "n": 12
+  },
+  {
+   "t": "reeds",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 9,
+   "seed": 296
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 297
+  },
+  {
+   "t": "fog",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 299
+  },
+  {
+   "t": "reeds",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 9,
+   "seed": 303
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 304
+  },
+  {
+   "t": "water",
+   "at": [
+    16.1,
+    -8.25
+   ],
+   "size": [
+    7,
+    4.5
+   ],
+   "y": 0.04,
+   "tint": "#5c6a4c"
+  },
+  {
+   "t": "fog",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 306
+  },
+  {
+   "t": "reeds",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 9,
+   "seed": 310
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 311
+  },
+  {
+   "t": "water",
+   "at": [
+    -13.899999999999999,
+    8.25
+   ],
+   "size": [
+    7,
+    4.5
+   ],
+   "y": 0.04,
+   "tint": "#5c6a4c"
+  },
+  {
+   "t": "fog",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 313
+  },
+  {
+   "t": "reeds",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 9,
+   "seed": 317
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 318
+  },
+  {
+   "t": "fog",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 320
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "A Leaning Marker",
+   "at": [
+    -8,
+    6
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "slough_shallows.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "signpost"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    -21,
+    -10
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "slough_shallows.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: The Slough Shallows",
+   "page": true
+  }
+ ],
+ "burden": true,
+ "enter_say": [
+  "The Slough Shallows. The foes here suit Base Level 5 to 8. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "mire_sloth",
+   "count": 6,
+   "lv": [
+    5,
+    6
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "glutton_grub",
+   "count": 5,
+   "lv": [
+    5,
+    7
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "despondling",
+   "count": 4,
+   "lv": [
+    6,
+    8
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "mire_sloth",
+   "count": 5,
+   "lv": [
+    6,
+    8
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "glutton_grub",
+   "count": 1,
+   "lv": [
+    8,
+    8
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    18,
+    -9
+   ],
+   "title": "A Lost Satchel",
+   "text": "Dropped by someone who turned back for home at the first mud. Denarii +35.",
+   "reward": {
+    "denarii": 35
+   }
+  }
+ ]
+}

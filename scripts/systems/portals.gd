@@ -8,7 +8,7 @@ extends RefCounted
 ## objective makes the same trip, so the story is told once and the road stays open afterwards.
 
 const TRIGGER := 1.3               # stepping this close to an open portal takes the road
-const ARM_DIST := 2.8              # a portal you arrive beside wakes only after you step this far away
+const ARM_DIST := 1.9              # a portal you arrive on top of wakes only after you step this far away
 const LABEL_HEIGHT := 3.5
 const BACK_SCALE := 0.72           # the way back is a smaller glow than the way on
 
@@ -50,7 +50,11 @@ static func go(from: String, to: String) -> void:
 
 static func label(e: Dictionary) -> String:
 	var place := String(G.data("maps/" + String(e.to)).name)
-	return "To %s" % (("the " + place.substr(4)) if place.begins_with("The ") else place)
+	var text := "To %s" % (("the " + place.substr(4)) if place.begins_with("The ") else place)
+	var n := node(String(e.to))
+	if n.get("kind", "") in ["field", "danger"]:   # a sign at the road: who this place suits
+		text += "\nLv %d-%d" % [int(n.level[0]), int(n.level[1])]
+	return text
 
 # ------------------------------------------------------------------ this map's portals
 func build() -> void:
@@ -74,8 +78,12 @@ func _portal(e: Dictionary) -> void:
 			w.show_ent(made.id, true)
 	made["kind"] = "portal"
 	made.fn = _take.bind(e)
-	w.kit._label3d(label(e), pos + Vector3(0, LABEL_HEIGHT, 0), Color("fbe58a"), 30).reparent(n)
-	list.append({"edge": e, "pos": pos, "ent": made, "armed": _far(pos)})
+	var sign := w.kit._label3d(label(e), pos + Vector3(0, LABEL_HEIGHT, 0), Color("fbe58a"), 30)
+	var dest := node(String(e.to))
+	if dest.get("kind", "") in ["field", "danger"]:
+		sign.modulate = Combat.con_color(int(dest.level[0]), G.lvl).lerp(Color("fbe58a"), 0.35)
+	sign.reparent(n)
+	list.append({"edge": e, "pos": pos, "ent": made, "armed": _far(pos), "own": not e.has("ent")})
 
 ## A place in a House that leads to a side map (the yard, the gate, the board), once its story is done.
 func _door(e: Dictionary) -> void:
@@ -97,6 +105,8 @@ func tick() -> void:
 	if w.ending:
 		return
 	for p in list:
+		if p.own and p.ent.hidden and open(p.edge):   # a road the story has just opened
+			w.show_ent(p.ent.id, true)
 		if not open(p.edge) or p.ent.hidden:
 			continue
 		if not p.armed:

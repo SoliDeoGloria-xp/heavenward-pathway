@@ -157,7 +157,7 @@ static func codex(hud: Node, b: VBoxContainer) -> void:
 	b.add_child(_row("Daily portion: overcome %d foes (%d/%d)" % [int(rules.kills), mini(int(st.kills), int(rules.kills)), int(rules.kills)],
 		"Manna +%d and Denarii +%d. There are no streaks; a missed day costs nothing." % [int(rules.reward_manna), int(rules.reward_denarii)], [claim], "bread"))
 	b.add_child(UIKit.label("The Dreamer's Pages (%d found)" % Quests.pages_found(), 20, UIKit.INK, true))
-	for map_id in G.data("acts").order:
+	for map_id in G.data("world").nodes.keys():
 		var page := _page_of(map_id)
 		if page.is_empty() or not G.flags.has("page_" + map_id):
 			continue

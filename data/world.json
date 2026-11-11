@@ -92,9 +92,9 @@
     7,
     7
    ],
-   "waymark": [
-    -3,
-    6
+   "milestone": [
+    -10,
+    7
    ]
   },
   "cross": {
@@ -120,10 +120,11 @@
     9,
     10
    ],
-   "waymark": [
+   "milestone": [
     4,
     8
-   ]
+   ],
+   "later": true
   },
   "trial": {
    "kind": "instance",
@@ -139,7 +140,8 @@
    "level": [
     9,
     10
-   ]
+   ],
+   "later": true
   },
   "lions": {
    "kind": "instance",
@@ -163,6 +165,214 @@
    "level": [
     11,
     12
+   ]
+  },
+  "city_square": {
+   "kind": "town",
+   "region": "city",
+   "level": [
+    1,
+    10
+   ],
+   "milestone": [
+    -6,
+    -1.8
+   ]
+  },
+  "sloth_meadow": {
+   "kind": "field",
+   "region": "city",
+   "level": [
+    1,
+    4
+   ],
+   "review": true
+  },
+  "neighbours_lane": {
+   "kind": "field",
+   "region": "city",
+   "level": [
+    3,
+    6
+   ],
+   "review": true
+  },
+  "evangelists_road": {
+   "kind": "field",
+   "region": "city",
+   "level": [
+    5,
+    8
+   ]
+  },
+  "old_cellars_1": {
+   "kind": "danger",
+   "region": "city",
+   "level": [
+    7,
+    9
+   ],
+   "review": true
+  },
+  "old_cellars_2": {
+   "kind": "danger",
+   "region": "city",
+   "level": [
+    8,
+    10
+   ],
+   "review": true
+  },
+  "wicket_gate": {
+   "kind": "town",
+   "region": "slough",
+   "level": [
+    6,
+    16
+   ],
+   "milestone": [
+    -6,
+    -1.8
+   ]
+  },
+  "slough_shallows": {
+   "kind": "field",
+   "region": "slough",
+   "level": [
+    5,
+    8
+   ]
+  },
+  "slough_deeps": {
+   "kind": "field",
+   "region": "slough",
+   "level": [
+    9,
+    13
+   ]
+  },
+  "sinai_foot": {
+   "kind": "field",
+   "region": "slough",
+   "level": [
+    11,
+    15
+   ],
+   "review": true
+  },
+  "slough_bog_1": {
+   "kind": "danger",
+   "region": "slough",
+   "level": [
+    12,
+    14
+   ],
+   "review": true
+  },
+  "slough_bog_2": {
+   "kind": "danger",
+   "region": "slough",
+   "level": [
+    14,
+    16
+   ],
+   "review": true
+  },
+  "house_gardens": {
+   "kind": "field",
+   "region": "interpreter_cross",
+   "level": [
+    6,
+    9
+   ],
+   "review": true
+  },
+  "wall_road": {
+   "kind": "field",
+   "region": "interpreter_cross",
+   "level": [
+    14,
+    17
+   ]
+  },
+  "cross_hill": {
+   "kind": "field",
+   "region": "interpreter_cross",
+   "level": [
+    16,
+    19
+   ],
+   "review": true
+  },
+  "dusty_cellar_1": {
+   "kind": "danger",
+   "region": "interpreter_cross",
+   "level": [
+    16,
+    18
+   ],
+   "review": true
+  },
+  "dusty_cellar_2": {
+   "kind": "danger",
+   "region": "interpreter_cross",
+   "level": [
+    18,
+    20
+   ],
+   "review": true
+  },
+  "arbour_rest": {
+   "kind": "town",
+   "region": "hill",
+   "level": [
+    7,
+    26
+   ],
+   "milestone": [
+    -6,
+    -1.8
+   ],
+   "review": true
+  },
+  "hill_slopes": {
+   "kind": "field",
+   "region": "hill",
+   "level": [
+    7,
+    10
+   ]
+  },
+  "spring_foot": {
+   "kind": "field",
+   "region": "hill",
+   "level": [
+    8,
+    10
+   ]
+  },
+  "way_danger": {
+   "kind": "field",
+   "region": "hill",
+   "level": [
+    18,
+    22
+   ]
+  },
+  "way_destruction_1": {
+   "kind": "danger",
+   "region": "hill",
+   "level": [
+    22,
+    24
+   ]
+  },
+  "way_destruction_2": {
+   "kind": "danger",
+   "region": "hill",
+   "level": [
+    24,
+    26
    ]
   }
  },
@@ -441,6 +651,605 @@
    "arrive": [
     8,
     -0.6
+   ]
+  },
+  {
+   "from": "city",
+   "to": "city_square",
+   "kind": "portal",
+   "at": [
+    0,
+    10.5
+   ],
+   "arrive": [
+    0.0,
+    -7.4
+   ]
+  },
+  {
+   "from": "city_square",
+   "to": "city",
+   "kind": "portal",
+   "at": [
+    0,
+    -10
+   ],
+   "arrive": [
+    0.0,
+    7.9
+   ]
+  },
+  {
+   "from": "city_square",
+   "to": "sloth_meadow",
+   "kind": "portal",
+   "at": [
+    -16,
+    0
+   ],
+   "arrive": [
+    25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "sloth_meadow",
+   "to": "city_square",
+   "kind": "portal",
+   "at": [
+    28,
+    0
+   ],
+   "arrive": [
+    -13.4,
+    0.0
+   ]
+  },
+  {
+   "from": "sloth_meadow",
+   "to": "evangelists_road",
+   "kind": "portal",
+   "at": [
+    -28,
+    0
+   ],
+   "arrive": [
+    25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "evangelists_road",
+   "to": "sloth_meadow",
+   "kind": "portal",
+   "at": [
+    28,
+    0
+   ],
+   "arrive": [
+    -25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "city_square",
+   "to": "neighbours_lane",
+   "kind": "portal",
+   "at": [
+    16,
+    0
+   ],
+   "arrive": [
+    -25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "neighbours_lane",
+   "to": "city_square",
+   "kind": "portal",
+   "at": [
+    -28,
+    0
+   ],
+   "arrive": [
+    13.4,
+    0.0
+   ]
+  },
+  {
+   "from": "neighbours_lane",
+   "to": "old_cellars_1",
+   "kind": "portal",
+   "at": [
+    28,
+    0
+   ],
+   "arrive": [
+    -19.4,
+    0.0
+   ]
+  },
+  {
+   "from": "old_cellars_1",
+   "to": "neighbours_lane",
+   "kind": "portal",
+   "at": [
+    -22,
+    0
+   ],
+   "arrive": [
+    25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "old_cellars_1",
+   "to": "old_cellars_2",
+   "kind": "portal",
+   "at": [
+    22,
+    0
+   ],
+   "arrive": [
+    -19.4,
+    0.0
+   ]
+  },
+  {
+   "from": "old_cellars_2",
+   "to": "old_cellars_1",
+   "kind": "portal",
+   "at": [
+    -22,
+    0
+   ],
+   "arrive": [
+    19.4,
+    0.0
+   ]
+  },
+  {
+   "from": "slough",
+   "to": "slough_shallows",
+   "kind": "portal",
+   "at": [
+    -22,
+    7.5
+   ],
+   "arrive": [
+    0.0,
+    -11.4
+   ]
+  },
+  {
+   "from": "slough_shallows",
+   "to": "slough",
+   "kind": "portal",
+   "at": [
+    0,
+    -14
+   ],
+   "arrive": [
+    -19.5,
+    6.7
+   ]
+  },
+  {
+   "from": "slough",
+   "to": "wicket_gate",
+   "kind": "portal",
+   "at": [
+    25.2,
+    6
+   ],
+   "arrive": [
+    -13.4,
+    0.0
+   ],
+   "needs": "gate_passed"
+  },
+  {
+   "from": "wicket_gate",
+   "to": "slough",
+   "kind": "portal",
+   "at": [
+    -16,
+    0
+   ],
+   "arrive": [
+    25.2,
+    3.3
+   ]
+  },
+  {
+   "from": "wicket_gate",
+   "to": "sinai_foot",
+   "kind": "portal",
+   "at": [
+    16,
+    0
+   ],
+   "arrive": [
+    -25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "sinai_foot",
+   "to": "wicket_gate",
+   "kind": "portal",
+   "at": [
+    -28,
+    0
+   ],
+   "arrive": [
+    13.4,
+    0.0
+   ]
+  },
+  {
+   "from": "wicket_gate",
+   "to": "slough_deeps",
+   "kind": "portal",
+   "at": [
+    0,
+    10
+   ],
+   "arrive": [
+    0.0,
+    -11.4
+   ]
+  },
+  {
+   "from": "slough_deeps",
+   "to": "wicket_gate",
+   "kind": "portal",
+   "at": [
+    0,
+    -14
+   ],
+   "arrive": [
+    0.0,
+    7.4
+   ]
+  },
+  {
+   "from": "slough_deeps",
+   "to": "slough_bog_1",
+   "kind": "portal",
+   "at": [
+    28,
+    0
+   ],
+   "arrive": [
+    -19.4,
+    0.0
+   ]
+  },
+  {
+   "from": "slough_bog_1",
+   "to": "slough_deeps",
+   "kind": "portal",
+   "at": [
+    -22,
+    0
+   ],
+   "arrive": [
+    25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "slough_bog_1",
+   "to": "slough_bog_2",
+   "kind": "portal",
+   "at": [
+    22,
+    0
+   ],
+   "arrive": [
+    -19.4,
+    0.0
+   ]
+  },
+  {
+   "from": "slough_bog_2",
+   "to": "slough_bog_1",
+   "kind": "portal",
+   "at": [
+    -22,
+    0
+   ],
+   "arrive": [
+    19.4,
+    0.0
+   ]
+  },
+  {
+   "from": "interpreter",
+   "to": "house_gardens",
+   "kind": "portal",
+   "at": [
+    6.5,
+    9.2
+   ],
+   "arrive": [
+    -25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "house_gardens",
+   "to": "interpreter",
+   "kind": "portal",
+   "at": [
+    -28,
+    0
+   ],
+   "arrive": [
+    4.9,
+    7.2
+   ]
+  },
+  {
+   "from": "interpreter",
+   "to": "wall_road",
+   "kind": "portal",
+   "at": [
+    13,
+    9.2
+   ],
+   "arrive": [
+    -25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "wall_road",
+   "to": "interpreter",
+   "kind": "portal",
+   "at": [
+    -28,
+    0
+   ],
+   "arrive": [
+    10.8,
+    7.8
+   ]
+  },
+  {
+   "from": "wall_road",
+   "to": "cross_hill",
+   "kind": "portal",
+   "at": [
+    28,
+    0
+   ],
+   "arrive": [
+    -25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "cross_hill",
+   "to": "wall_road",
+   "kind": "portal",
+   "at": [
+    -28,
+    0
+   ],
+   "arrive": [
+    25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "interpreter",
+   "to": "dusty_cellar_1",
+   "kind": "portal",
+   "at": [
+    -13,
+    -5
+   ],
+   "arrive": [
+    -19.4,
+    0.0
+   ]
+  },
+  {
+   "from": "dusty_cellar_1",
+   "to": "interpreter",
+   "kind": "portal",
+   "at": [
+    -22,
+    0
+   ],
+   "arrive": [
+    -13,
+    -2.4
+   ]
+  },
+  {
+   "from": "dusty_cellar_1",
+   "to": "dusty_cellar_2",
+   "kind": "portal",
+   "at": [
+    22,
+    0
+   ],
+   "arrive": [
+    -19.4,
+    0.0
+   ]
+  },
+  {
+   "from": "dusty_cellar_2",
+   "to": "dusty_cellar_1",
+   "kind": "portal",
+   "at": [
+    -22,
+    0
+   ],
+   "arrive": [
+    19.4,
+    0.0
+   ]
+  },
+  {
+   "from": "hill",
+   "to": "arbour_rest",
+   "kind": "portal",
+   "at": [
+    4,
+    8.5
+   ],
+   "arrive": [
+    0.0,
+    -7.4
+   ]
+  },
+  {
+   "from": "arbour_rest",
+   "to": "hill",
+   "kind": "portal",
+   "at": [
+    0,
+    -10
+   ],
+   "arrive": [
+    2.9,
+    6.1
+   ]
+  },
+  {
+   "from": "arbour_rest",
+   "to": "hill_slopes",
+   "kind": "portal",
+   "at": [
+    16,
+    0
+   ],
+   "arrive": [
+    -25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "hill_slopes",
+   "to": "arbour_rest",
+   "kind": "portal",
+   "at": [
+    -28,
+    0
+   ],
+   "arrive": [
+    13.4,
+    0.0
+   ]
+  },
+  {
+   "from": "hill",
+   "to": "spring_foot",
+   "kind": "portal",
+   "at": [
+    -23,
+    -7.5
+   ],
+   "arrive": [
+    25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "spring_foot",
+   "to": "hill",
+   "kind": "portal",
+   "at": [
+    28,
+    0
+   ],
+   "arrive": [
+    -20.5,
+    -6.7
+   ]
+  },
+  {
+   "from": "spring_foot",
+   "to": "way_danger",
+   "kind": "portal",
+   "at": [
+    -28,
+    0
+   ],
+   "arrive": [
+    25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "way_danger",
+   "to": "spring_foot",
+   "kind": "portal",
+   "at": [
+    28,
+    0
+   ],
+   "arrive": [
+    -25.4,
+    0.0
+   ]
+  },
+  {
+   "from": "spring_foot",
+   "to": "way_destruction_1",
+   "kind": "portal",
+   "at": [
+    0,
+    14
+   ],
+   "arrive": [
+    -19.4,
+    0.0
+   ]
+  },
+  {
+   "from": "way_destruction_1",
+   "to": "spring_foot",
+   "kind": "portal",
+   "at": [
+    -22,
+    0
+   ],
+   "arrive": [
+    0.0,
+    11.4
+   ]
+  },
+  {
+   "from": "way_destruction_1",
+   "to": "way_destruction_2",
+   "kind": "portal",
+   "at": [
+    22,
+    0
+   ],
+   "arrive": [
+    -19.4,
+    0.0
+   ]
+  },
+  {
+   "from": "way_destruction_2",
+   "to": "way_destruction_1",
+   "kind": "portal",
+   "at": [
+    -22,
+    0
+   ],
+   "arrive": [
+    19.4,
+    0.0
    ]
   }
  ]

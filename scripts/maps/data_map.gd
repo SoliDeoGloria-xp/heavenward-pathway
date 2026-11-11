@@ -32,6 +32,8 @@ func populate() -> void:
 		prop(p, World.v3(p.get("at", [0, 0])))
 	for e in w.def.get("ents", []):
 		_ent(e)
+	for s in w.def.get("secrets", []):
+		w.quests._add_secret(String(s.id), World.v3(s.at), String(s.title), String(s.text), s.get("reward", {}))
 	if look.get("scatter", true):
 		kit.scatter(hash(w.map_id), int(look.get("tufts", 80)), int(look.get("patches", 22)), int(look.get("flowers", 10)))
 
@@ -259,6 +261,10 @@ func _ent(e: Dictionary) -> void:
 			node = _glint(at)
 		"warp":
 			node = kit.warp(at)
+		"milestone":   # a town's fast-travel stone: a pillar from the kit under a steady light
+			node = Node3D.new(); node.position = at; w.add_child(node)
+			for part in [kit.prop("pillar", at), kit.halo(at + Vector3(0, 3.3, 0), Color("fbe58a"), 0.03, 0.7), kit._label3d("Milestone", at + Vector3(0, 4.1, 0), Color("fbe58a"), 30)]:
+				part.reparent(node)
 	var made := w._add_ent(e.id, e.name, at, node, e.act, e.icon, Callable(), e.get("hidden", false))
 	if e.has("ui"):   # a vendor or bench: opens a HUD window
 		var ui: String = e.ui

@@ -8,7 +8,7 @@ match the design budget per act (data/acts.json) and in total; boss XP is 150-25
 monster XP is 15-25% of quest XP; every Scripture cite is [BSB: Book ch:v]; no reserved (divine)
 names are used as a speaker or entity; every referenced dialogue, entity, mob, skill and map exists.
 World graph (data/world.json): every map is a node and can be reached; every road has a way back
-unless marked story_oneway; every town has a Waymark; portals and arrival points are inside their
+unless marked story_oneway; every town has a Milestone; portals and arrival points are inside their
 maps and clear of each other; level ranges rise without gaps.
 """
 import json, re, sys
@@ -59,6 +59,65 @@ def check_name(where: str, name: str) -> None:
         if re.search(rf"\b{re.escape(r)}\b", low):
             err(f"{where}: reserved name used as a character or entity: {name!r}")
 
+AGGRO = ("aggressive", "passive", "alert")
+TOWN_NEEDS = ("shop", "rest_point", "board", "storage", "milestone")
+
+def _check_place(nid: str, n: dict, d: dict, mobs: dict, dialogue: dict) -> None:
+    """Towns, fields and danger zones: what each kind of place must have."""
+    kind = n.get("kind")
+    where = f"{kind} {nid}"
+    lv = n.get("level", [1, 99])
+    ents = d.get("ents", [])
+    if kind == "town":
+        if d.get("combat"):
+            err(f"{where}: a town is a safe place (combat must be false)")
+        uis = {e.get("ui") for e in ents}
+        for need in TOWN_NEEDS:
+            if need not in uis:
+                err(f"{where}: no {need} (a town has a shop, a rest point, a board, storage and a Milestone)")
+        talkers = [e for e in ents if e.get("kind") == "npc" and "dialog" in e]
+        if len(talkers) < 2:
+            err(f"{where}: needs at least two townsfolk with something to say")
+        for e in talkers:
+            if "[BSB:" not in json.dumps(dialogue.get(e["dialog"], [])) and "Bunyan" not in json.dumps(dialogue.get(e["dialog"], [])):
+                err(f"{where}: {e['id']} must cite the BSB or Bunyan")
+        ms = [e for e in ents if e.get("ui") == "milestone"]
+        if ms and "milestone" in n and ms[0]["at"] != n["milestone"]:
+            err(f"{where}: the Milestone entity and the world graph disagree about where it stands")
+    if kind in ("field", "danger"):
+        if not d.get("combat") or not d.get("spawns"):
+            err(f"{where}: needs combat and a spawn table")
+        for s in d.get("spawns", []):
+            if "at" in s:
+                continue
+            if s.get("aggro") not in AGGRO:
+                err(f"{where}: spawn of {s.get('mob')} needs aggro (one of {AGGRO})")
+            sl = s.get("lv", [])
+            if not (len(sl) == 2 and lv[0] <= sl[0] <= sl[1] <= lv[1]):
+                err(f"{where}: spawn of {s.get('mob')} needs a level range inside {lv}, got {sl}")
+            if s.get("mob") in mobs and mobs[s["mob"]].get("boss"):
+                err(f"{where}: {s['mob']} is a boss and cannot be in a spawn table")
+        if "Recommended Level" not in d.get("sub", ""):
+            err(f"{where}: its banner must give the recommended level")
+        if not d.get("music"):
+            err(f"{where}: needs a music cue")
+    if kind == "field":
+        if not any(s.get("greater") for s in d.get("spawns", [])):
+            err(f"{where}: a field has one rare Greater foe")
+        pois = len(d.get("secrets", [])) + sum(1 for e in ents if e.get("id", "").startswith("landmark"))
+        if not 2 <= pois <= 4:
+            err(f"{where}: needs 2 to 4 points of interest, has {pois}")
+        if sum(1 for o in d.get("side", []) if o.get("page")) != 1:
+            err(f"{where}: needs exactly one hidden Dreamer's Page")
+    if kind == "danger":
+        if not d.get("zones"):
+            err(f"{where}: a danger zone has hazards (zones)")
+        if any(s.get("aggro") != "aggressive" for s in d.get("spawns", []) if "at" not in s):
+            err(f"{where}: foes in a danger zone attack on sight")
+        b = d.get("boss")
+        if b and not (b.get("mob") in mobs and mobs[b["mob"]].get("boss") and lv[0] <= b.get("lv", 0) <= lv[1]):
+            err(f"{where}: its boss must be a boss foe at a level inside {lv}")
+
 def main() -> int:
     prog, acts, mobs, skills, jobs, dialogue, lessons = (load(n) for n in ("progression", "acts", "mobs", "skills", "jobs", "dialogue", "lessons"))
     maps = {p.stem: load(f"maps/{p.stem}") for p in sorted((DATA / "maps").glob("*.json"))}
@@ -83,8 +142,13 @@ def main() -> int:
     if len(jobs.get("jobs", {})) != 6:
         err("jobs.json: the first job change offers exactly six jobs")
     sprites = load("sprites")
+    all_maps = {p.stem for p in (DATA / "maps").glob("*.json")}
     for mid, m in mobs.items():
         check_name(f"mob {mid}", m.get("name", ""))
+        if m.get("home") not in all_maps:
+            err(f"mob {mid}: needs a home map")
+        if m.get("aggro") not in AGGRO:
+            err(f"mob {mid}: needs an aggro type (one of {AGGRO})")
         sheet = sprites.get(m.get("sprite", ""))
         if sheet is None or "size" not in m:
             err(f"mob {mid}: needs a sprite listed in sprites.json and a size")
@@ -116,6 +180,7 @@ def main() -> int:
     pilgrim_acts = {a for a in acts.get("order", []) if acts["acts"][a].get("pilgrim")}
 
     # ---- maps
+    wnodes = load("world").get("nodes", {})
     budget = {a: [0, 0] for a in acts.get("order", [])}
     kill_xp = 0
     rules = prog.get("mob_xp", {})
@@ -138,10 +203,11 @@ def main() -> int:
             if "dialog" in e and e["dialog"] not in dialogue:
                 err(f"{where} ent {e['id']}: unknown dialogue {e['dialog']}")
         objs = d.get("objectives", [])
-        if not objs:
+        free = wnodes.get(mid_, {}).get("kind") in ("town", "field", "danger")   # no story here: the roads of the graph are its ways out
+        if not objs and not free:
             err(f"{where}: no objectives")
         # a way out: an exit or travel objective, an objective that ends on another screen, or the Fall scene (Eden)
-        leaves = any(o.get("type") in ("exit", "travel") or "screen" in o.get("on_done", {}) for o in objs) or mid_ == "eden"
+        leaves = any(o.get("type") in ("exit", "travel") or "screen" in o.get("on_done", {}) for o in objs) or mid_ == "eden" or free
         if not leaves:
             err(f"{where}: no exit (softlock)")
         spawn_ats = {s.get("at", "") for s in d.get("spawns", [])}
@@ -224,8 +290,22 @@ def main() -> int:
         lv = n.get("level", [])
         if not (len(lv) == 2 and 1 <= lv[0] <= lv[1] <= prog.get("max_base", 99)):
             err(f"world: node {nid} needs a level range [low, high]")
-        if n.get("kind") == "town" and not ("waymark" in n and inside(nid, n["waymark"])):
-            err(f"world: town {nid} needs a Waymark point inside its bounds")
+        if n.get("kind") == "town" and not ("milestone" in n and inside(nid, n["milestone"])):
+            err(f"world: town {nid} needs a Milestone point inside its bounds")
+        check_name(f"world node {nid}", maps[nid].get("name", ""))
+        band = regions.get(n.get("region"), {}).get("band", [1, 99])
+        if n.get("kind") in ("field", "danger") and len(lv) == 2 and lv[1] > band[1]:
+            err(f"world: {nid} (level {lv}) goes above its region's band {band}")
+        if not n.get("later"):   # "later": a hand-built place whose full dress belongs to a later pass
+            _check_place(nid, n, maps[nid], mobs, dialogue)
+    for rid in regions:
+        danger = [nid for nid, n in nodes.items() if n.get("region") == rid and n.get("kind") == "danger" and nid in maps]
+        fields = [nid for nid, n in nodes.items() if n.get("region") == rid and n.get("kind") == "field"]
+        if fields and not any("boss" in maps[nid] or any(o.get("type") == "boss" or o.get("mob") for o in maps[nid].get("objectives", [])) or maps[nid].get("spawns") and nid == "lions_path" for nid in danger):
+            err(f"world: region {rid} has fields but no danger zone ending in a boss")
+        if fields and not 3 <= len(fields) <= 5:
+            err(f"world: region {rid} has {len(fields)} fields (want 3 to 5)")
+    review = sorted([nid for nid, n in nodes.items() if n.get("review")] + [f"mob:{k}" for k, v in mobs.items() if v.get("review")])
     links = {}
     for e in edges:
         a_, b_ = e.get("from"), e.get("to")
@@ -336,7 +416,7 @@ def main() -> int:
         for e in errors:
             print("  -", e)
         return 1
-    print(f"validate_data: OK · {len(maps)} maps · world graph {len(nodes)} nodes, {len(edges)} roads · {len(dialogue)} dialogue scenes · quest XP {total[0]}/{total[1]} · required-kill mob XP {kill_xp} ({share:.0%}) · planned {minutes} min")
+    print(f"validate_data: OK · {len(maps)} maps · world graph {len(nodes)} nodes, {len(edges)} roads · {len(review)} names awaiting theological review · {len(dialogue)} dialogue scenes · quest XP {total[0]}/{total[1]} · required-kill mob XP {kill_xp} ({share:.0%}) · planned {minutes} min")
     return 0
 
 if __name__ == "__main__":

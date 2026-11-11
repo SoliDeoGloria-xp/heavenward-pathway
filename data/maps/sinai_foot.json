@@ -1,0 +1,377 @@
+{
+ "id": "sinai_foot",
+ "act": "slough",
+ "name": "The Foot of Mount Sinai",
+ "sub": "Field · Recommended Level 11-15",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "slough",
+ "resumable": true,
+ "look": {
+  "bg": "#2a2420",
+  "amb": "#c8b0a0",
+  "amb_e": 0.4,
+  "tint": [
+   1.0,
+   0.9,
+   0.84
+  ],
+  "sun_e": 0.6,
+  "sun_c": "#ffc890",
+  "post": [
+   0.8,
+   1.1,
+   [
+    1.04,
+    0.96,
+    0.92
+   ]
+  ],
+  "mini": "#8a7868",
+  "ground": "rock",
+  "ground_b": "dirt_dark",
+  "weather": "",
+  "flora": "dry",
+  "rock": "earth",
+  "tufts": 20,
+  "flowers": 0
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 309,
+   "tint": "#8a6a58",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 409,
+   "tint": "#8a6a58",
+   "n": 12
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 370
+  },
+  {
+   "t": "spires",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 2,
+   "seed": 371
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 372
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 377
+  },
+  {
+   "t": "spires",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 2,
+   "seed": 378
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 379
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 384
+  },
+  {
+   "t": "spires",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 2,
+   "seed": 385
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 386
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 391
+  },
+  {
+   "t": "spires",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 2,
+   "seed": 392
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 393
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "A Scorched Stone",
+   "at": [
+    -9,
+    -7
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "sinai_foot.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "menhir_b"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    -22,
+    9.5
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "sinai_foot.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: The Foot of Mount Sinai",
+   "page": true
+  }
+ ],
+ "burden": true,
+ "enter_say": [
+  "The Foot of Mount Sinai. The foes here suit Base Level 11 to 15. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "sinai_ember",
+   "count": 6,
+   "lv": [
+    11,
+    12
+   ],
+   "aggro": "aggressive",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "legalist",
+   "count": 5,
+   "lv": [
+    12,
+    13
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "sinai_ember",
+   "count": 5,
+   "lv": [
+    13,
+    14
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "legalist",
+   "count": 5,
+   "lv": [
+    13,
+    15
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "legalist",
+   "count": 1,
+   "lv": [
+    15,
+    15
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    16,
+    10
+   ],
+   "title": "A Dropped Bundle",
+   "text": "Thrown down by someone who ran from the hill when it flashed. Denarii +55.",
+   "reward": {
+    "denarii": 55
+   }
+  }
+ ]
+}

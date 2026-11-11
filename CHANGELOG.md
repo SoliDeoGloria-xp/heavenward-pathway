@@ -15,6 +15,19 @@ Built in phases from `WORLD_BUILD_PROMPT.md`. The version number and versionCode
 - **The end screen** offers "Walk the road again" in place of replaying the Palace.
 - **Autotest** now walks every road on foot (20 trips), leaves a chapter mid-story and returns, replays the three side maps, and loads an old-format save.
 
+### Phase 2: towns, fields and danger zones for regions 1 to 4
+
+- **23 new maps**: three towns (the City Square, the Wicket Gate, the Arbour Rest), twelve fields and four two-floor danger zones, joined to the story maps by 23 new roads. The Interpreter's House became the fourth town.
+- **Towns** are safe: a provisioner, a storage chest, a rest point, a board listing the region's fields with their levels, a **Milestone** for free travel between towns reached, and townsfolk who each have a line citing the BSB or Bunyan.
+- **Fields** have a spawn table (foe, level range, how it notices you, one rare Greater foe), a landmark to read, a hidden cache, a hidden Dreamer's Page, a recommended-level banner and their region's music. Nothing in a field must be done.
+- **Danger zones** have foes that attack on sight, bad ground, stairs between floors and a boss that wakes as you draw near: the Keeper of the Cellars (10), the Dread of the Deep Mire (16), the Stirred Dust (20), and Formalist and Hypocrisy again at 26.
+- **Every foe shows its level**, coloured by how it compares with yours. 25 new foes; all 47 now have a home map and a notice type.
+- **Portal signs give the levels** of the field or danger zone beyond.
+- **A fall in the wilds** wakes you in the last town. No XP is lost, as always.
+- **Autotest** walks all 60 portal roads on foot, uses every town service, travels by Milestone, hunts in eight fields across the level bands, finds a page and a cache, falls and wakes in town, and overcomes a danger-zone boss. The gallery photographs all 35 maps.
+- `tools/gen_fields.py` writes these maps from short specs; the validator checks what each kind of place must have.
+- Fixed: effects and timers that outlived a map change no longer raise script errors.
+
 ## 0.5.0 (versionCode 6) — one look
 
 - **An art bible, enforced by tools.** 32 colours, a one-pixel ink outline, light from the upper left, one shadow, 48 sprite pixels per world unit. See DECISIONS.md.

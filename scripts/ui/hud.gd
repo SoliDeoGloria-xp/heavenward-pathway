@@ -625,6 +625,67 @@ func _sheet_equip(b: VBoxContainer) -> void:
 func shop() -> void:
 	GearUI.shop(self)
 
+# ------------------------------------------------------------------ town services (an entity's "ui" in map data names one of these)
+func storage() -> void:
+	GearUI.shop(self, "store")
+
+## A town's rest point: sit, and be restored. Weariness lifts.
+func rest_point() -> void:
+	if not world.sitting:
+		world.toggle_sit()
+	G.house_rested = true
+	world.kit._sparkle(world.player.position + Vector3(0, 1.2, 0), Color("ffd8a0"))
+	G.hp = G.hp_max; G.zeal = G.zeal_max; G.weary = false
+	G.say("You rest here a while. Health and Zeal restored.", G.INFO)
+	G.stats_changed.emit()
+
+## Where a Milestone or a KO sets the pilgrim down in a town.
+static func town_spot(town: String) -> Array:
+	var m: Array = Portals.node(town).milestone
+	return [float(m[0]), float(m[1]) + 2.0]
+
+## The Milestone: free travel between the towns the pilgrim has reached.
+func milestone() -> void:
+	_dim()
+	var w := UIKit.window("Milestone  ·  %s" % String(world.info("name")), Vector2(640, 0))
+	w.body.add_child(UIKit.label("A stone that marks how far the road has come. From here you may go at once to any town you have reached. It costs nothing.", 17, UIKit.SUB, false, true))
+	for town in G.data("world").nodes.keys():
+		if not town in G.milestones:
+			continue
+		var t: String = town
+		var here: bool = t == world.map_id
+		var b := UIKit.button(String(G.data("maps/" + t).name) + ("  (you are here)" if here else ""), func() -> void:
+			clear_overlay(); world.ending = true; G.sfx("warp"); G.save_game()
+			G.goto("world", {"map": t, "at": town_spot(t)}), 0, not here)
+		b.disabled = here
+		more_tiles["milestone_" + t] = b
+		w.body.add_child(b)
+	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
+	row.add_child(UIKit.button("Close", func() -> void: clear_overlay(), 140))
+	w.body.add_child(row)
+	_center(w.root)
+
+## The town board: the places of this region and whom they suit. Errands are posted here in a later phase.
+func board() -> void:
+	_dim()
+	var region: String = Portals.node(world.map_id).region
+	var w := UIKit.window("Town Board  ·  %s" % String(G.data("world").regions[region].name), Vector2(700, 0))
+	w.body.add_child(UIKit.label("The fields and dangers of this country. The colour of a name tells how its foes compare with you.", 17, UIKit.SUB, false, true))
+	var nodes: Dictionary = G.data("world").nodes
+	for id in nodes.keys():
+		var n: Dictionary = nodes[id]
+		if n.region != region or not n.kind in ["field", "danger"]:
+			continue
+		var seen: bool = id in G.visited
+		var line := "%s  ·  %s  ·  Lv %d-%d%s" % [String(G.data("maps/" + String(id)).name), "Danger" if n.kind == "danger" else "Field", int(n.level[0]), int(n.level[1]), "" if seen else "  ·  not yet walked"]
+		var l := UIKit.label(line, 19, UIKit.INK, true, true)
+		l.add_theme_color_override("font_color", Combat.con_color(int(n.level[0]), G.lvl).darkened(0.6))
+		w.body.add_child(l)
+	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
+	row.add_child(UIKit.button("Close", func() -> void: clear_overlay(), 140))
+	w.body.add_child(row)
+	_center(w.root)
+
 func bench() -> void:
 	GearUI.bench(self)
 
@@ -776,7 +837,7 @@ func _sheet_way(b: VBoxContainer) -> void:
 		var txt: String = ("✓  " if done else ("▸  " if cur else "·  ")) + (o.text if i <= world.quests.obj_idx else "???")
 		var l := UIKit.label(txt, 20, Color("9a6a3f") if cur else (Color("918a7e") if done else Color("c4bdac")), cur)
 		b.add_child(l)
-	b.add_child(UIKit.label("Dreamer's Pages: %d of %d   ·   Calling: %s" % [Quests.pages_found(), G.data("acts").order.size() - 1, G.job_name()], 18, UIKit.SUB, true))
+	b.add_child(UIKit.label("Dreamer's Pages: %d of %d   ·   Calling: %s" % [Quests.pages_found(), Quests.pages_total(), G.job_name()], 18, UIKit.SUB, true))
 	if world.quests.obj_idx < world.quests.objectives.size():
 		b.add_child(UIKit.button("Auto-path to current step", func(): clear_overlay(); world.quests.auto_path_quest(), 0, true))
 
@@ -1022,7 +1083,8 @@ func show_ko(spoil: float) -> void:
 	w.body.add_child(UIKit.parchment("[BSB: Proverbs 24:16 · text pulled at build time]\nYour standing before God does not rest on this battle."))
 	w.body.add_child(UIKit.label("•  Weariness: you move a little slower for a short while.\n•  Manna spoiled: %s (5%% of unspent). Gather again within 24 h to recover half.\n•  No experience was lost." % str(spoil), 19, UIKit.INK, false, true))
 	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
-	row.add_child(UIKit.button("Rise at the nearest safe site", func(): clear_overlay(); world.combat.rise(), 0, true))
+	var in_wilds: bool = world.kind in ["field", "danger"] and G.last_town != ""
+	row.add_child(UIKit.button(("Rise at %s" % String(G.data("maps/" + G.last_town).name)) if in_wilds else "Rise at the nearest safe site", func(): clear_overlay(); world.combat.rise(), 0, true))
 	w.body.add_child(row)
 	w.root.anchor_left = 0.5; w.root.anchor_right = 0.5; w.root.anchor_top = 1; w.root.anchor_bottom = 1
 	w.root.offset_left = -360; w.root.offset_right = 360; w.root.offset_top = -380; w.root.offset_bottom = -30

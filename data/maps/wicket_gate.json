@@ -1,0 +1,334 @@
+{
+ "id": "wicket_gate",
+ "act": "slough",
+ "name": "The Wicket Gate",
+ "sub": "Town · a safe place",
+ "layer": "House",
+ "combat": false,
+ "start": [
+  0.0,
+  -7.4
+ ],
+ "bounds": [
+  -18,
+  -12,
+  36,
+  24
+ ],
+ "music": "slough",
+ "resumable": true,
+ "look": {
+  "bg": "#2c3428",
+  "amb": "#d8dcc8",
+  "amb_e": 0.42,
+  "tint": [
+   0.98,
+   1.0,
+   0.92
+  ],
+  "sun_e": 0.7,
+  "sun_c": "#fff0c8",
+  "post": [
+   0.84,
+   1.04,
+   [
+    1.0,
+    1.0,
+    0.96
+   ]
+  ],
+  "mini": "#a8b088",
+  "ground": "grass",
+  "ground_b": "cobble_warm",
+  "weather": "",
+  "flora": "green",
+  "rock": "stone",
+  "tufts": 40,
+  "flowers": 8
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    36,
+    3.4
+   ],
+   "tile": "cobble_warm",
+   "ragged": 0.25
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3.4,
+    24
+   ],
+   "tile": "cobble_warm",
+   "ragged": 0.25
+  },
+  {
+   "t": "house",
+   "at": [
+    -13,
+    -11
+   ],
+   "kind": "a",
+   "flip": false
+  },
+  {
+   "t": "house",
+   "at": [
+    -6.5,
+    -11
+   ],
+   "kind": "b",
+   "flip": false
+  },
+  {
+   "t": "house",
+   "at": [
+    6.5,
+    -11
+   ],
+   "kind": "c",
+   "flip": true
+  },
+  {
+   "t": "house",
+   "at": [
+    13,
+    -11
+   ],
+   "kind": "a",
+   "flip": true
+  },
+  {
+   "t": "lamp",
+   "at": [
+    -3.5,
+    -3.5
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    3.5,
+    -3.5
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    -3.5,
+    3.5
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "lamp",
+   "at": [
+    3.5,
+    3.5
+   ],
+   "color": "#ffd080"
+  },
+  {
+   "t": "trees",
+   "area": [
+    -17,
+    8,
+    6,
+    3
+   ],
+   "n": 2,
+   "seed": 56
+  },
+  {
+   "t": "trees",
+   "area": [
+    11,
+    8,
+    6,
+    3
+   ],
+   "n": 2,
+   "seed": 66
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -17,
+    -7,
+    4,
+    4
+   ],
+   "n": 3,
+   "seed": 76
+  },
+  {
+   "t": "banner",
+   "at": [
+    -2.4,
+    -8.2
+   ],
+   "color": "#2f4f8f"
+  },
+  {
+   "t": "banner",
+   "at": [
+    2.4,
+    -8.2
+   ],
+   "color": "#2f4f8f"
+  }
+ ],
+ "ents": [
+  {
+   "id": "keeper",
+   "kind": "npc",
+   "name": "Gatehouse Provisioner",
+   "at": [
+    -8,
+    -5
+   ],
+   "standee": "steward",
+   "look": [
+    0,
+    0,
+    0
+   ],
+   "act": "Trade",
+   "icon": "bag",
+   "ui": "shop"
+  },
+  {
+   "id": "storage",
+   "kind": "spot",
+   "name": "Storage Chest",
+   "at": [
+    -12,
+    -5.5
+   ],
+   "act": "Open",
+   "icon": "bag",
+   "ui": "storage",
+   "prop": {
+    "t": "kit",
+    "name": "crate"
+   }
+  },
+  {
+   "id": "rest",
+   "kind": "spot",
+   "name": "The Gatehouse Bench",
+   "at": [
+    9,
+    -5.5
+   ],
+   "act": "Rest",
+   "icon": "sit",
+   "ui": "rest_point",
+   "prop": {
+    "t": "kit",
+    "name": "table"
+   }
+  },
+  {
+   "id": "board",
+   "kind": "spot",
+   "name": "Town Board",
+   "at": [
+    6,
+    6.5
+   ],
+   "act": "Read",
+   "icon": "scroll",
+   "ui": "board",
+   "prop": {
+    "t": "kit",
+    "name": "signpost"
+   }
+  },
+  {
+   "id": "milestone",
+   "kind": "milestone",
+   "name": "Milestone",
+   "at": [
+    -6,
+    -1.8
+   ],
+   "act": "Travel",
+   "icon": "warp",
+   "ui": "milestone"
+  },
+  {
+   "id": "folk0",
+   "kind": "npc",
+   "name": "Pilgrim at Rest",
+   "at": [
+    -5,
+    5
+   ],
+   "look": [
+    1,
+    2,
+    2
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "dialog": "wicket_gate.folk0",
+   "color": "#dfe9ff"
+  },
+  {
+   "id": "folk1",
+   "kind": "npc",
+   "name": "Mender of the Road",
+   "at": [
+    10,
+    5.5
+   ],
+   "look": [
+    0,
+    1,
+    3
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "dialog": "wicket_gate.folk1",
+   "color": "#dfe9ff"
+  },
+  {
+   "id": "folk2",
+   "kind": "npc",
+   "name": "Watcher on the Wall",
+   "at": [
+    -12,
+    3.5
+   ],
+   "look": [
+    2,
+    3,
+    5
+   ],
+   "act": "Talk",
+   "icon": "talk",
+   "dialog": "wicket_gate.folk2",
+   "color": "#dfe9ff"
+  }
+ ],
+ "objectives": [],
+ "side": [],
+ "burden": true,
+ "enter_say": [
+  "The Wicket Gate. No foe comes here. Trade, rest, read the board, and use the Milestone to return to any town you have reached."
+ ]
+}

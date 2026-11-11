@@ -1,0 +1,476 @@
+{
+ "id": "way_danger",
+ "act": "hill",
+ "name": "The Way called Danger",
+ "sub": "Field · Recommended Level 18-22",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "hill",
+ "resumable": true,
+ "look": {
+  "bg": "#1c221c",
+  "amb": "#98a890",
+  "amb_e": 0.36,
+  "tint": [
+   0.84,
+   0.9,
+   0.84
+  ],
+  "sun_e": 0.42,
+  "sun_c": "#b8c8a8",
+  "post": [
+   0.72,
+   1.08,
+   [
+    0.94,
+    0.98,
+    0.94
+   ]
+  ],
+  "mini": "#4a5a40",
+  "ground": "grass_dark",
+  "ground_b": "leaves",
+  "weather": "",
+  "flora": "dark",
+  "rock": "dark",
+  "tufts": 60,
+  "flowers": 0
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 320,
+   "tint": "#4a5444",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 420,
+   "tint": "#4a5444",
+   "n": 12
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 7,
+   "seed": 780
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 778
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 779
+  },
+  {
+   "t": "fog",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 780
+  },
+  {
+   "t": "mushrooms",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 781,
+   "color": "#8fe0c0"
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 7,
+   "seed": 787
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 785
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 786
+  },
+  {
+   "t": "fog",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 787
+  },
+  {
+   "t": "mushrooms",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 788,
+   "color": "#8fe0c0"
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 7,
+   "seed": 794
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 792
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 793
+  },
+  {
+   "t": "fog",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 794
+  },
+  {
+   "t": "mushrooms",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 795,
+   "color": "#8fe0c0"
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 7,
+   "seed": 801
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 799
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 800
+  },
+  {
+   "t": "fog",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "tint": "#b8c8a8",
+   "alpha": 0.13,
+   "seed": 801
+  },
+  {
+   "t": "mushrooms",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 802,
+   "color": "#8fe0c0"
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "A Warning Board",
+   "at": [
+    -10,
+    -6
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "way_danger.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "signpost"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    -22,
+    10
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "way_danger.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: The Way called Danger",
+   "page": true
+  }
+ ],
+ "enter_say": [
+  "The Way called Danger. The foes here suit Base Level 18 to 22. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "prowler",
+   "count": 6,
+   "lv": [
+    18,
+    19
+   ],
+   "aggro": "aggressive",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "snare",
+   "count": 5,
+   "lv": [
+    19,
+    20
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "wood_shade",
+   "count": 5,
+   "lv": [
+    20,
+    21
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "prowler",
+   "count": 5,
+   "lv": [
+    20,
+    22
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "snare",
+   "count": 1,
+   "lv": [
+    22,
+    22
+   ],
+   "aggro": "aggressive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    17,
+    9.5
+   ],
+   "title": "A Woodcutter's Cache",
+   "text": "In a hollow trunk, wrapped in oilcloth. The woodcutter did not come back for it. Denarii +90.",
+   "reward": {
+    "denarii": 90
+   }
+  }
+ ]
+}

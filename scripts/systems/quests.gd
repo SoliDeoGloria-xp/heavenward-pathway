@@ -331,11 +331,25 @@ func _side_done(sd: Dictionary) -> void:
 	if sd.get("page", false):
 		w.show_ent(sd.ent, false)
 		G.flags["page_" + w.map_id] = true; G.sfx("page")
-		G.say("Dreamer's Page found (%d of %d). They are kept in More → The Way." % [pages_found(), G.data("acts").order.size() - 1], G.INFO)
+		G.say("Dreamer's Page found (%d of %d). They are kept in More → The Way." % [pages_found(), pages_total()], G.INFO)
 	else:
 		G.say("Done: %s" % sd.text, G.INFO)
 	_save()
 	_update_quest()
+
+## What the tracker says where no objective is waiting.
+func free_text() -> String:
+	if objectives.is_empty():
+		return String(def.get("sub", ""))
+	return "This chapter is told. The road is open."
+
+## Every Dreamer's Page there is to find, on story maps and in the fields.
+static func pages_total() -> int:
+	var n := 0
+	for m in G.data("world").nodes.keys():
+		if not GearUI._page_of(String(m)).is_empty():
+			n += 1
+	return n
 
 static func pages_found() -> int:
 	var n := 0
@@ -352,7 +366,7 @@ func _update_quest() -> void:
 		zone_fx.queue_free(); zone_fx = null
 	var o := cur()
 	if o.is_empty():
-		w.hud.set_quest(""); return
+		w.hud.set_quest(free_text()); return
 	w.hud.set_quest(o.text)
 	var q: Variant = quest_target()
 	if q is Dictionary:
@@ -415,6 +429,8 @@ func _find_secret(id: String, title: String, text: String, reward: Dictionary) -
 		G.add_xp(int(reward.xp), int(reward.get("jxp", -1)), w.map_id)
 	if reward.has("manna"):
 		G.manna += float(reward.manna)
+	if reward.has("denarii"):
+		G.denarii += int(reward.denarii); G.sfx("coin")
 	G.say("Secret found (%d/%d): %s" % [found.size(), secret_ids.size(), title], G.INFO)
 	w.hud.secret_card(title, text, found.size(), secret_ids.size())
 	G.haptic(30)

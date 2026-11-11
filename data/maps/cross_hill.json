@@ -1,0 +1,378 @@
+{
+ "id": "cross_hill",
+ "act": "cross",
+ "name": "The Hill before the Cross",
+ "sub": "Field · Recommended Level 16-19",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "cross",
+ "resumable": true,
+ "look": {
+  "bg": "#3a3a2c",
+  "amb": "#f0e8d8",
+  "amb_e": 0.44,
+  "tint": [
+   1.04,
+   1.0,
+   0.92
+  ],
+  "sun_e": 0.8,
+  "sun_c": "#fff0d0",
+  "post": [
+   0.86,
+   1.04,
+   [
+    1.02,
+    1.0,
+    0.96
+   ]
+  ],
+  "mini": "#b8c08a",
+  "ground": "grass",
+  "ground_b": "grass_dry",
+  "weather": "",
+  "flora": "green",
+  "rock": "stone"
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 314,
+   "tint": "#a09a8a",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 414,
+   "tint": "#a09a8a",
+   "n": 12
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 555
+  },
+  {
+   "t": "blooms",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 556,
+   "color": "#fff0a0"
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 557
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 562
+  },
+  {
+   "t": "blooms",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 563,
+   "color": "#e0704a"
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 564
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 569
+  },
+  {
+   "t": "blooms",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 570,
+   "color": "#9a7cc4"
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 571
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 576
+  },
+  {
+   "t": "blooms",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 577,
+   "color": "#f4efe4"
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 578
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "A Plain Stone",
+   "at": [
+    10,
+    6
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "cross_hill.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "menhir_a"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    -21,
+    10
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "cross_hill.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: The Hill before the Cross",
+   "page": true
+  }
+ ],
+ "enter_say": [
+  "The Hill before the Cross. The foes here suit Base Level 16 to 19. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "backward_glance",
+   "count": 6,
+   "lv": [
+    16,
+    17
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "heavy_heart",
+   "count": 5,
+   "lv": [
+    16,
+    18
+   ],
+   "aggro": "alert",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "backward_glance",
+   "count": 5,
+   "lv": [
+    17,
+    19
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "heavy_heart",
+   "count": 5,
+   "lv": [
+    18,
+    19
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "heavy_heart",
+   "count": 1,
+   "lv": [
+    19,
+    19
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    -18,
+    -9.5
+   ],
+   "title": "A Dropped Strap",
+   "text": "The broken strap of someone's burden, and the purse that hung from it. Whoever wore it did not come back for either. Denarii +80.",
+   "reward": {
+    "denarii": 80
+   }
+  }
+ ]
+}

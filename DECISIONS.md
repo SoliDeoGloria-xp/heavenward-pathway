@@ -2,16 +2,36 @@
 
 Made while building, where the brief and the design doc left room. Each can be changed in data.
 
+## Towns, fields and danger zones (0.6.0, phase 2)
+
+Owner's answers, 2026-11-10: the Base 10 cap before the Calling stays, so each region has two tiers; fast-travel points are called **Milestones** ("Waymark" stays the name of the messages pilgrims leave).
+
+- **Two tiers per region.** Fields at the level of a first visit (City 1-8, Slough 5-8, House Gardens 6-9, Hill 7-10), and higher fields and danger zones to come back to after the Calling (up to 16, 20 and 26). Nothing stops a low pilgrim walking into a high field: the portal sign gives the levels and each foe's nameplate is coloured by how it compares with the pilgrim (grey, green, bone, gold, ember, crimson).
+- **Three kinds of notice.** Aggressive foes attack on sight; passive ones only when struck; alert ones come to the help of their own family when one is struck nearby. Danger zones hold only aggressive foes.
+- **A field has one rare Greater foe** that returns after four minutes. In story maps a Greater foe is still a set piece that appears once.
+- **A danger zone's boss sleeps** until the pilgrim comes near, and returns ten minutes after it falls. Formalist and Hypocrisy are reused at level 26 at the end of the Way called Destruction (the same foe, scaled by the mob formulas).
+- **Worldly Wiseman is not a boss.** The world plan suggested him for the Slough bog; he is a tempter the pilgrim answers with words, so the bog ends in a game-original foe instead.
+- **Field finds pay Denarii, never Manna or quest XP.** Manna comes only through the means of grace, and the quest budget of 2,210 / 855 must stay exact. A field's Dreamer's Page pays nothing but itself.
+- **A pilgrim who falls in a field or danger zone wakes in the last town**, weary. In a story map he still rises where the map begins.
+- **Lord's Day.** Lord's Day Mode closes the whole road at the title screen, so a town needs no behaviour of its own on that day.
+- **Palace Beautiful and the Lions' Path keep their hand-built form** (marked `later` in the world graph). The Palace gained a Milestone and a storage chest so that travel reaches it.
+- **The Interpreter's House is the town of its region**: a keeper, a table to rest at, a board, a chest and a Milestone were added inside it.
+- **Geography that departs from the world plan.** The Way called Danger and the Way called Destruction (Bunyan's two byways at the foot of the hill) replace "By-path Meadow" and "Lucre quarry", which belong to later parts of the book. The road fenced by the Wall called Salvation is a field of its own.
+- **Every new map is built from the kit by `tools/gen_fields.py`**: correct in structure, plain to look at. They are placeholders for dressing by hand.
+
+**Awaiting theological review** (flagged `"review": true` in `data/world.json` and `data/mobs.json`; no reviewer is appointed yet):
+
+- Places: Sloth Meadow, Neighbours' Lane, The Old Cellars, The Old Cellars: the Vault, The Foot of Mount Sinai, The Slough Bog, The Slough Bog: the Deep Mire, The House Gardens, The Hill before the Cross, The Dusty Cellar, The Dusty Cellar: the Unswept Room, The Arbour Rest.
+- Foes: Gossip, Mocker, Grudge, Hoarder, Miser, Bog Lurker, Sinker, Ember of the Mount, Legalist, Weedling, Dust Mote, Self-Trust, Scorner, Backward Glance, Heavy Heart, Dust Wraith, Prowler, Snare, Shade of the Wood, Ruin, Stumbler in the Dark, Pitfall, The Keeper of the Cellars, Dread of the Deep Mire, The Stirred Dust.
+- Words: every townsperson's line, landmark inscription and field page in `data/dialogue.json` whose id begins with a new map's id (35 short scenes). They paraphrase and cite; no Scripture text is embedded. Monsters named for guilt and looking back stand in the field before the Cross (Backward Glance, Heavy Heart): confirm that is fitting so near that place.
+
 ## The world graph (0.6.0, phase 1)
 
 - **A road is two one-way edges** in `data/world.json`. Kinds: `portal` (walk in), `door` (use an entity), `exit` (the map's own exit objective), `story` (a scripted scene change). Only Eden to the City is `story_oneway`.
 - **A forward portal is the story's own exit light.** It opens when the map's last objective is done (flag `done_<map>`); before that the exit objective makes the same trip, so the chapter is told once. The way back is always open.
-- **Recommended levels are what is true today** (City 5-6 up to the Shadow 11-12). The region bands from the world plan (City 1-10, Slough 8-16, Interpreter and Cross 14-20, Hill 18-26) are stored beside them as targets. They do not fit the locked rule that a Pilgrim stops at Base 10 until the Calling at the Palace. **Open question for the owner; phases 2 and 3 wait on it.**
-- **Interpreter's House and Palace Beautiful are the two towns so far.** Each has a Waymark point in data; nothing stands there yet (phase 4 builds travel).
-- **"Waymark" already means something** in this game: the short messages pilgrims leave on the road. The world plan uses the same word for fast-travel points. One of the two needs another name. **Open question for the owner.**
+- **Recommended levels of story maps are what is true today** (City 5-6 up to the Shadow 11-12). The region bands from the world plan are stored beside them. (Answered in phase 2: the cap stays, regions have two tiers.)
 - **The Palace's return portal is by the south path**, where the pilgrim arrives from the Hill, not on the west side as the build notes suggested: the validator requires an arrival point to be near the road back.
-- **A KO still raises the pilgrim at the start of the same map.** The last town is saved, but returning there on a KO waits for towns that have a rest point (phase 2).
-- **A finished map keeps its always-present foes** (the City's Slothlings, the Lions' Path shades) and nothing else. Real spawn tables come in phase 2.
+- **A finished story map keeps its always-present foes** (the City's Slothlings, the Lions' Path shades) and nothing else.
 - No game-original names were added in this phase.
 
 ## Art bible (0.5.0)

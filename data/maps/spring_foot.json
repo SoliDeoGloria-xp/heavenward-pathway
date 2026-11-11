@@ -1,0 +1,404 @@
+{
+ "id": "spring_foot",
+ "act": "hill",
+ "name": "The Spring at the Foot of the Hill",
+ "sub": "Field · Recommended Level 8-10",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "hill",
+ "resumable": true,
+ "look": {
+  "bg": "#34302a",
+  "amb": "#d8ccb8",
+  "amb_e": 0.4,
+  "tint": [
+   1.0,
+   0.95,
+   0.88
+  ],
+  "sun_e": 0.66,
+  "sun_c": "#ffd8a0",
+  "post": [
+   0.88,
+   1.06,
+   [
+    1.03,
+    0.99,
+    0.94
+   ]
+  ],
+  "mini": "#a89878",
+  "ground": "grass_dry",
+  "ground_b": "dirt",
+  "weather": "",
+  "flora": "dry",
+  "rock": "earth"
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 319,
+   "tint": "#8a8478",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 419,
+   "tint": "#8a8478",
+   "n": 12
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 740
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 741
+  },
+  {
+   "t": "blooms",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 743,
+   "color": "#fff0a0"
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 747
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 748
+  },
+  {
+   "t": "water",
+   "at": [
+    16.1,
+    -8.25
+   ],
+   "size": [
+    7,
+    4.5
+   ],
+   "y": 0.04,
+   "tint": "#5c6a4c"
+  },
+  {
+   "t": "blooms",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 750,
+   "color": "#e0704a"
+  },
+  {
+   "t": "trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 754
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 755
+  },
+  {
+   "t": "water",
+   "at": [
+    -13.899999999999999,
+    8.25
+   ],
+   "size": [
+    7,
+    4.5
+   ],
+   "y": 0.04,
+   "tint": "#5c6a4c"
+  },
+  {
+   "t": "blooms",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 757,
+   "color": "#9a7cc4"
+  },
+  {
+   "t": "trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 761
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 762
+  },
+  {
+   "t": "blooms",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 6,
+   "seed": 764,
+   "color": "#f4efe4"
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "The Spring",
+   "at": [
+    6,
+    -6
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "spring_foot.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "well"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    20,
+    10.5
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "spring_foot.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: The Spring at the Foot of the Hill",
+   "page": true
+  }
+ ],
+ "enter_say": [
+  "The Spring at the Foot of the Hill. The foes here suit Base Level 8 to 10. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "loiterer",
+   "count": 6,
+   "lv": [
+    8,
+    9
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "glutton_grub",
+   "count": 5,
+   "lv": [
+    8,
+    9
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "loiterer",
+   "count": 5,
+   "lv": [
+    9,
+    10
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "pretender",
+   "count": 4,
+   "lv": [
+    9,
+    10
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "glutton_grub",
+   "count": 1,
+   "lv": [
+    10,
+    10
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    -18,
+    9
+   ],
+   "title": "A Forgotten Flask",
+   "text": "Left full beside the water by someone in a hurry to take an easier road. Denarii +45.",
+   "reward": {
+    "denarii": 45
+   }
+  }
+ ]
+}

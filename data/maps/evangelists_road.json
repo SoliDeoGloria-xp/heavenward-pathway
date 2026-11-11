@@ -1,0 +1,377 @@
+{
+ "id": "evangelists_road",
+ "act": "city",
+ "name": "Evangelist's Road",
+ "sub": "Field · Recommended Level 5-8",
+ "layer": "Wilds",
+ "combat": true,
+ "start": [
+  -25.4,
+  0.0
+ ],
+ "bounds": [
+  -30,
+  -16,
+  60,
+  32
+ ],
+ "music": "city",
+ "resumable": true,
+ "look": {
+  "bg": "#2a2832",
+  "amb": "#a8a4c0",
+  "amb_e": 0.38,
+  "tint": [
+   0.86,
+   0.87,
+   0.98
+  ],
+  "sun_e": 0.55,
+  "sun_c": "#c8c4d8",
+  "post": [
+   0.72,
+   1.08,
+   [
+    0.93,
+    0.95,
+    1.05
+   ]
+  ],
+  "mini": "#8c9484",
+  "ground": "grass_dark",
+  "ground_b": "dirt_dark",
+  "weather": "drizzle",
+  "flora": "dark",
+  "rock": "stone",
+  "tufts": 60,
+  "flowers": 2
+ },
+ "props": [
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    60,
+    3
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "path",
+   "at": [
+    0,
+    0
+   ],
+   "size": [
+    3,
+    30
+   ],
+   "tile": "dirt_dark"
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    -16.6
+   ],
+   "to": [
+    30,
+    -16.6
+   ],
+   "h": 2.2,
+   "seed": 303,
+   "tint": "#5a5a64",
+   "n": 12
+  },
+  {
+   "t": "ridge",
+   "from": [
+    -30,
+    16.6
+   ],
+   "to": [
+    30,
+    16.6
+   ],
+   "h": 2.2,
+   "seed": 403,
+   "tint": "#5a5a64",
+   "n": 12
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 148
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 149
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 150
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 155
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 156
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 157
+  },
+  {
+   "t": "rocks",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 162
+  },
+  {
+   "t": "bushes",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 163
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 164
+  },
+  {
+   "t": "rocks",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 4,
+   "seed": 169
+  },
+  {
+   "t": "bushes",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 5,
+   "seed": 170
+  },
+  {
+   "t": "dead_trees",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ],
+   "n": 3,
+   "seed": 171
+  }
+ ],
+ "ents": [
+  {
+   "id": "landmark",
+   "kind": "spot",
+   "name": "The Fingerpost",
+   "at": [
+    0,
+    -6
+   ],
+   "act": "Read",
+   "icon": "eye",
+   "dialog": "evangelists_road.landmark",
+   "prop": {
+    "t": "kit",
+    "name": "signpost"
+   }
+  },
+  {
+   "id": "page",
+   "kind": "page",
+   "name": "Something glints",
+   "at": [
+    22,
+    -10
+   ],
+   "act": "Search",
+   "icon": "eye"
+  }
+ ],
+ "objectives": [],
+ "side": [
+  {
+   "id": "page",
+   "type": "interact",
+   "ent": "page",
+   "dialog": "evangelists_road.page",
+   "xp": [
+    0,
+    0
+   ],
+   "text": "The Dreamer's Page: Evangelist's Road",
+   "page": true
+  }
+ ],
+ "burden": true,
+ "enter_say": [
+  "Evangelist's Road. The foes here suit Base Level 5 to 8. Nothing here must be done: stay as long as you like."
+ ],
+ "spawns": [
+  {
+   "mob": "grudge",
+   "count": 6,
+   "lv": [
+    5,
+    6
+   ],
+   "aggro": "aggressive",
+   "area": [
+    -26,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "hoarder",
+   "count": 5,
+   "lv": [
+    6,
+    7
+   ],
+   "aggro": "passive",
+   "area": [
+    -26,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "grudge",
+   "count": 5,
+   "lv": [
+    6,
+    8
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "hoarder",
+   "count": 5,
+   "lv": [
+    7,
+    8
+   ],
+   "aggro": "alert",
+   "area": [
+    4,
+    3.5,
+    22,
+    9.5
+   ]
+  },
+  {
+   "mob": "grudge",
+   "count": 1,
+   "lv": [
+    8,
+    8
+   ],
+   "aggro": "aggressive",
+   "area": [
+    4,
+    -13,
+    22,
+    9.5
+   ],
+   "greater": true
+  }
+ ],
+ "secrets": [
+  {
+   "id": "cache",
+   "at": [
+    -16,
+    9.5
+   ],
+   "title": "A Traveller's Cache",
+   "text": "Under a flat stone, a purse left by someone who went on lighter. Denarii +35.",
+   "reward": {
+    "denarii": 35
+   }
+  }
+ ]
+}

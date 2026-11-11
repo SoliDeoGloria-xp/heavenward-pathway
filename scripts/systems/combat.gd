@@ -49,6 +49,28 @@ var regen_rate := 0.0
 
 func _init(world: World) -> void:
 	w = world
+	G.level_up.connect(recolor_nameplates)
+
+# ------------------------------------------------------------------ a danger zone's boss (map data "boss": {mob, at, lv, respawn})
+const LAIR_WAKE_RANGE := 11.0
+const LAIR_RESPAWN_S := 600.0
+var lair: Dictionary = {}          # set when this map has a boss that is not yet woken
+
+func lair_ready() -> void:
+	var b: Dictionary = w.def.get("boss", {})
+	if b.is_empty():
+		return
+	var since: float = Time.get_unix_time_from_system() - float(G.lairs.get(w.map_id, 0.0))
+	if since >= float(b.get("respawn", LAIR_RESPAWN_S)):
+		lair = b
+
+func lair_tick() -> void:
+	if lair.is_empty() or dead:
+		return
+	var at := World.v3(lair.at)
+	if at.distance_to(w.player.position) < LAIR_WAKE_RANGE:
+		var b := lair; lair = {}
+		spawn_boss(String(b.mob), at, int(b.get("lv", -1)))
 
 # ------------------------------------------------------------------ timers and derived numbers
 func tick_cooldowns(delta: float) -> void:
@@ -113,7 +135,11 @@ func spawn_group(objective_id: String) -> void:
 			continue
 		var a: Array = sp.area
 		for i in int(sp.count):
-			_spawn_mob(String(sp.mob), Vector3(rng.randf_range(a[0], a[0] + a[2]), 0, rng.randf_range(a[1], a[1] + a[3])))
+			var pos := Vector3(rng.randf_range(a[0], a[0] + a[2]), 0, rng.randf_range(a[1], a[1] + a[3]))
+			var lv := -1
+			if sp.has("lv"):   # a field's table gives its own level range for the foe
+				lv = rng.randi_range(int(sp.lv[0]), int(sp.lv[1]))
+			_spawn_mob(String(sp.mob), pos, sp, lv)
 
 ## Sheets imported by tools/import_sheets.py are described in data/sprites.json; a mob's "size"
 ## is its standing height in world units. The old generated placeholder sheet is the fallback.
@@ -131,21 +157,58 @@ func _mob_actor(md: Dictionary, scale: float, pos: Vector3, shadow: float = 1.0)
 	a.set_tint(Color(String(md.tint)) * G.sprite_tint)
 	return a
 
-func _spawn_mob(id: String, pos: Vector3) -> Dictionary:
+## How a foe notices the pilgrim. aggressive: attacks on sight. passive: only when struck.
+## alert: only when struck, or when one of its own family is struck nearby.
+const AGGRO_TYPES := ["aggressive", "passive", "alert"]
+const HELP_RANGE := 6.5
+const FIELD_GREATER_RESPAWN := 240.0
+
+func _spawn_mob(id: String, pos: Vector3, sp: Dictionary = {}, lv_override: int = -1) -> Dictionary:
 	var md: Dictionary = G.MOBS[id]
 	var rules: Dictionary = G.PROG["mob"]
-	var greater: bool = md.get("greater", false)
-	var lv := int(md.level)
+	var greater: bool = md.get("greater", false) or sp.get("greater", false)
+	var lv := lv_override if lv_override > 0 else int(md.level)
+	# a Greater foe in a story map is a set piece (once); in a field's table it comes back, slowly
+	var back: float = NO_RESPAWN if (greater and not sp.has("lv")) else (FIELD_GREATER_RESPAWN if greater else float(rules.respawn))
+	back = float(sp.get("respawn", back))
 	var a := _mob_actor(md, float(rules.greater_scale) if greater else 1.0, pos)
 	var hp := (float(rules.hp_base) + float(rules.hp_per_lv) * lv) * (float(rules.greater_hp) if greater else 1.0)
 	var atk := (float(rules.atk_base) + float(rules.atk_per_lv) * lv) * (float(rules.greater_atk) if greater else 1.0)
 	var bars := _hp_bars(a)
-	var m := {"id": id, "name": md.name, "level": lv, "greater": greater, "drop": md.get("drop", ""), "actor": a, "hp": hp, "max": hp, "atk": atk,
-		"xp": mob_xp(md), "alive": true, "next": 0.0, "home": pos, "wander": pos, "wander_t": randf_range(1, 4), "family": md.family, "only": md.get("only", ""),
+	var shown: String = ("Greater " + String(md.name)) if (greater and not md.get("greater", false)) else String(md.name)
+	var m := {"id": id, "name": shown, "level": lv, "greater": greater, "drop": md.get("drop", ""), "actor": a, "hp": hp, "max": hp, "atk": atk,
+		"xp": xp_for(lv, greater), "notice": String(sp.get("aggro", md.get("aggro", "aggressive"))), "respawn_s": back, "alive": true, "next": 0.0, "home": pos, "wander": pos, "wander_t": randf_range(1, 4), "family": md.family, "only": md.get("only", ""),
 		"reach": float(G.PROG["ranged_reach"]) if md.get("kind", "") == "ranged" else MOB_REACH,
 		"bg": bars[0], "fg": bars[1], "trail": bars[2], "aggro": false, "respawn": 0.0, "tele": false, "tele_pos": Vector3.ZERO, "trail_v": 1.0, "was_aggro": false}
 	mobs.append(m)
+	_nameplate(m)
 	return m
+
+## The nameplate shows the foe's level in a colour that tells how it compares with the pilgrim's.
+const CON := [[-6, "918a7e"], [-3, "8cb84f"], [2, "f4efe4"], [4, "e8b83e"], [7, "e0704a"]]
+const CON_ABOVE := "b33a35"
+
+static func con_color(mob_lv: int, my_lv: int) -> Color:
+	var diff := mob_lv - my_lv
+	for step in CON:
+		if diff <= int(step[0]):
+			return Color(String(step[1]))
+	return Color(CON_ABOVE)
+
+func _nameplate(m: Dictionary) -> void:
+	var a: SpriteActor = m.actor
+	if a.name_lbl:
+		a.set_name_text("Lv %d  %s" % [int(m.level), m.name])
+		a.name_lbl.modulate = con_color(int(m.level), G.lvl)
+
+func recolor_nameplates(_kind: String = "") -> void:
+	for m in mobs:
+		if not m.get("boss", false) and is_instance_valid(m.actor):
+			_nameplate(m)
+
+static func xp_for(lv: int, greater: bool) -> int:
+	var rules: Dictionary = G.PROG["mob_xp"]
+	return (int(rules.base) + int(rules.per_level) * lv) * (int(rules.greater_mult) if greater else 1)
 
 ## Common monster XP = 3 + level; Greater x4; a boss pays its bonus on top of its objective (150-250 in all).
 static func mob_xp(md: Dictionary) -> int:
@@ -167,8 +230,15 @@ func _hp_bars(a: SpriteActor) -> Array:
 	return out
 
 ## A field boss or the Muster boss: one large foe with telegraphed blows and a periodic slam.
-func spawn_boss(id: String, pos: Vector3) -> Dictionary:
+func spawn_boss(id: String, pos: Vector3, lv: int = -1) -> Dictionary:
 	var md: Dictionary = G.MOBS[id]
+	if lv > 0 and lv != int(md.level):   # a danger zone's boss stands at the zone's level: the same foe, scaled
+		md = md.duplicate()
+		var rules: Dictionary = G.PROG["mob"]
+		var k: float = (float(rules.hp_base) + float(rules.hp_per_lv) * lv) / (float(rules.hp_base) + float(rules.hp_per_lv) * int(md.level))
+		var ka: float = (float(rules.atk_base) + float(rules.atk_per_lv) * lv) / (float(rules.atk_base) + float(rules.atk_per_lv) * int(md.level))
+		md["hp"] = round(float(md.hp) * k); md["atk"] = round(float(md.atk) * ka); md["slam"] = round(float(md.slam) * ka)
+		md["xp_bonus"] = int(round(float(md.get("xp_bonus", 0)) * k)); md["level"] = lv
 	var a := _mob_actor(md, 1.0, pos, BOSS_SHADOW)
 	if a.name_lbl:
 		a.name_lbl.font_size = BOSS_NAME_SIZE; a.name_lbl.position.y = -0.3
@@ -200,7 +270,7 @@ func _mob_tick(delta: float) -> void:
 		var d := a.position.distance_to(p)
 		if dead:
 			m.aggro = false
-		elif not calm_all and ((d < AGGRO_RANGE and not w.sitting) or m.aggro):   # a resting pilgrim is not noticed
+		elif not calm_all and ((m.notice == "aggressive" and d < AGGRO_RANGE and not w.sitting) or m.aggro):   # a resting pilgrim is not noticed
 			m.aggro = true
 		if m.aggro and not m.was_aggro:
 			w.kit._pop_mark(a, "!", Color("ffd400"))
@@ -282,6 +352,9 @@ func hit_mob(m: Dictionary, dmg: int, crit: bool = false, miss: bool = false, vi
 		w.kit._float_text(a.position + Vector3(0, 1.6, 0), "Miss", Color("dff2ff")); return
 	m.hp = maxf(0.0, m.hp - dmg)
 	m.aggro = true
+	for o in mobs:   # alert foes come to the help of their own kind
+		if o != m and o.alive and o.get("notice", "") == "alert" and o.family == m.family and o.actor.position.distance_to(a.position) < HELP_RANGE:
+			o.aggro = true
 	G.sfx("hit")
 	var kill: bool = m.hp <= 0.0
 	w.kit._float_text(a.position + Vector3(0, 1.6, 0), str(dmg), Color("ffe25a") if crit else Color.WHITE, crit or kill, dmg)
@@ -310,12 +383,13 @@ func hit_mob(m: Dictionary, dmg: int, crit: bool = false, miss: bool = false, vi
 func _mob_down(m: Dictionary) -> void:
 	var a: SpriteActor = m.actor
 	m.alive = false; m.bg.visible = false
-	m.respawn = NO_RESPAWN if m.greater else float(G.PROG["mob"].respawn)   # Greater foes are set pieces: once each
+	m.respawn = float(m.respawn_s)
 	a.play_once("die", 0.7)
 	w.get_tree().create_timer(0.35).timeout.connect(func() -> void:
-		Fx.motes_up(w, a.position + Vector3(0, 0.4, 0), Color("fff6d8"), 16, 1.2); Fx.ring(w, a.position, Color(1, 0.95, 0.75), 2.2, 0.5))
+		if is_instance_valid(a) and is_instance_valid(w):
+			Fx.motes_up(w, a.position + Vector3(0, 0.4, 0), Color("fff6d8"), 16, 1.2); Fx.ring(w, a.position, Color(1, 0.95, 0.75), 2.2, 0.5))
 	w.get_tree().create_timer(0.7).timeout.connect(func() -> void:
-		if not m.alive: a.visible = false)
+		if is_instance_valid(a) and not m.alive: a.visible = false)
 	if target == m:
 		target = null
 	slain += 1
@@ -348,7 +422,7 @@ func _boss_intro(pos: Vector3, title: String) -> void:
 	G.sfx("boss_roar"); w.shake(0.45); G.audio.music("boss")
 	Fx.ring(w, pos, Color(1.0, 0.4, 0.3), 5.0, 0.8); Fx.dust(w, pos, Color(0.5, 0.45, 0.4, 0.7), 18)
 	w.get_tree().create_timer(BOSS_INTRO_S).timeout.connect(func() -> void:
-		if not w.cinema: w.cam_focus = null)
+		if is_instance_valid(w) and not w.cinema: w.cam_focus = null)
 
 ## Kill XP is optional extra on top of the quest budget (ledger source "mob").
 func _pay_kill(m: Dictionary) -> void:
@@ -484,6 +558,12 @@ func _ko() -> void:
 func rise() -> void:
 	dead = false
 	G.hp = G.hp_max; G.zeal = G.zeal_max
+	if w.kind in ["field", "danger"] and G.last_town != "":   # out in the wilds, a fallen pilgrim wakes in the last town
+		G.weary = true
+		G.say("You rest, and rise again in %s." % String(G.data("maps/" + G.last_town).name), G.SYS)
+		w.ending = true; G.save_game()
+		G.goto("world", {"map": G.last_town, "at": load("res://scripts/ui/hud.gd").town_spot(G.last_town)})
+		return
 	w.player.position = w.info("start")
 	w.pact.play("idle")
 	for m in mobs:
@@ -694,6 +774,8 @@ func _boss_down(m: Dictionary) -> void:
 	if m.drop != "":
 		G.bag_add(m.drop, 1)
 	G.audio.music(String(w.def.get("music", "")))
+	if w.def.has("boss") and String(w.def.boss.mob) == String(m.id):
+		G.lairs[w.map_id] = Time.get_unix_time_from_system()
 	if m.muster:
 		_muster_cleared(m)
 	else:

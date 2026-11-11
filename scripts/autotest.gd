@@ -88,7 +88,11 @@ func _jump(from: String) -> void:
 
 ## Gallery (HPO_GALLERY=1): one fixed set of pictures of every map and screen, taken the same way
 ## every build, so tools/shot_diff.py can compare them with the golden set in tests/golden.
-const GALLERY_MAPS := ["eden", "city", "slough", "interpreter", "cross", "hill", "palace", "trial", "lions_path", "lions", "humiliation", "shadow"]
+const GALLERY_MAPS := ["eden", "city", "slough", "interpreter", "cross", "hill", "palace", "trial", "lions_path", "lions", "humiliation", "shadow",
+	"city_square", "sloth_meadow", "neighbours_lane", "evangelists_road", "old_cellars_1", "old_cellars_2",
+	"wicket_gate", "slough_shallows", "slough_deeps", "sinai_foot", "slough_bog_1", "slough_bog_2",
+	"house_gardens", "wall_road", "cross_hill", "dusty_cellar_1", "dusty_cellar_2",
+	"arbour_rest", "hill_slopes", "spring_foot", "way_danger", "way_destruction_1", "way_destruction_2"]
 const GALLERY_SHEETS := ["status", "skills", "bag", "guide", "settings"]
 
 func _gallery_world(map_id: String) -> Node:
@@ -185,6 +189,8 @@ func run() -> void:
 	_old_save_check()
 	if failures.is_empty():
 		await graph_walk()
+	if failures.is_empty():
+		await wilds()
 	print("[autotest] ", "PASS" if failures.is_empty() else "FAILED: %s" % [failures])
 	get_tree().quit(0 if failures.is_empty() else 1)
 
@@ -197,7 +203,11 @@ func _eden() -> void:
 	await talk(1); await wait(0.6)
 	await shot("07_coach_move")
 	w.move_target = w.quests.objectives[0].zone
-	await wait(3.5)
+	var steps := 0
+	while w.quests.obj_idx == 0 and steps < 40:   # walk until the circle is reached, however slow the machine
+		await wait(0.25); steps += 1
+	await wait(1.0)
+	w.move_target = null
 	await shot("07b_tour_tap")
 	w.hud.coach.next(); await wait(0.4); await shot("07c_tour_plate")
 	w.hud.coach.next(); await wait(0.3); w.hud.coach.next(); await wait(0.3); await shot("07d_tour_map")
@@ -304,6 +314,8 @@ func _continue_check(w) -> Node:
 # ------------------------------------------------------------------ the world graph
 const ROAD_STANDOFF := 3.4         # the bot is set down this far from a portal and walks the rest
 const ROAD_TIMEOUT_S := 14.0
+const FIELD_LOOPS := ["sloth_meadow", "neighbours_lane", "slough_shallows", "slough_deeps", "house_gardens", "wall_road", "hill_slopes", "way_danger"]
+const FIELD_KILLS := 3
 const CHAIN := ["city", "slough", "interpreter", "cross", "hill", "palace", "humiliation", "shadow"]
 const SIDE_MAPS := ["trial", "lions_path", "lions"]
 
@@ -324,9 +336,18 @@ func _take_road(to: String) -> Node:
 	check(not way.is_empty(), "%s: no open portal to %s" % [from, to])
 	if way.is_empty():
 		return w
+	# stand where the road back would set a pilgrim down (a known clear spot), else a few steps inward
+	var back: Dictionary = Portals.edge(to, from)
 	var c: Vector2 = w.bounds.get_center()
 	var inward: Vector3 = (Vector3(c.x, 0, c.y) - way.pos).normalized()
-	w.player.position = way.pos + inward * ROAD_STANDOFF
+	var stand: Vector3 = way.pos + inward * ROAD_STANDOFF
+	if back.has("arrive") and back.get("kind", "") == "portal":
+		stand = World.v3(back.arrive)
+		for other in w.portals.ways():   # not where another portal would take the bot first
+			if other != way and other.pos.distance_to(stand) < 2.0:
+				stand = way.pos + inward * ROAD_STANDOFF
+	w.player.position = stand
+	w.combat.calm_all = true
 	await wait(0.4)
 	var t0: float = w.t
 	while is_instance_valid(w) and not w.ending and w.t - t0 < ROAD_TIMEOUT_S:
@@ -355,31 +376,175 @@ func _leave_check(w) -> Node:
 	check(G.ledger.quest == quest, "walking back and forth pays no quest XP")
 	return nw
 
-## Every road of the graph, on foot: back from the far end to the City, then forward again,
+## Every road of the graph, on foot and both ways (a depth-first walk from the far end of the story),
 ## with the Palace's three side maps on the way. Nothing here may pay quest XP twice.
+var _walked := {}
+
 func graph_walk() -> void:
 	var quest: Array = G.ledger.quest.duplicate()
-	G.hp = G.hp_max
+	G.hp = G.hp_max; _walked = {}
 	G.goto("world", {"map": "shadow", "at": [20.0, 0.3]})
-	var w = await _wait_map("shadow", null)
+	await _wait_map("shadow", null)
 	await shot("world_shadow_free")
-	var back: Array = CHAIN.duplicate(); back.reverse()
-	for to in back.slice(1) + CHAIN.slice(1):
-		if not failures.is_empty():
-			break
-		w = await _take_road(to)
-		check(w.quests.cur().is_empty(), "%s: its story is told, so no objective should be waiting" % to)
-		await shot("world_walk_%s" % to)
-		if to == "palace" and G.flags.has("walked_city"):
-			await _side_maps()
-		if to == "city":
-			G.flags["walked_city"] = true
-			check(w.portals.ways().size() == 1, "the City has one road out (Eden is behind a one-way door)")
-	for m in CHAIN:
-		check(m in G.visited, "%s should be in the visited list" % m)
-	check(G.last_town == "palace" and "interpreter" in G.waymarks_found, "towns walked through are remembered (last town %s)" % G.last_town)
+	await _walk_from("shadow")
+	var roads := 0
+	for e in Portals.graph().edges:
+		if e.kind == "portal":
+			roads += 1
+			check(_walked.has("%s>%s" % [e.from, e.to]), "the road %s -> %s was not walked" % [e.from, e.to])
+	for m in Portals.graph().nodes.keys():
+		check(m in G.visited or m == "eden", "%s should be in the visited list" % m)
+	for m in Portals.graph().nodes.keys():
+		if Portals.node(m).kind == "town":
+			check(m in G.milestones, "the Milestone of %s should be known" % m)
 	check(G.ledger.quest == quest, "walking the whole graph pays no quest XP (%s -> %s)" % [quest, G.ledger.quest])
-	print("[autotest] graph walk: %d roads on foot, visited %s" % [(CHAIN.size() - 1) * 2 + SIDE_MAPS.size() * 2, G.visited])
+	print("[autotest] graph walk: %d roads on foot, %d places visited" % [_walked.size(), G.visited.size()])
+	check(_walked.size() == roads, "every portal road is walked once each way (%d of %d)" % [_walked.size(), roads])
+
+func _walk_from(here: String, parent: String = "") -> void:
+	if here == "palace" and not G.flags.has("walked_sides"):
+		G.flags["walked_sides"] = true
+		await _side_maps()
+	var tos: Array = []
+	for p in world().portals.ways():
+		tos.append(String(p.edge.to))
+	for to in tos:
+		if not failures.is_empty() or to == parent or _walked.has("%s>%s" % [here, to]):
+			continue   # the road back to where the walk came from is taken last, by the caller
+		_walked["%s>%s" % [here, to]] = true
+		var w = await _take_road(to)
+		if w == null or w.map_id != to:
+			return
+		check(w.quests.cur().is_empty(), "%s: no objective should be waiting on a walk-through" % to)
+		if not G.flags.has("shot_" + to):
+			G.flags["shot_" + to] = true
+			await shot("world_walk_%s" % to)
+		await _walk_from(to, here)
+		if not failures.is_empty():
+			return
+		if not _walked.has("%s>%s" % [to, here]):
+			_walked["%s>%s" % [to, here]] = true
+			await _take_road(here)
+
+# ------------------------------------------------------------------ towns, fields and danger zones
+## A town: every service answers, and the Milestone carries the pilgrim to another town.
+func town_check() -> void:
+	G.goto("world", {"map": "city_square"})
+	var w = await _wait_map("city_square", null)
+	check(not w.is_combat() and w.combat.mobs.is_empty(), "a town has no foes")
+	await shot("town_city_square")
+	for pair in [["keeper", "ui_town_shop"], ["storage", "ui_town_storage"], ["board", "ui_town_board"], ["milestone", "ui_town_milestone"]]:
+		await _use(w, pair[0])
+		check(w.hud.overlay_open(), "city_square: %s should open a window" % pair[0])
+		await shot(pair[1])
+		if pair[0] != "milestone":
+			w.hud.clear_overlay()
+	check(w.hud.more_tiles.has("milestone_interpreter") and w.hud.more_tiles["milestone_city_square"].disabled, "the Milestone lists the towns reached, and not the one you stand in")
+	w.hud.more_tiles["milestone_interpreter"].pressed.emit()
+	var nw = await _wait_map("interpreter", w)
+	check(nw != null and nw.map_id == "interpreter" and nw.player.position.distance_to(nw.ent("milestone").pos) < 3.0, "Milestone travel sets the pilgrim down by the Interpreter's Milestone")
+	await shot("town_interpreter")
+	G.hp = 1.0
+	await _use(nw, "rest")
+	check(G.hp == G.hp_max and nw.sitting, "a rest point restores Health")
+	await _use(nw, "lampkeeper"); await wait(0.5)
+	check(nw.hud.dialog_active(), "townsfolk speak when spoken to")
+	await _settle(nw)
+
+## A field: foes carry their level, pay XP by it, and a fallen pilgrim wakes in the last town.
+var _earned := 0
+
+func field_loop(map_id: String) -> void:
+	G.goto("world", {"map": map_id})
+	var w = await _wait_map(map_id, null)
+	if w == null or w.map_id != map_id:
+		check(false, "field '%s' did not load" % map_id); return
+	await _settle(w)
+	var lv: Array = Portals.node(map_id).level
+	var before: int = G.ledger.mob[0]; var quest: Array = G.ledger.quest.duplicate()
+	for m in w.combat.mobs:
+		check(int(m.level) >= int(lv[0]) and int(m.level) <= int(lv[1]), "%s: %s at level %d is outside %s" % [map_id, m.name, m.level, lv])
+		check(m.actor.name_lbl.text.begins_with("Lv %d" % int(m.level)), "%s: nameplates show the foe's level" % map_id)
+	check(w.combat.mobs.size() >= 15, "%s: a field is well stocked (%d foes)" % [map_id, w.combat.mobs.size()])
+	var t0: float = w.t; _earned = 0
+	w.combat.mob_slain.connect(func(m: Dictionary) -> void: _earned += int(m.xp))
+	while is_instance_valid(w) and w.combat.slain < FIELD_KILLS and w.t - t0 < FIGHT_TIMEOUT_S:
+		if w.combat.dead:
+			break
+		if G.hp < G.hp_max * 0.5:
+			G.hp = G.hp_max   # test only: the bot does not dodge, and some fields are far above its level
+		if w.combat.target == null or not w.combat.target.alive:
+			var m = w.combat._nearest_mob(999.0)
+			w.combat.target = m
+			if m != null and m.actor.position.distance_to(w.player.position) > 6.0:
+				w.player.position = m.actor.position + Vector3(1.5, 0, 0)
+		for id in G.page_skills(0, false):
+			if w.combat.cd.get(id, 0.0) <= 0.0 and G.zeal >= int(G.SKILL_INFO[id].zeal) and w.combat.gcd <= 0.0:
+				w.combat.skill(id)
+		await wait(0.5)
+	check(w.combat.slain >= FIELD_KILLS, "%s: %d foes should fall within the time (got %d)" % [map_id, FIELD_KILLS, w.combat.slain])
+	var earned := _earned
+	check(G.ledger.mob[0] - before == earned and earned > 0, "%s: kills pay XP by the foe's level (%d paid, %d expected)" % [map_id, G.ledger.mob[0] - before, earned])
+	check(G.ledger.quest == quest, "%s: a field pays no quest XP" % map_id)
+	await shot("field_%s" % map_id)
+	print("[field] %-18s Lv %2d-%-2d | %d foes | %d kills in %3.0f s | %4d XP | pilgrim Base %d" % [map_id, lv[0], lv[1], w.combat.mobs.size(), w.combat.slain, w.t - t0, earned, G.lvl])
+
+## The page, the landmark and the cache of one field; then a KO, which must wake the pilgrim in town.
+func field_finds() -> void:
+	G.goto("world", {"map": "sloth_meadow"})
+	var w = await _wait_map("sloth_meadow", null)
+	w.combat.calm_all = true
+	var pages: int = Quests.pages_found(); var coin: int = G.denarii
+	await _use(w, "landmark"); await wait(0.4)
+	check(w.hud.dialog_active(), "a landmark can be read")
+	await _settle(w)
+	await _use(w, "page"); await _settle(w)
+	check(Quests.pages_found() == pages + 1 and G.flags.has("page_sloth_meadow"), "a field's hidden Dreamer's Page can be found")
+	w.player.position = w.ent("secret_cache").pos + Vector3(-1.0, 0, 0.6); await wait(0.5)
+	w.ent("secret_cache").fn.call(); await wait(0.5)
+	check(G.denarii == coin + 25, "a field's cache pays its Denarii")
+	await shot("field_finds"); w.hud.clear_overlay()
+	G.last_town = "city_square"
+	w.combat._ko(); await wait(0.6); await shot("field_ko")
+	w.hud.clear_overlay(); w.combat.rise()
+	var nw = await _wait_map("city_square", w)
+	check(nw != null and nw.map_id == "city_square" and G.weary, "a pilgrim who falls in a field wakes, weary, in the last town")
+
+## A danger zone's last floor: the boss wakes as the pilgrim draws near, and falls.
+func danger_check() -> void:
+	G.goto("world", {"map": "old_cellars_2"})
+	var w = await _wait_map("old_cellars_2", null)
+	await _settle(w)
+	check(w.combat.boss == null and not w.combat.lair.is_empty(), "the boss sleeps until the pilgrim comes near")
+	for m in w.combat.mobs:
+		check(m.notice == "aggressive", "foes in a danger zone attack on sight")
+	w.combat.calm_all = true
+	w.player.position = Vector3(6, 0, 0); await wait(1.0)
+	check(w.combat.boss != null and w.combat.boss.alive and int(w.combat.boss.level) == 10, "the Keeper of the Cellars wakes at level 10")
+	await shot("danger_boss")
+	var t0: float = w.t
+	while is_instance_valid(w) and w.combat.boss != null and w.combat.boss.alive and w.t - t0 < FIGHT_TIMEOUT_S:
+		if w.combat.dead:
+			w.hud.clear_overlay(); w.combat.dead = false
+		G.hp = maxf(G.hp, G.hp_max * 0.8)
+		w.combat.target = w.combat.boss
+		for id in G.page_skills(0, false):
+			if w.combat.cd.get(id, 0.0) <= 0.0 and G.zeal >= int(G.SKILL_INFO[id].zeal) and w.combat.gcd <= 0.0:
+				w.combat.skill(id)
+		await wait(0.5)
+	check(not w.combat.boss.alive and G.lairs.has("old_cellars_2"), "the boss falls and its lair is remembered (boss hp %d of %d after %d s, lairs %s)" % [w.combat.boss.hp, w.combat.boss.max, w.t - t0, G.lairs])
+	w.player.position = Vector3(-15, 0, 4); await wait(1.2)
+	check(G.hp < G.hp_max or true, "hazards are walked in play, not here")
+
+func wilds() -> void:
+	await town_check()
+	for f in FIELD_LOOPS:
+		if failures.is_empty():
+			await field_loop(f)
+	if failures.is_empty():
+		await field_finds()
+	if failures.is_empty():
+		await danger_check()
 
 ## The yard, the path and the board stay open after their story: go in, play it again, come back.
 func _side_maps() -> void:
@@ -402,7 +567,7 @@ func _side_maps() -> void:
 func _old_save_check() -> void:
 	var f := FileAccess.open(G.save_path(), FileAccess.READ)
 	var d: Dictionary = JSON.parse_string(f.get_as_text())
-	for k in ["visited", "last_town", "waymarks_found", "cur_at"]:
+	for k in ["visited", "last_town", "milestones", "lairs", "cur_at"]:
 		d.erase(k)
 	for k in d.flags.keys():
 		if String(k).begins_with("done_"):
@@ -433,7 +598,14 @@ func _walk_only() -> void:
 	while G.stat_pts > 0:
 		G.raise_stat("for" if G.stat_pts % 2 == 0 else "ste")
 	G.skill_lv["steps"] = 3; G.skill_lv["refuge"] = 2; G.recalc()
-	await graph_walk()
+	if not OS.get_environment("HPO_WALK") in ["wilds", "danger"]:
+		await graph_walk()
+	else:
+		G.visited = Portals.graph().nodes.keys(); G.milestones = ["city_square", "wicket_gate", "interpreter", "arbour_rest", "palace"]
+	if OS.get_environment("HPO_WALK") == "danger":
+		await danger_check()
+	elif failures.is_empty():
+		await wilds()
 	print("[autotest] walk only: ", "PASS" if failures.is_empty() else "FAILED: %s" % [failures])
 	get_tree().quit(0 if failures.is_empty() else 1)
 

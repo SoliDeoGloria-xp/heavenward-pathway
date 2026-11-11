@@ -194,6 +194,34 @@
    "act": "Trade",
    "icon": "bag",
    "ui": "shop"
+  },
+  {
+   "id": "milestone",
+   "kind": "milestone",
+   "name": "Milestone",
+   "at": [
+    4,
+    8
+   ],
+   "act": "Travel",
+   "icon": "warp",
+   "ui": "milestone"
+  },
+  {
+   "id": "storage",
+   "kind": "spot",
+   "name": "Storage Chest",
+   "at": [
+    13,
+    -1
+   ],
+   "act": "Open",
+   "icon": "bag",
+   "ui": "storage",
+   "prop": {
+    "t": "kit",
+    "name": "crate"
+   }
   }
  ],
  "objectives": [
