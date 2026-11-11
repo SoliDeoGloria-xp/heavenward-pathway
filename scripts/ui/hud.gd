@@ -48,6 +48,15 @@ var more_tiles := {}        # tab -> Button in the More grid (coach targets)
 var stat_plus := {}         # stat -> "+" Button in Status
 var skill_learn := {}       # skill -> Learn Button in Skills
 var sheet_tab := ""         # tab currently open in the side sheet
+var sheet_scroll: TouchScroll
+var sheet_footer: VBoxContainer   # stays in view under the list: the selected item's card
+var bag_filter := "all"     # all, gear, supplies
+var bag_sel := ""           # "c:<supply name>" or "g:<gear uid>"
+var equip_sel := ""         # the slot or bag piece chosen in the Equipment sheet: "slot:<id>", "g:<uid>", "armor", "stone"
+var shop_sel := ""          # the thing chosen at the vendor
+var shop_tab := ""
+var shop_scroll: TouchScroll
+var chat_filter := "all"
 var coach: Coach
 const TOAST_W := 500.0
 
@@ -471,7 +480,7 @@ func _dim(close_on_tap: bool = true) -> Control:
 	return d
 
 func clear_overlay() -> void:
-	sheet_tab = ""
+	sheet_tab = ""; shop_tab = ""
 	_dlg_state = []
 	for c in overlay.get_children():
 		c.queue_free()
@@ -526,28 +535,60 @@ func _locked(nm: String) -> void:
 		"Veiled Library": "The Veiled Library (codex, Westminster Shorter Catechism, full Scripture readings) arrives in a later build."}
 	G.say(msg.get(nm, "Not available yet."), G.WARN)
 
+## Messages: everything the game has told the pilgrim, newest at the bottom, one card each with a
+## coloured edge for its kind. The tabs sort them.
+const CHAT_KINDS := [["all", "All"], ["story", "Journey"], ["system", "System"], ["warn", "Warnings"]]
+
+func _chat_kind(c: Color) -> String:
+	if c.is_equal_approx(G.WARN):
+		return "warn"
+	return "system" if c.is_equal_approx(G.SYS) else "story"
+
 func open_chat() -> void:
 	_dim()
-	var w := UIKit.window("Chat · Local", Vector2(760, 460))
-	var tabs := HBoxContainer.new()
-	for t in ["Local", "Party", "Congregation", "System"]:
-		var b := UIKit.button(t, func(): pass, 120); tabs.add_child(b)
+	var w := UIKit.window("Messages", Vector2(minf(780.0, get_viewport().get_visible_rect().size.x - 24.0), 0))
+	var tabs := HBoxContainer.new(); tabs.add_theme_constant_override("separation", 6)
+	for t in CHAT_KINDS:
+		var key: String = t[0]
+		var n := 0
+		for l in G.log_lines:
+			if key == "all" or _chat_kind(l[1]) == key:
+				n += 1
+		var b := UIKit.button("%s  %d" % [t[1], n], func() -> void: chat_filter = key; open_chat(), 150, key == chat_filter)
+		more_tiles["chat_" + key] = b
+		tabs.add_child(b)
+	var gap := Control.new(); gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL; tabs.add_child(gap)
+	tabs.add_child(UIKit.button("✕", clear_overlay, 56))
 	w.body.add_child(tabs)
-	var sc := ScrollContainer.new(); sc.custom_minimum_size = Vector2(720, 300); sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var r := RichTextLabel.new(); r.bbcode_enabled = true; r.fit_content = true; r.custom_minimum_size = Vector2(700, 0)
-	r.add_theme_font_size_override("normal_font_size", 19); r.add_theme_color_override("default_color", UIKit.INK)
-	var s := ""
+	var sc := TouchScroll.new(); sc.custom_minimum_size.y = 380
+	var list := VBoxContainer.new(); list.size_flags_horizontal = Control.SIZE_EXPAND_FILL; list.add_theme_constant_override("separation", 6)
+	sc.add_child(list); w.body.add_child(sc)
+	var stripe := {"story": Color("b8862e"), "system": Color("5c8a3a"), "warn": Color("b33a35")}
+	var label_of := {"story": "Journey", "system": "System", "warn": "Warning"}
 	for l in G.log_lines:
-		var c: Color = l[1]
-		s += "[color=#%s]%s[/color]\n" % [c.darkened(0.45).to_html(false), l[0]]
-	r.text = s; sc.add_child(r); w.body.add_child(sc)
-	w.body.add_child(UIKit.label("Messages from the world and from the pilgrims of a House appear here.", 16, UIKit.SUB, false, true))
+		var kind := _chat_kind(l[1])
+		if chat_filter != "all" and kind != chat_filter:
+			continue
+		var p := PanelContainer.new(); p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/card.png", 4, 8))
+		var h := HBoxContainer.new(); h.add_theme_constant_override("separation", 10)
+		var bar := ColorRect.new(); bar.color = stripe[kind]; bar.custom_minimum_size = Vector2(6, 0); h.add_child(bar)
+		var v := VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.add_theme_constant_override("separation", 0)
+		v.add_child(UIKit.label(String(label_of[kind]), 13, (stripe[kind] as Color).darkened(0.2), true))
+		v.add_child(UIKit.label(String(l[0]), 18, UIKit.INK, false, true))
+		h.add_child(v); p.add_child(h); list.add_child(p)
+	if list.get_child_count() == 0:
+		list.add_child(UIKit.label("Nothing here yet.", 18, UIKit.SUB))
 	_center(w.root)
+	sc.set_deferred("scroll_vertical", 1000000)   # open at the newest
 
 func _open_sfx() -> void:
 	G.sfx("open")
 
+## The side sheet. Re-opening the tab that is already showing (a tile was tapped) keeps the list where
+## it was and skips the slide-in, so choosing an item does not make the window jump.
 func open_sheet(tab: String) -> void:
+	var same: bool = tab == sheet_tab and is_instance_valid(sheet_scroll)
+	var keep: int = sheet_scroll.scroll_vertical if same else 0
 	_dim()
 	var sheet := PanelContainer.new()
 	sheet.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/window.png", 8, 16))
@@ -568,10 +609,16 @@ func open_sheet(tab: String) -> void:
 	var close := UIKit.button("✕", clear_overlay, 56)
 	tabs.add_child(close)
 	v.add_child(tabs)
-	var scroll := ScrollContainer.new(); scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := TouchScroll.new(); scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(scroll)
+	sheet_scroll = scroll
+	var pad := MarginContainer.new(); pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pad.add_theme_constant_override("margin_right", TouchScroll.BAR_W + 6)   # room for the scrollbar, so nothing hides under it
+	scroll.add_child(pad)
 	var body := VBoxContainer.new(); body.add_theme_constant_override("separation", 10); body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(body)
+	pad.add_child(body)
+	sheet_footer = VBoxContainer.new(); sheet_footer.add_theme_constant_override("separation", 6)
+	v.add_child(sheet_footer)
 	stat_plus.clear(); skill_learn.clear()
 	match tab:
 		"bag": _sheet_bag(body)
@@ -582,6 +629,9 @@ func open_sheet(tab: String) -> void:
 		"way": _sheet_way(body)
 		"settings": _sheet_settings(body)
 		"guide": _sheet_guide(body)
+	if same:
+		scroll.set_deferred("scroll_vertical", keep)
+		return
 	sheet.modulate.a = 0.0
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(sheet, "modulate:a", 1.0, 0.18)
@@ -590,29 +640,72 @@ func open_sheet(tab: String) -> void:
 		tw.tween_property(sheet, "offset_left", sheet.offset_left - 60, 0.22).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 		tw.tween_property(sheet, "offset_right", sheet.offset_right - 60, 0.22).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
+## The bag: everything carried, supplies and road gear together, as tiles. Tap a tile to see what it
+## is; what can be done with it (use, wear, take off) is on the card that stays under the grid.
+const BAG_FILTERS := [["all", "All"], ["gear", "Gear"], ["supplies", "Supplies"]]
+const BAG_MIN_SLOTS := 24
+
 func _sheet_bag(b: VBoxContainer) -> void:
-	b.add_child(UIKit.label("Satchel", 26, UIKit.BLUE_INK, true))
-	var grid := GridContainer.new(); grid.columns = 6; grid.add_theme_constant_override("h_separation", 8); grid.add_theme_constant_override("v_separation", 8)
-	var keys := []
-	for k in G.bag.keys():
-		if int(G.bag[k]) > 0: keys.append(k)
 	var uses: Dictionary = G.data("items").consumables
-	for i in 18:
-		var p := PanelContainer.new(); p.custom_minimum_size = Vector2(96, 96)
-		p.add_theme_stylebox_override("panel", UIKit.sb("res://assets/ui/slot.png", 5, 4))
-		if i < keys.size():
-			var vb := VBoxContainer.new(); vb.alignment = BoxContainer.ALIGNMENT_CENTER
-			vb.add_child(UIKit.icon_rect(uses[keys[i]].icon if uses.has(keys[i]) else "scroll", 52))
-			var l := UIKit.label("%s ×%d" % [keys[i].split(" ")[0], G.bag[keys[i]]], 14, UIKit.INK, true); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			vb.add_child(l); p.add_child(vb)
-			if uses.has(keys[i]):   # tap to eat or drink
-				var item: String = keys[i]
-				var tap := Button.new(); tap.flat = true; tap.focus_mode = Control.FOCUS_NONE; p.add_child(tap)
-				tap.pressed.connect(func() -> void: world.use_item(item); open_sheet("bag"))
-		grid.add_child(p)
+	var head := HBoxContainer.new(); head.add_theme_constant_override("separation", 6)
+	for f in BAG_FILTERS:
+		var key: String = f[0]
+		var fb := UIKit.button(f[1], func() -> void: bag_filter = key; bag_sel = ""; open_sheet("bag"), 120, key == bag_filter)
+		more_tiles["bag_tab_" + key] = fb
+		head.add_child(fb)
+	var purse := UIKit.label("Denarii %d   Manna %s" % [G.denarii, str(snappedf(G.manna, 0.1))], 18, UIKit.BLUE_INK, true)
+	purse.size_flags_horizontal = Control.SIZE_EXPAND_FILL; purse.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	head.add_child(purse)
+	b.add_child(head)
+	var grid := ItemUI.grid()
+	var shown := 0
+	if bag_filter != "gear":
+		for k in G.bag.keys():
+			if int(G.bag[k]) <= 0:
+				continue
+			var name: String = k; var key := "c:" + name
+			var t := ItemUI.tile({"icon": String(uses[name].icon) if uses.has(name) else "scroll", "corner": "×%d" % int(G.bag[name]), "selected": bag_sel == key},
+				func() -> void: bag_sel = key; open_sheet("bag"))
+			more_tiles["bag_" + key] = t
+			grid.add_child(t); shown += 1
+	if bag_filter != "supplies":
+		var pieces: Array = G.gear.duplicate()
+		pieces.sort_custom(func(x: Dictionary, y: Dictionary) -> bool:   # worn first, then the best
+			if Gear.is_equipped(x) != Gear.is_equipped(y):
+				return Gear.is_equipped(x)
+			return Gear.score(x) > Gear.score(y))
+		for it in pieces:
+			var key := "g:%d" % int(it.uid)
+			var t := ItemUI.gear_tile(it, bag_sel == key, func() -> void: bag_sel = key; open_sheet("bag"))
+			more_tiles["bag_" + key] = t
+			grid.add_child(t); shown += 1
+	while shown < BAG_MIN_SLOTS or shown % ItemUI.COLS != 0:   # empty slots: it is a bag, not a list
+		grid.add_child(ItemUI.tile({})); shown += 1
 	b.add_child(grid)
-	b.add_child(UIKit.label("Denarii %d · Manna %s · tap food or drink to use it. Gear is under More → Equipment." % [G.denarii, str(snappedf(G.manna, 0.1))], 17, UIKit.SUB, false, true))
-	b.add_child(UIKit.label("Tip: long-press the quick-item button to switch between Bread and Figs.", 17, UIKit.SUB, false, true))
+	b.add_child(UIKit.label("Road gear %d of %d. Sell or store spare pieces with a Provisioner or Steward." % [G.gear.size(), int(Gear.db().bag_cap)], 15, UIKit.SUB, false, true))
+	_bag_card(uses)
+
+func _bag_card(uses: Dictionary) -> void:
+	if bag_sel.begins_with("c:") and int(G.bag.get(bag_sel.substr(2), 0)) > 0:
+		var name := bag_sel.substr(2)
+		var c: Dictionary = uses.get(name, {})
+		var what := "Restores %d Health." % int(c.heal) if c.has("heal") else ("Restores %d Zeal." % int(c.zeal) if c.has("zeal") else "Kept for the road.")
+		var buttons: Array = []
+		if uses.has(name):
+			var use := UIKit.button("Use", func() -> void: world.use_item(name); open_sheet("bag"), 150, true)
+			more_tiles["bag_use"] = use
+			buttons.append(use)
+		sheet_footer.add_child(ItemUI.card(String(c.get("icon", "scroll")), "%s  ×%d" % [name, int(G.bag[name])], UIKit.INK, [what, "The quick-item button on the screen uses this too (long-press it to switch)."], buttons))
+		return
+	var it := Gear.find(int(bag_sel.substr(2))) if bag_sel.begins_with("g:") else {}
+	if not it.is_empty():
+		var uid := int(it.uid); var slot: String = Gear.def(it).slot
+		var act := UIKit.button("Take off", func() -> void: Gear.unequip(slot); open_sheet("bag"), 150) if Gear.is_equipped(it) else UIKit.button("Wear", func() -> void: Gear.equip(uid); open_sheet("bag"), 150, true)
+		more_tiles["bag_wear"] = act
+		sheet_footer.add_child(ItemUI.gear_card(it, [act]))
+		return
+	bag_sel = ""
+	sheet_footer.add_child(ItemUI.hint("Tap something in your Satchel to see what it is and what you can do with it."))
 
 func _weight() -> int:
 	var w := 0

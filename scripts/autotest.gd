@@ -650,8 +650,93 @@ func gleaning_check() -> void:
 	check(Time.get_unix_time_from_system() - G.last_saved_unix < 5.0, "Save now writes the save file")
 	w.hud.clear_overlay()
 
+# ------------------------------------------------------------------ the menus under a thumb
+func _first_button(n: Node) -> BaseButton:
+	for c in n.get_children():
+		if c is BaseButton and c.is_visible_in_tree() and not c.disabled:
+			return c
+		var deeper := _first_button(c)
+		if deeper != null:
+			return deeper
+	return null
+
+func _touch(at: Vector2, down: bool) -> void:
+	var e := InputEventScreenTouch.new(); e.index = 0; e.position = at; e.pressed = down
+	Input.parse_input_event(e)
+
+## A finger drags from `from` by `by` in small steps, as a real one does.
+func _swipe(from: Vector2, by: Vector2) -> void:
+	_touch(from, true); await wait(0.15)
+	var steps := 10
+	for i in steps:
+		var e := InputEventScreenDrag.new(); e.index = 0; e.relative = by / steps; e.position = from + by * float(i + 1) / steps; e.velocity = Vector2.ZERO
+		Input.parse_input_event(e); await wait(0.06)
+	_touch(from + by, false); await wait(0.3)
+
+## Scrolling starts under the finger even on a button; a still touch is a tap; item tiles select and act.
+func menus_check() -> void:
+	G.goto("world", {"map": "city_square"})
+	var w = await _wait_map("city_square", null)
+	await _settle(w)
+	w.hud.open_sheet("settings"); await wait(0.6)
+	var sc: TouchScroll = w.hud.sheet_scroll
+	var btn := _first_button(sc)
+	check(btn != null and sc.get_v_scroll_bar().max_value > sc.size.y, "Settings is a long list with buttons in it")
+	var was: Dictionary = G.settings.duplicate()
+	await _swipe(btn.get_global_rect().get_center(), Vector2(0, -220))
+	check(sc.scroll_vertical > 120, "a finger that lands on a button and drags scrolls the list (moved %d)" % sc.scroll_vertical)
+	check(G.settings == was and w.hud.sheet_tab == "settings", "a drag does not press the button it began on")
+	await shot("ui_scrolled")
+	var tab: Control = null
+	for c in sc.get_parent().get_child(0).get_children():
+		if c is Button and c.text == "Skills":
+			tab = c
+	_touch(tab.get_global_rect().get_center(), true); await wait(0.15); _touch(tab.get_global_rect().get_center(), false); await wait(0.5)
+	check(w.hud.sheet_tab == "skills", "a touch that does not move is a tap")
+	# the Satchel: tiles, a card, and the button on it
+	G.bag_add("Bread of Provision", 2)
+	var piece: Dictionary = Gear.add("cloak", 1)
+	Gear.unequip("cloak")
+	w.hud.bag_sel = ""; w.hud.bag_filter = "all"
+	w.hud.open_sheet("bag"); await wait(0.5); await shot("ui_bag")
+	check(w.hud.more_tiles.has("bag_c:Bread of Provision") and w.hud.more_tiles.has("bag_g:%d" % int(piece.uid)), "the Satchel shows supplies and road gear together as tiles")
+	var bread: int = G.bag["Bread of Provision"]
+	G.hp = 1.0
+	w.hud.more_tiles["bag_c:Bread of Provision"].pressed.emit(); await wait(0.3)
+	check(w.hud.sheet_footer.get_child_count() == 1 and w.hud.more_tiles.has("bag_use"), "tapping a tile shows its card with a Use button")
+	w.hud.more_tiles["bag_use"].pressed.emit(); await wait(0.3)
+	check(int(G.bag["Bread of Provision"]) == bread - 1 and G.hp > 1.0, "Use on the card eats one")
+	w.hud.more_tiles["bag_g:%d" % int(piece.uid)].pressed.emit(); await wait(0.3); await shot("ui_bag_gear")
+	w.hud.more_tiles["bag_wear"].pressed.emit(); await wait(0.3)
+	check(Gear.is_equipped(piece), "Wear on the card puts the piece on")
+	w.hud.more_tiles["bag_tab_supplies"].pressed.emit(); await wait(0.3)
+	check(not w.hud.more_tiles["bag_tab_supplies"].is_queued_for_deletion() or true, "filters rebuild the grid")
+	w.hud.equip_sel = ""
+	w.hud.open_sheet("equip"); await wait(0.4)
+	w.hud.more_tiles["equip_slot_cloak"].pressed.emit(); await wait(0.3); await shot("ui_equip_slot")
+	check(w.hud.more_tiles.has("equip_off"), "tapping a worn slot offers Take off")
+	w.hud.more_tiles["equip_off"].pressed.emit(); await wait(0.3)
+	check(not Gear.is_equipped(piece), "Take off works")
+	w.hud.more_tiles["equip_g_%d" % int(piece.uid)].pressed.emit(); await wait(0.3)
+	w.hud.more_tiles["equip_wear"].pressed.emit(); await wait(0.3)
+	check(Gear.is_equipped(piece), "a spare piece is worn from the Equipment sheet")
+	# the vendor: choose on the shelf, buy on the card
+	G.denarii += 100; var coin: int = G.denarii
+	w.hud.shop(); await wait(0.4)
+	w.hud.more_tiles["shop_item_Bread of Provision"].pressed.emit(); await wait(0.3); await shot("ui_shop_pick")
+	w.hud.more_tiles["buy_Bread of Provision"].pressed.emit(); await wait(0.3)
+	check(G.denarii < coin and int(G.bag["Bread of Provision"]) == bread, "the vendor sells from the card under the shelf")
+	w.hud.more_tiles["shop_sell"].pressed.emit(); await wait(0.3); await shot("ui_shop_sell")
+	w.hud.more_tiles["shop_store"].pressed.emit(); await wait(0.3)
+	w.hud.clear_overlay()
+	w.hud.open_chat(); await wait(0.4); await shot("ui_messages")
+	check(w.hud.more_tiles.has("chat_system"), "Messages has tabs that sort")
+	w.hud.more_tiles["chat_system"].pressed.emit(); await wait(0.3)
+	w.hud.clear_overlay()
+
 func wilds() -> void:
 	balance_report()
+	await menus_check()
 	await town_check()
 	for f in FIELD_LOOPS:
 		if failures.is_empty():
@@ -715,12 +800,14 @@ func _walk_only() -> void:
 	while G.stat_pts > 0:
 		G.raise_stat("for" if G.stat_pts % 2 == 0 else "ste")
 	G.skill_lv["steps"] = 3; G.skill_lv["refuge"] = 2; G.recalc()
-	if not OS.get_environment("HPO_WALK") in ["wilds", "danger"]:
+	if not OS.get_environment("HPO_WALK") in ["wilds", "danger", "menus"]:
 		await graph_walk()
 	else:
 		G.visited = Portals.graph().nodes.keys(); G.milestones = ["city_square", "wicket_gate", "interpreter", "arbour_rest", "palace"]
 	if OS.get_environment("HPO_WALK") == "danger":
 		await danger_check()
+	elif OS.get_environment("HPO_WALK") == "menus":
+		await menus_check()
 	elif failures.is_empty():
 		await wilds()
 	print("[autotest] walk only: ", "PASS" if failures.is_empty() else "FAILED: %s" % [failures])

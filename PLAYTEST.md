@@ -101,3 +101,11 @@ Play on a phone in landscape. Note the time at each ★.
 - [ ] Hunt foes five levels below you and five above. Does the difference in XP feel fair?
 - [ ] Does the goals board read as something that waits for you, not something you can miss?
 
+## Added in 0.6.0: menus
+
+- [ ] Scroll Settings, the Guide and the Codex with your thumb starting on a button or a row. Does it scroll every time? Does anything get pressed by accident?
+- [ ] Satchel: tap tiles, use bread, wear and take off a piece. Is it clear what is worn ("E") and what each tile is?
+- [ ] Equipment: tap each slot. Is "better / worse than what you wear" enough to decide by?
+- [ ] At a Provisioner: buy, sell, store and take back. Are the tiles big enough? Is the price easy to read?
+- [ ] Which other windows still feel like plain lists (Skills, Status, the Way, Codex, the town board)? Name them and they will be next.
+

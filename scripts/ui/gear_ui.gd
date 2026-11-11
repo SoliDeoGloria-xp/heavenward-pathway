@@ -27,7 +27,7 @@ static func _item_row(it: Dictionary, buttons: Array) -> PanelContainer:
 	return p
 
 static func _scroll(parent: Control) -> VBoxContainer:
-	var sc := ScrollContainer.new(); sc.custom_minimum_size.y = LIST_HEIGHT; sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var sc := TouchScroll.new(); sc.custom_minimum_size.y = LIST_HEIGHT
 	var v := VBoxContainer.new(); v.size_flags_horizontal = Control.SIZE_EXPAND_FILL; v.add_theme_constant_override("separation", 6)
 	sc.add_child(v); parent.add_child(sc)
 	return v
@@ -36,70 +36,153 @@ static func _purse() -> String:
 	return "Denarii %d · Manna %s" % [G.denarii, str(snappedf(G.manna, 0.1))]
 
 # ------------------------------------------------------------------ Equipment sheet (More → Equipment)
+## What is worn, as a row of slots; under it the pieces in the Satchel that fit the chosen slot.
+## Tap a slot or a piece: its card, with Wear or Take off, stays at the bottom of the sheet.
 static func sheet(hud: Node, b: VBoxContainer) -> void:
+	var slots: Dictionary = Gear.db().slots
+	if hud.equip_sel == "":
+		hud.equip_sel = "slot:" + String(slots.keys()[0])
+	var pick := Gear.find(int(hud.equip_sel.substr(2))) if hud.equip_sel.begins_with("g:") else {}
+	var cur_slot: String = String(Gear.def(pick).slot) if not pick.is_empty() else (hud.equip_sel.substr(5) if hud.equip_sel.begins_with("slot:") else "")
 	var head := HBoxContainer.new()
 	var t := UIKit.label("Equipment", 26, UIKit.BLUE_INK, true); t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(t); head.add_child(UIKit.button("Wear the best", func() -> void: Gear.equip_best(); hud.open_sheet("equip"), 220))
 	b.add_child(head)
-	b.add_child(_row("Armor of God", "The whole armor (+%d block), given at the Palace, the same for every pilgrim. Never sold, refined or levelled." % int(G.PROG["armor_guard"]) if G.armor else "Not yet received. It is given whole at the Palace Beautiful.", [], "shield_of_faith"))
-	for slot in Gear.db().slots.keys():
-		var it := Gear.equipped(slot)
+	var worn := ItemUI.grid(6)
+	for slot in slots.keys():
+		var sid: String = slot
+		var it := Gear.equipped(sid)
+		var chosen: bool = cur_slot == sid and pick.is_empty()
+		var tile: Button
 		if it.is_empty():
-			b.add_child(_row("%s: —" % Gear.db().slots[slot], "", []))
+			tile = ItemUI.tile({"caption": String(slots[sid]), "selected": chosen}, func() -> void: hud.equip_sel = "slot:" + sid; hud.open_sheet("equip"))
 		else:
-			b.add_child(_item_row(it, [UIKit.button("Take off", func() -> void: Gear.unequip(slot); hud.open_sheet("equip"), ROW_BTN + 20)]))
-	var stone: String = G.fruit_stone
-	b.add_child(_row("Fruit stone (in the garment): %s" % (Gear.db().stones[stone].name if stone != "" else "—"),
-		Gear.db().stones[stone].text if stone != "" else "Cut and set at the armory bench in the Palace.", [], "fruit_stone"))
-	b.add_child(UIKit.label("In your satchel (%d of %d) · %s" % [G.gear.size(), int(Gear.db().bag_cap), _purse()], 18, UIKit.SUB, true))
-	for it in G.gear:
-		if not Gear.is_equipped(it):
+			tile = ItemUI.tile({"icon": Gear.def(it).icon, "color": String(Gear.rarity(it).color), "selected": chosen, "caption": String(slots[sid]),
+				"corner": ""}, func() -> void: hud.equip_sel = "slot:" + sid; hud.open_sheet("equip"))
+		hud.more_tiles["equip_slot_" + sid] = tile
+		worn.add_child(tile)
+	worn.add_child(ItemUI.tile({"icon": "shield_of_faith", "dim": not G.armor, "caption": "Armor", "selected": hud.equip_sel == "armor"}, func() -> void: hud.equip_sel = "armor"; hud.open_sheet("equip")))
+	worn.add_child(ItemUI.tile({"icon": "fruit_stone", "dim": G.fruit_stone == "", "caption": "Stone", "selected": hud.equip_sel == "stone"}, func() -> void: hud.equip_sel = "stone"; hud.open_sheet("equip")))
+	b.add_child(worn)
+	var total := Gear.stat_text(Gear.totals())
+	b.add_child(UIKit.label("From what you wear: %s" % (total if total != "" else "nothing yet"), 16, UIKit.SUB, true, true))
+	var spare: Array = G.gear.filter(func(it: Dictionary) -> bool: return not Gear.is_equipped(it) and (cur_slot == "" or String(Gear.def(it).slot) == cur_slot))
+	spare.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return Gear.score(x) > Gear.score(y))
+	b.add_child(UIKit.label(("In your Satchel for the %s" % String(slots[cur_slot])) if cur_slot != "" else "In your Satchel", 19, UIKit.BLUE_INK, true))
+	if spare.is_empty():
+		b.add_child(UIKit.label("Nothing spare for this slot. Foes sometimes drop road gear, and Provisioners sell it.", 16, UIKit.SUB, false, true))
+	else:
+		var grid := ItemUI.grid()
+		for it in spare:
 			var uid := int(it.uid)
-			b.add_child(_item_row(it, [UIKit.button("Wear", func() -> void: Gear.equip(uid); hud.open_sheet("equip"), ROW_BTN, true)]))
-	b.add_child(UIKit.label("Road gear is help for the journey, not a measure of the pilgrim. Sell or store spare pieces with a Steward or Provisioner.", 16, UIKit.SUB, false, true))
+			var tile := ItemUI.gear_tile(it, hud.equip_sel == "g:%d" % uid, func() -> void: hud.equip_sel = "g:%d" % uid; hud.open_sheet("equip"))
+			hud.more_tiles["equip_g_%d" % uid] = tile
+			grid.add_child(tile)
+		b.add_child(grid)
+	b.add_child(UIKit.label("Road gear is help for the journey, not a measure of the pilgrim.", 15, UIKit.SUB, false, true))
+	# the card
+	var foot: VBoxContainer = hud.sheet_footer
+	if hud.equip_sel == "armor":
+		foot.add_child(ItemUI.card("shield_of_faith", "Armor of God", UIKit.BLUE_INK, ["The whole armor (+%d block), given at the Palace, the same for every pilgrim. Never sold, refined or levelled." % int(G.PROG["armor_guard"]) if G.armor else "Not yet received. It is given whole at the Palace Beautiful."], []))
+	elif hud.equip_sel == "stone":
+		var stone: String = G.fruit_stone
+		foot.add_child(ItemUI.card("fruit_stone", "Fruit stone: %s" % (String(Gear.db().stones[stone].name) if stone != "" else "none set"), UIKit.BLUE_INK,
+			[String(Gear.db().stones[stone].text) if stone != "" else "Cut from Manna and set in the garment at the armory bench in the Palace."], []))
+	elif not pick.is_empty():
+		var uid := int(pick.uid)
+		var wear := UIKit.button("Wear", func() -> void: Gear.equip(uid); hud.equip_sel = "slot:" + String(Gear.def(pick).slot); hud.open_sheet("equip"), 150, true)
+		hud.more_tiles["equip_wear"] = wear
+		foot.add_child(ItemUI.gear_card(pick, [wear]))
+	else:
+		var it := Gear.equipped(cur_slot)
+		if it.is_empty():
+			foot.add_child(ItemUI.hint("%s: nothing worn. Tap a piece above to see it, then Wear." % String(slots[cur_slot])))
+		else:
+			var off := UIKit.button("Take off", func() -> void: Gear.unequip(cur_slot); hud.open_sheet("equip"), 150)
+			hud.more_tiles["equip_off"] = off
+			foot.add_child(ItemUI.gear_card(it, [off]))
 
 # ------------------------------------------------------------------ vendor
+## Buy, Sell and Storage as shelves of tiles. Tap one: its card, with the price and the button, is below.
+const SHOP_COLS := 8
+
 static func shop(hud: Node, tab: String = "buy") -> void:
+	var same: bool = hud.get("shop_tab") == tab and is_instance_valid(hud.get("shop_scroll"))
+	var keep: int = hud.shop_scroll.scroll_vertical if same else 0
+	if not same:
+		hud.shop_sel = ""
 	hud._dim(false)
-	var w := UIKit.window("Provisions · %s" % _purse(), Vector2(860, 0))
+	hud.shop_tab = tab
+	var w := UIKit.window("Provisions", Vector2(minf(880.0, hud.get_viewport().get_visible_rect().size.x - 24.0), 0))
 	var tabs := HBoxContainer.new(); tabs.add_theme_constant_override("separation", 8)
 	for tb in [["buy", "Buy"], ["sell", "Sell"], ["store", "Storage"]]:
 		var id: String = tb[0]
-		var bt := UIKit.button(tb[1], func() -> void: shop(hud, id), 160, id == tab)
+		var bt := UIKit.button(tb[1], func() -> void: shop(hud, id), 150, id == tab)
 		hud.more_tiles["shop_" + id] = bt
 		tabs.add_child(bt)
-	var gap := Control.new(); gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL; tabs.add_child(gap)
-	tabs.add_child(UIKit.button("Done", func() -> void: hud.clear_overlay(), 140))
+	var purse := UIKit.label(_purse(), 19, UIKit.BLUE_INK, true); purse.size_flags_horizontal = Control.SIZE_EXPAND_FILL; purse.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	tabs.add_child(purse)
+	tabs.add_child(UIKit.button("Done", func() -> void: hud.shop_tab = ""; hud.clear_overlay(), 120))
 	w.body.add_child(tabs)
-	var list := _scroll(w.body)
+	var sc := TouchScroll.new(); sc.custom_minimum_size.y = 300
+	hud.shop_scroll = sc
+	var cols: int = SHOP_COLS if hud.get_viewport().get_visible_rect().size.x >= 900.0 else ItemUI.COLS
+	var grid := ItemUI.grid(cols)
+	sc.add_child(grid); w.body.add_child(sc)
+	var pick_tile := func(key: String) -> Callable:
+		return func() -> void: hud.shop_sel = key; shop(hud, tab)
+	var card: Control = null
+	var n := 0
 	match tab:
 		"buy":
 			for id in Gear.db().shop:
 				var is_gear: bool = Gear.db().gear.has(id)
 				var d: Dictionary = Gear.db().gear[id] if is_gear else Gear.db().consumables[id]
-				var sub := Gear.stat_text(d.stats) if is_gear else ("Restores %d Health." % int(d.heal) if d.has("heal") else "Restores %d Zeal." % int(d.zeal))
 				var item_id: String = id
-				var bt := UIKit.button("%d" % int(d.price), func() -> void:
-					if Gear.buy(item_id): shop(hud, "buy"), ROW_BTN, G.denarii >= int(d.price))
-				hud.more_tiles["buy_" + id] = bt
-				list.add_child(_row(String(d.name) if is_gear else id, sub, [bt], d.icon))
+				var can: bool = G.denarii >= int(d.price)
+				var tile := ItemUI.tile({"icon": d.icon, "corner": "%d" % int(d.price), "selected": hud.shop_sel == item_id, "dim": not can}, pick_tile.call(item_id))
+				hud.more_tiles["shop_item_" + item_id] = tile
+				grid.add_child(tile); n += 1
+				if hud.shop_sel == item_id:
+					var sub := Gear.stat_text(d.stats) if is_gear else ("Restores %d Health." % int(d.heal) if d.has("heal") else "Restores %d Zeal." % int(d.zeal))
+					var have: String = ("You carry %d." % int(G.bag.get(item_id, 0))) if not is_gear else String(Gear.db().slots[d.slot])
+					var bt := UIKit.button("Buy · %d" % int(d.price), func() -> void:
+						if Gear.buy(item_id): shop(hud, "buy"), 190, can)
+					bt.disabled = not can
+					hud.more_tiles["buy_" + item_id] = bt
+					card = ItemUI.card(String(d.icon), String(d.name) if is_gear else item_id, UIKit.INK, [sub, have, "" if can else "Not enough Denarii."], [bt])
 		"sell":
 			for it in G.gear:
-				if not Gear.is_equipped(it):
-					var uid := int(it.uid)
-					list.add_child(_item_row(it, [UIKit.button("+%d" % Gear.sell_price(it), func() -> void: Gear.sell(uid); shop(hud, "sell"), ROW_BTN)]))
-			if list.get_child_count() == 0:
-				list.add_child(UIKit.label("Nothing spare to sell. Worn gear is not listed.", 18, UIKit.SUB))
+				if Gear.is_equipped(it):
+					continue
+				var uid := int(it.uid); var key := "g:%d" % uid
+				grid.add_child(ItemUI.gear_tile(it, hud.shop_sel == key, pick_tile.call(key))); n += 1
+				if hud.shop_sel == key:
+					card = ItemUI.gear_card(it, [UIKit.button("Sell · +%d" % Gear.sell_price(it), func() -> void: Gear.sell(uid); hud.shop_sel = ""; shop(hud, "sell"), 190, true)])
 		"store":
-			list.add_child(UIKit.label("Kept safe in the House (%d pieces). Storage is shared by every House you reach." % G.storage.size(), 17, UIKit.SUB, false, true))
 			for it in G.storage:
-				var uid := int(it.uid)
-				list.add_child(_item_row(it, [UIKit.button("Take", func() -> void: Gear.take(uid); shop(hud, "store"), ROW_BTN)]))
+				var uid := int(it.uid); var key := "s:%d" % uid
+				var tile := ItemUI.tile({"icon": Gear.def(it).icon, "color": String(Gear.rarity(it).color), "selected": hud.shop_sel == key, "badge": "kept",
+					"corner": ("+%d" % int(it.plus)) if int(it.plus) > 0 else ""}, pick_tile.call(key))
+				grid.add_child(tile); n += 1
+				if hud.shop_sel == key:
+					card = ItemUI.card(String(Gear.def(it).icon), Gear.label(it), Color(String(Gear.rarity(it).color)).darkened(0.25), ["In storage · " + Gear.stat_text(Gear.stats(it))],
+						[UIKit.button("Take", func() -> void: Gear.take(uid); hud.shop_sel = ""; shop(hud, "store"), 190, true)])
 			for it in G.gear:
-				if not Gear.is_equipped(it):
-					var uid := int(it.uid)
-					list.add_child(_item_row(it, [UIKit.button("Store", func() -> void: Gear.store(uid); shop(hud, "store"), ROW_BTN)]))
+				if Gear.is_equipped(it):
+					continue
+				var uid := int(it.uid); var key := "g:%d" % uid
+				grid.add_child(ItemUI.gear_tile(it, hud.shop_sel == key, pick_tile.call(key))); n += 1
+				if hud.shop_sel == key:
+					card = ItemUI.gear_card(it, [UIKit.button("Store", func() -> void: Gear.store(uid); hud.shop_sel = ""; shop(hud, "store"), 190, true)])
+	while n < cols * 2 or n % cols != 0:
+		grid.add_child(ItemUI.tile({})); n += 1
+	var hints := {"buy": "Tap something on the shelf to see it and its price.", "sell": "Tap a spare piece to sell it. Worn gear is not shown." if G.gear.size() > G.equipped.size() else "Nothing spare to sell. Worn gear is not shown.",
+		"store": "Tiles marked \"kept\" are in storage (%d pieces), shared by every town and House. Tap a piece to store it or take it back." % G.storage.size()}
+	w.body.add_child(card if card != null else ItemUI.hint(String(hints[tab])))
 	hud._center(w.root)
+	if same:
+		sc.set_deferred("scroll_vertical", keep)
 
 # ------------------------------------------------------------------ the armory bench: refine and Fruit stones
 static func bench(hud: Node) -> void:

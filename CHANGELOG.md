@@ -37,6 +37,15 @@ Built in phases from `WORLD_BUILD_PROMPT.md`. The version number and versionCode
 - **The save file.** The game now saves every 30 seconds, and when the app is closed or put in the background, as well as at each map, objective and Gleaning. Continue returns you to the very spot. Each save keeps a backup, and Settings has a **Save now** button showing the slot and when it was last saved.
 - **Autotest**: a balance report (hours per band against the plan, 25% tolerance, a field for every level to 26), a Gleaning taken and received, and the save file read back after a simulated app close and after being broken on purpose.
 
+### Menus: scrolling and item windows
+
+- **Lists scroll under a thumb.** Before, a list only scrolled if the finger landed on bare background; landing on a row or a button did nothing. Now a drag anywhere in a list scrolls it and it glides on after a flick, a still touch is a tap, and a drag never presses the button it began on. The scrollbar is wider.
+- **The Satchel is a bag**: supplies and road gear together as tiles (rarity border, count, refinement, "E" when worn), with All / Gear / Supplies tabs. Tap a tile and its card stays under the grid with Use, Wear or Take off.
+- **Equipment** shows what is worn as a row of slots, with the spare pieces for the chosen slot beneath and a line saying whether a piece is better than the one worn.
+- **The vendor** (Buy, Sell, Storage) is shelves of tiles with the price on each; the chosen item's card holds the button.
+- **Messages** are cards with a coloured edge, newest at the bottom, sorted by tabs (All, Journey, System, Warnings).
+- Choosing a tile no longer makes the window slide in again or jump back to the top.
+
 ## 0.5.0 (versionCode 6) — one look
 
 - **An art bible, enforced by tools.** 32 colours, a one-pixel ink outline, light from the upper left, one shadow, 48 sprite pixels per world unit. See DECISIONS.md.
