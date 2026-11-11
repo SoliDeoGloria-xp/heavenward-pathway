@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.0 (in progress) — a world you can roam
+
+Built in phases from `WORLD_BUILD_PROMPT.md`. The version number and versionCode change when the pass is finished.
+
+### Phase 1: the world graph and portals
+
+- **The maps are a network now, not a chain.** `data/world.json` lists every map as a node (kind, region, level range) and every road as an edge. The validator checks that every map can be reached, every road has a way back (only Eden's door is one-way), every town has a Waymark point, portals and arrival points sit inside their maps and clear of each other, and level ranges rise without gaps.
+- **You can walk back.** Every story map from the Slough onward has a smaller glow at its entrance that leads to the map before it, with a name label. The shining light at a map's exit stays open after the chapter is told, so the whole road from the City to the Valley of the Shadow can be walked both ways.
+- **Leaving never loses anything.** A chapter can be left half told and picked up again at the same objective. A chapter that is finished becomes a place to walk: no objective, no second payment of quest XP, its opening lines are not repeated.
+- **The Palace's yard, Lions' Path and Muster board stay open** after their story, and set you down beside them when you come back.
+- **Fixed: the Wicket Gate was a wall.** The gate's collision sealed the road, and the Slough's exit lay behind it, out of reach on foot (the test bot teleported, so it was never caught). Goodwill now opens it.
+- **Saves** remember visited maps, the last town, known Waymark points and where you entered the current map. A 0.5.0 save loads with every earlier chapter marked as told.
+- **The end screen** offers "Walk the road again" in place of replaying the Palace.
+- **Autotest** now walks every road on foot (20 trips), leaves a chapter mid-story and returns, replays the three side maps, and loads an old-format save.
+
 ## 0.5.0 (versionCode 6) — one look
 
 - **An art bible, enforced by tools.** 32 colours, a one-pixel ink outline, light from the upper left, one shadow, 48 sprite pixels per world unit. See DECISIONS.md.

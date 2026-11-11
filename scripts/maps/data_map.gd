@@ -126,7 +126,10 @@ func _light(at: Vector3, color: Color, energy: float, reach: float) -> void:
 
 func _gate(at: Vector3) -> Node3D:
 	var sp := kit.art("wicket_gate", at)
-	kit._solid_box(Vector3(1.0, 3.0, 4.6), at + Vector3(0, 1.5, 0))
+	# shut until the story opens it (an objective's "open_gate" effect), then it never bars the road again
+	var sb := StaticBody3D.new(); var cs := CollisionShape3D.new(); var sh := BoxShape3D.new(); sh.size = Vector3(1.0, 3.0, 4.6)
+	cs.shape = sh; sb.add_child(cs); sb.position = at + Vector3(0, 1.5, 0); w.add_child(sb)
+	w.gates.append(cs)
 	return sp
 
 ## The Cross stands empty. No figure is drawn on it or near it.

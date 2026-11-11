@@ -44,7 +44,7 @@ Foes drop Denarii and road gear (four slots, Clay to Radiant). Vendors buy, sell
 1. Copy a file in `data/maps/` and edit it: `look` (palette), `props` (geometry from the kit in `scripts/maps/data_map.gd`), `ents` (characters, spots, pages), `spawns`, `zones` (bad ground), `objectives` and `side` (optional objectives). Each objective has a `type` (`zone`, `path`, `talk`, `interact`, `choice`, `kill`, `boss`, `check`, `travel`, `exit`), its `xp` as `[base, job]`, and optional `on_start` / `on_done` effects (`show`, `hide`, `give`, `flag`, `say`, `burden`, `weary`, `heal`, `dialog`, `branch`).
 2. Write its scenes in `data/dialogue.json`. A line may carry `fx` or `cam` for staging (`scripts/systems/cutscene.gd`), `choices`, and `if` / `unless` flags.
 3. Add coach tips in `data/lessons.json`, monsters in `data/mobs.json`, and the act's budget in `data/acts.json`.
-4. Point the previous map's `exit` objective at the new map.
+4. Point the previous map's `exit` objective at the new map, and add the map to `data/world.json`: a node (`kind`, `region`, `level`) and two edges, one each way, with the portal's position (`at`) and where it sets the pilgrim down (`arrive`). `scripts/systems/portals.gd` builds the portals from that file.
 5. Run `python3 tools/validate_data.py`, then the autotest. The bot plays any data map without new test code.
 
 Only a place that needs hand-built geometry gets a script in `scripts/maps/<id>.gd` (Eden, the City, the Palace and the Lions' Gate have one).
@@ -52,13 +52,14 @@ Only a place that needs hand-built geometry gets a script in `scripts/maps/<id>.
 ## Testing
 
 ```
-python3 tools/validate_data.py                     # XP budgets, exits, BSB cites, reserved names, references
+python3 tools/validate_data.py                     # XP budgets, exits, BSB cites, reserved names, references, the world graph
 godot --headless --path . --import                  # once
 HPO_SHOTS=/tmp/shots xvfb-run -a godot --path . --rendering-driver opengl3 -- --autotest
 HPO_FROM=hill HPO_SHOTS=/tmp/shots xvfb-run -a godot --path . --rendering-driver opengl3 -- --autotest   # start the bot at one map
+HPO_WALK=1 HPO_SHOTS=/tmp/shots xvfb-run -a godot --path . --rendering-driver opengl3 -- --autotest     # only walk every road of the world graph
 ```
 
-The autotest plays from the title to the Calling, saves screenshots, prints one `[pacing]` line per act, checks Save/Continue mid-map, and fails unless quest XP is exactly 2,210 / 855.
+The autotest plays from the title to the Calling, saves screenshots, prints one `[pacing]` line per act, checks Save/Continue mid-map, leaves a chapter half told and returns, walks every road of the world graph on foot, and fails unless quest XP is exactly 2,210 / 855.
 
 ## Feel and effects (polish pass 1)
 

@@ -160,6 +160,10 @@ func run() -> void:
 	if OS.get_environment("HPO_GALLERY") != "":
 		await gallery()
 		return
+	if OS.get_environment("HPO_WALK") != "":
+		await wait(1.0)
+		await _walk_only()
+		return
 	if OS.get_environment("HPO_FROM") != "":
 		await wait(1.0)
 		await _jump(OS.get_environment("HPO_FROM"))
@@ -178,6 +182,9 @@ func run() -> void:
 	await wait(3.0)
 	await shot("90_end")
 	_final_checks()
+	_old_save_check()
+	if failures.is_empty():
+		await graph_walk()
 	print("[autotest] ", "PASS" if failures.is_empty() else "FAILED: %s" % [failures])
 	get_tree().quit(0 if failures.is_empty() else 1)
 
@@ -265,6 +272,9 @@ func play_map(map_id: String) -> void:
 		if map_id == "slough" and o.id == "wiseman" and not G.flags.has("tested_continue"):
 			w = await _continue_check(w)
 			continue
+		if map_id == "interpreter" and o.id == "parlor" and not G.flags.has("tested_leave"):
+			w = await _leave_check(w)
+			continue
 		if o.id != last:
 			last = o.id
 			await shot("%s_%d_%s" % [map_id, w.quests.obj_idx, o.id])
@@ -290,6 +300,142 @@ func _continue_check(w) -> Node:
 	check(not nw.ent("wiseman").hidden and not nw.ent("help").hidden and nw.ent("pliable").hidden, "Continue must replay earlier objectives' world changes")
 	await shot("slough_continued")
 	return nw
+
+# ------------------------------------------------------------------ the world graph
+const ROAD_STANDOFF := 3.4         # the bot is set down this far from a portal and walks the rest
+const ROAD_TIMEOUT_S := 14.0
+const CHAIN := ["city", "slough", "interpreter", "cross", "hill", "palace", "humiliation", "shadow"]
+const SIDE_MAPS := ["trial", "lions_path", "lions"]
+
+func _wait_map(map_id: String, old) -> Node:
+	var guard := 0
+	while (world() == null or world() == old or world().map_id != map_id or world().hud == null) and guard < 300:
+		await wait(0.1); guard += 1
+	await wait(0.6)
+	return world()
+
+## Walk (not teleport) into the portal that leads to `to`, and check the arrival. Returns the new world.
+func _take_road(to: String) -> Node:
+	var w = world(); var from: String = w.map_id
+	var way: Dictionary = {}
+	for p in w.portals.ways():
+		if p.edge.to == to:
+			way = p
+	check(not way.is_empty(), "%s: no open portal to %s" % [from, to])
+	if way.is_empty():
+		return w
+	var c: Vector2 = w.bounds.get_center()
+	var inward: Vector3 = (Vector3(c.x, 0, c.y) - way.pos).normalized()
+	w.player.position = way.pos + inward * ROAD_STANDOFF
+	await wait(0.4)
+	var t0: float = w.t
+	while is_instance_valid(w) and not w.ending and w.t - t0 < ROAD_TIMEOUT_S:
+		w.move_target = way.pos
+		await wait(0.2)
+	check(not is_instance_valid(w) or w.ending, "%s: the portal to %s cannot be walked into (stopped at %s)" % [from, to, w.player.position if is_instance_valid(w) else Vector3.ZERO])
+	var nw = await _wait_map(to, w)
+	check(nw != null and nw.map_id == to, "%s: the portal to %s led elsewhere" % [from, to])
+	if nw == null or nw.map_id != to:
+		return nw
+	var want: Vector3 = World.v3(way.edge.arrive)
+	await wait(0.8)
+	check(world() == nw and not nw.ending, "%s -> %s: the pilgrim was bounced straight back" % [from, to])
+	check(nw.player.position.distance_to(want) < 0.8, "%s -> %s: arrived at %s, not at %s (blocked ground?)" % [from, to, nw.player.position, want])
+	return nw
+
+## Leave a story map half told, come back, and find it as it was left.
+func _leave_check(w) -> Node:
+	G.flags["tested_leave"] = true
+	var idx: int = w.quests.obj_idx; var quest: Array = G.ledger.quest.duplicate()
+	var nw = await _take_road("slough")
+	check(nw.quests.cur().is_empty() and G.flags.has("done_slough"), "a finished map is free to walk: no objective")
+	await shot("world_back_in_slough")
+	nw = await _take_road("interpreter")
+	check(nw.quests.obj_idx == idx and nw.quests.cur_obj() == "parlor", "leaving a map mid-story must keep its objective (%d, got %d)" % [idx, nw.quests.obj_idx])
+	check(G.ledger.quest == quest, "walking back and forth pays no quest XP")
+	return nw
+
+## Every road of the graph, on foot: back from the far end to the City, then forward again,
+## with the Palace's three side maps on the way. Nothing here may pay quest XP twice.
+func graph_walk() -> void:
+	var quest: Array = G.ledger.quest.duplicate()
+	G.hp = G.hp_max
+	G.goto("world", {"map": "shadow", "at": [20.0, 0.3]})
+	var w = await _wait_map("shadow", null)
+	await shot("world_shadow_free")
+	var back: Array = CHAIN.duplicate(); back.reverse()
+	for to in back.slice(1) + CHAIN.slice(1):
+		if not failures.is_empty():
+			break
+		w = await _take_road(to)
+		check(w.quests.cur().is_empty(), "%s: its story is told, so no objective should be waiting" % to)
+		await shot("world_walk_%s" % to)
+		if to == "palace" and G.flags.has("walked_city"):
+			await _side_maps()
+		if to == "city":
+			G.flags["walked_city"] = true
+			check(w.portals.ways().size() == 1, "the City has one road out (Eden is behind a one-way door)")
+	for m in CHAIN:
+		check(m in G.visited, "%s should be in the visited list" % m)
+	check(G.last_town == "palace" and "interpreter" in G.waymarks_found, "towns walked through are remembered (last town %s)" % G.last_town)
+	check(G.ledger.quest == quest, "walking the whole graph pays no quest XP (%s -> %s)" % [quest, G.ledger.quest])
+	print("[autotest] graph walk: %d roads on foot, visited %s" % [(CHAIN.size() - 1) * 2 + SIDE_MAPS.size() * 2, G.visited])
+
+## The yard, the path and the board stay open after their story: go in, play it again, come back.
+func _side_maps() -> void:
+	var ents := {"trial": "yard", "lions_path": "gate", "lions": "board"}
+	for m in SIDE_MAPS:
+		var w = world()
+		check(not w.ent(ents[m]).hidden, "palace: the way to %s should be visible" % m)
+		await _use(w, ents[m])
+		await _settle(w)
+		var nw = await _wait_map(m, w)
+		check(nw != null and nw.map_id == m, "palace: %s should lead to %s" % [ents[m], m])
+		if nw == null or nw.map_id != m:
+			return
+		await play_map(m)
+		var home = await _wait_map("palace", nw)
+		check(home != null and home.map_id == "palace", "%s should return to the Palace" % m)
+		check(home.player.position.distance_to(World.v3(Portals.edge(m, "palace").arrive)) < 0.8, "%s: return sets the pilgrim down by the %s" % [m, ents[m]])
+
+## A save from before the world graph knows only its current map: the maps before it are marked told.
+func _old_save_check() -> void:
+	var f := FileAccess.open(G.save_path(), FileAccess.READ)
+	var d: Dictionary = JSON.parse_string(f.get_as_text())
+	for k in ["visited", "last_town", "waymarks_found", "cur_at"]:
+		d.erase(k)
+	for k in d.flags.keys():
+		if String(k).begins_with("done_"):
+			d.flags.erase(k)
+	d.cur_map = "hill"; d.map_state["hill"] = {"idx": 2, "side": []}
+	for m in ["palace", "humiliation", "shadow"]:
+		d.map_state.erase(m)
+	G.slot = G.SAVE_SLOTS - 1
+	FileAccess.open(G.save_path(), FileAccess.WRITE).store_string(JSON.stringify(d))
+	check(G.load_game(), "an old save must load")
+	check(G.flags.has("done_city") and G.flags.has("done_cross") and not G.flags.has("done_hill") and not G.flags.has("done_palace"), "old save: maps before the current one are marked told, later ones are not")
+	check(G.visited == ["eden", "city", "slough", "interpreter", "cross", "hill"] and G.last_town == "interpreter", "old save: visited maps and the last town are rebuilt (%s, %s)" % [G.visited, G.last_town])
+	G.delete_save(); G.slot = 0
+	check(G.load_game() and G.cur_map == "shadow" and G.flags.has("done_shadow"), "the real save loads again with its world state")
+
+## Dev shortcut: HPO_WALK=1 marks the whole story told and only walks the graph.
+func _walk_only() -> void:
+	G.pname = "Steadfast"; G.lamb_name = "Meadow"; G.guide = "off"
+	G.flags["done_eden"] = true
+	for m in CHAIN:
+		var def: Dictionary = G.data("maps/" + m)
+		G.map_state[m] = {"idx": def.objectives.size(), "side": def.get("side", []).map(func(sd: Dictionary) -> String: return sd.id)}
+		G.flags["done_" + m] = true
+	for f in ["city_fight", "prayer_taught", "trial_done", "lions_path_done", "grim_down"]:
+		G.flags[f] = true
+	G.add_xp(G.base_total(10), 855)
+	G.change_job(FINAL_JOB); G.build_player_sheet()
+	while G.stat_pts > 0:
+		G.raise_stat("for" if G.stat_pts % 2 == 0 else "ste")
+	G.skill_lv["steps"] = 3; G.skill_lv["refuge"] = 2; G.recalc()
+	await graph_walk()
+	print("[autotest] walk only: ", "PASS" if failures.is_empty() else "FAILED: %s" % [failures])
+	get_tree().quit(0 if failures.is_empty() else 1)
 
 ## Clear coach tips and dialogue, and spend points like a player would.
 func _settle(w) -> void:

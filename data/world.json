@@ -1,0 +1,447 @@
+{
+ "about": "The world graph. Nodes are maps (data/maps/<id>.json); edges are one-way links, so a road that can be walked both ways is two edges. kind: portal (walk into it), door (use an entity), exit (the map's own exit objective), story (a scripted scene change). A forward portal opens once its map's story is done (flag done_<map>); until then the map's exit objective makes the same trip. 'level' is the Base Level a map suits today; a region's 'band' is the design target from WORLD_BUILD_PROMPT.md section 4.",
+ "start": "eden",
+ "regions": {
+  "eden": {
+   "name": "Eden Isle",
+   "band": [
+    1,
+    5
+   ],
+   "prologue": true
+  },
+  "city": {
+   "name": "City of Destruction",
+   "band": [
+    1,
+    10
+   ]
+  },
+  "slough": {
+   "name": "The Slough and the Gate",
+   "band": [
+    8,
+    16
+   ]
+  },
+  "interpreter_cross": {
+   "name": "The Interpreter and the Cross",
+   "band": [
+    14,
+    20
+   ]
+  },
+  "hill": {
+   "name": "The Hill Difficulty",
+   "band": [
+    18,
+    26
+   ]
+  },
+  "palace": {
+   "name": "Palace Beautiful",
+   "band": [
+    22,
+    30
+   ]
+  },
+  "humiliation": {
+   "name": "The Valley of Humiliation",
+   "band": [
+    28,
+    36
+   ]
+  },
+  "shadow": {
+   "name": "The Valley of the Shadow of Death",
+   "band": [
+    32,
+    42
+   ]
+  }
+ },
+ "nodes": {
+  "eden": {
+   "kind": "story",
+   "region": "eden",
+   "level": [
+    1,
+    5
+   ]
+  },
+  "city": {
+   "kind": "story",
+   "region": "city",
+   "level": [
+    5,
+    6
+   ]
+  },
+  "slough": {
+   "kind": "story",
+   "region": "slough",
+   "level": [
+    6,
+    7
+   ]
+  },
+  "interpreter": {
+   "kind": "town",
+   "region": "interpreter_cross",
+   "level": [
+    7,
+    7
+   ],
+   "waymark": [
+    -3,
+    6
+   ]
+  },
+  "cross": {
+   "kind": "story",
+   "region": "interpreter_cross",
+   "level": [
+    7,
+    8
+   ]
+  },
+  "hill": {
+   "kind": "story",
+   "region": "hill",
+   "level": [
+    8,
+    9
+   ]
+  },
+  "palace": {
+   "kind": "town",
+   "region": "palace",
+   "level": [
+    9,
+    10
+   ],
+   "waymark": [
+    4,
+    8
+   ]
+  },
+  "trial": {
+   "kind": "instance",
+   "region": "palace",
+   "level": [
+    10,
+    10
+   ]
+  },
+  "lions_path": {
+   "kind": "danger",
+   "region": "palace",
+   "level": [
+    9,
+    10
+   ]
+  },
+  "lions": {
+   "kind": "instance",
+   "region": "palace",
+   "level": [
+    10,
+    10
+   ]
+  },
+  "humiliation": {
+   "kind": "story",
+   "region": "humiliation",
+   "level": [
+    10,
+    11
+   ]
+  },
+  "shadow": {
+   "kind": "story",
+   "region": "shadow",
+   "level": [
+    11,
+    12
+   ]
+  }
+ },
+ "edges": [
+  {
+   "from": "eden",
+   "to": "city",
+   "kind": "story",
+   "story_oneway": true
+  },
+  {
+   "from": "city",
+   "to": "slough",
+   "kind": "portal",
+   "forward": true,
+   "ent": "warp",
+   "at": [
+    21,
+    0
+   ],
+   "arrive": [
+    -23,
+    0
+   ],
+   "side": "east"
+  },
+  {
+   "from": "slough",
+   "to": "city",
+   "kind": "portal",
+   "at": [
+    -25.3,
+    0
+   ],
+   "arrive": [
+    18.4,
+    0
+   ],
+   "side": "west"
+  },
+  {
+   "from": "slough",
+   "to": "interpreter",
+   "kind": "portal",
+   "forward": true,
+   "ent": "warp",
+   "at": [
+    25,
+    0
+   ],
+   "arrive": [
+    0,
+    8
+   ],
+   "side": "east"
+  },
+  {
+   "from": "interpreter",
+   "to": "slough",
+   "kind": "portal",
+   "at": [
+    -5,
+    9.2
+   ],
+   "arrive": [
+    22.4,
+    0
+   ],
+   "side": "south"
+  },
+  {
+   "from": "interpreter",
+   "to": "cross",
+   "kind": "portal",
+   "forward": true,
+   "ent": "warp",
+   "at": [
+    0,
+    9.3
+   ],
+   "arrive": [
+    -21,
+    0
+   ],
+   "side": "south"
+  },
+  {
+   "from": "cross",
+   "to": "interpreter",
+   "kind": "portal",
+   "at": [
+    -23.2,
+    0
+   ],
+   "arrive": [
+    0,
+    6.7
+   ],
+   "side": "west"
+  },
+  {
+   "from": "cross",
+   "to": "hill",
+   "kind": "portal",
+   "forward": true,
+   "ent": "warp",
+   "at": [
+    22.5,
+    0
+   ],
+   "arrive": [
+    -25,
+    0
+   ],
+   "side": "east"
+  },
+  {
+   "from": "hill",
+   "to": "cross",
+   "kind": "portal",
+   "at": [
+    -27.2,
+    0
+   ],
+   "arrive": [
+    19.9,
+    0
+   ],
+   "side": "west"
+  },
+  {
+   "from": "hill",
+   "to": "palace",
+   "kind": "portal",
+   "forward": true,
+   "ent": "warp",
+   "at": [
+    27,
+    0
+   ],
+   "arrive": [
+    0,
+    11
+   ],
+   "side": "east"
+  },
+  {
+   "from": "palace",
+   "to": "hill",
+   "kind": "portal",
+   "at": [
+    -4.5,
+    12.2
+   ],
+   "arrive": [
+    24.4,
+    0
+   ],
+   "side": "south"
+  },
+  {
+   "from": "palace",
+   "to": "humiliation",
+   "kind": "portal",
+   "forward": true,
+   "ent": "valley",
+   "at": [
+    7,
+    11.5
+   ],
+   "arrive": [
+    -25,
+    0
+   ],
+   "side": "south"
+  },
+  {
+   "from": "humiliation",
+   "to": "palace",
+   "kind": "portal",
+   "at": [
+    -27.2,
+    0
+   ],
+   "arrive": [
+    7,
+    9
+   ],
+   "side": "west"
+  },
+  {
+   "from": "humiliation",
+   "to": "shadow",
+   "kind": "portal",
+   "forward": true,
+   "ent": "warp",
+   "at": [
+    26.5,
+    0
+   ],
+   "arrive": [
+    -25,
+    0
+   ],
+   "side": "east"
+  },
+  {
+   "from": "shadow",
+   "to": "humiliation",
+   "kind": "portal",
+   "at": [
+    -27.2,
+    0
+   ],
+   "arrive": [
+    23.9,
+    0
+   ],
+   "side": "west"
+  },
+  {
+   "from": "palace",
+   "to": "trial",
+   "kind": "door",
+   "ent": "yard",
+   "needs": "trial_done",
+   "arrive": [
+    0,
+    6
+   ]
+  },
+  {
+   "from": "trial",
+   "to": "palace",
+   "kind": "exit",
+   "arrive": [
+    12,
+    6
+   ]
+  },
+  {
+   "from": "palace",
+   "to": "lions_path",
+   "kind": "door",
+   "ent": "gate",
+   "needs": "lions_path_done",
+   "arrive": [
+    0,
+    17
+   ]
+  },
+  {
+   "from": "lions_path",
+   "to": "palace",
+   "kind": "exit",
+   "arrive": [
+    -12,
+    9
+   ]
+  },
+  {
+   "from": "palace",
+   "to": "lions",
+   "kind": "door",
+   "ent": "board",
+   "needs": "grim_down",
+   "arrive": [
+    0,
+    10
+   ]
+  },
+  {
+   "from": "lions",
+   "to": "palace",
+   "kind": "exit",
+   "arrive": [
+    8,
+    -0.6
+   ]
+  }
+ ]
+}

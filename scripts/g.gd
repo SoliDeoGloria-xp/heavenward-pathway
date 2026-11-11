@@ -97,6 +97,10 @@ var armor := false              # the whole Armor of God, given at the Palace, t
 var flags := {}
 var map_state := {}             # map_id -> {"idx": int, "side": [ids]}
 var cur_map := "eden"
+var cur_at: Array = []          # [x, z] where the pilgrim entered cur_map ([] = the map's own start)
+var visited: Array = []         # map ids the pilgrim has stood on (the world map draws these)
+var last_town := ""             # the last House or town entered
+var waymarks_found: Array = []  # towns whose fast-travel point is known
 var lamb_name := ""
 var ledger := {"quest": [0, 0], "mob": [0, 0]}   # [base, job] XP by source, for pacing checks
 var act_xp := {}                # act id -> [base, job] quest XP earned there
@@ -168,6 +172,7 @@ func reset() -> void:
 	for k in STATS: stat[k] = STAT_START
 	stat_pts = 0; skill_pts = 0; skill_lv = {}; tips_seen = {}
 	job_id = PILGRIM; trial_job = ""; armor = false; flags = {}; map_state = {}; cur_map = "eden"; lamb_name = ""
+	cur_at = []; visited = []; last_town = ""; waymarks_found = []
 	ledger = {"quest": [0, 0], "mob": [0, 0]}; act_xp = {}; cur_act = "eden"; played_ms = 0
 	gear = []; gear_uid = 0; equipped = {}; storage = []; denarii = 0; stones = {}; fruit_stone = ""; bestiary = {}; daily = {}
 	Gear.equip(int(Gear.add("wooden_staff").uid))
@@ -485,7 +490,7 @@ func lords_day() -> bool:
 # ------------------------------------------------------------------ save / continue (one local slot)
 const SAVED := ["pname", "hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "manna", "bag", "weary", "burden", "kos", "snaps",
 	"stat", "stat_pts", "skill_lv", "skill_pts", "guide", "tips_seen", "minor", "marks", "secrets", "house_rested",
-	"job_id", "armor", "flags", "map_state", "cur_map", "lamb_name", "ledger", "act_xp", "cur_act",
+	"job_id", "armor", "flags", "map_state", "cur_map", "cur_at", "visited", "last_town", "waymarks_found", "lamb_name", "ledger", "act_xp", "cur_act",
 	"gear", "gear_uid", "equipped", "storage", "denarii", "stones", "fruit_stone", "bestiary", "daily"]
 const SAVED_INTS := ["hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "kos", "snaps", "stat_pts", "skill_pts", "marks", "gear_uid", "denarii"]
 
@@ -535,10 +540,37 @@ func load_game() -> bool:
 	for it in gear + storage:
 		for k in ["uid", "rarity", "plus"]: it[k] = int(it[k])
 	played_ms = int(d0.get("played_ms", 0)); start_ms = Time.get_ticks_msec()
+	_world_state(not d0.has("visited"))
 	base_cap = cap_for(int(PROG["pilgrim_base_cap"]))
 	recalc(); hp = hp_max; zeal = zeal_max
 	build_player_sheet()
 	return true
+
+## Keeps the world-graph state whole. A save from before 0.6.0 knows only its current map, so every
+## story map before it is marked as told; in any save, a map whose objectives are all done gets its flag.
+func _world_state(old_save: bool) -> void:
+	var order: Array = data("acts").order
+	if old_save:
+		var here: int = order.find(String(data("maps/" + cur_map).act))
+		for i in maxi(here, 0):
+			var m: String = order[i]
+			flags["done_" + m] = true
+			if data("maps/" + m).get("resumable", false):
+				var side: Array = map_state.get(m, {}).get("side", [])
+				map_state[m] = {"idx": data("maps/" + m).objectives.size(), "side": side}
+		for i in maxi(here, 0) + 1:
+			var m2: String = order[i]
+			if not m2 in visited:
+				visited.append(m2)
+			if data("world").nodes[m2].kind == "town":
+				last_town = m2
+				if not m2 in waymarks_found:
+					waymarks_found.append(m2)
+		if not cur_map in visited:
+			visited.append(cur_map)
+	for m3 in map_state.keys():
+		if int(map_state[m3].get("idx", 0)) >= data("maps/" + String(m3)).objectives.size():
+			flags["done_" + String(m3)] = true
 
 func delete_save() -> void:
 	if has_save():

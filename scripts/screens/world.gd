@@ -58,6 +58,7 @@ var quests: Quests
 var lessons: Lessons
 var scene: Cutscene
 var folk: Folk
+var portals: Portals
 var map                          # hand-built map script (scripts/maps/<id>.gd) or the DataMap builder
 
 ## Map data stores ground positions as [x, z].
@@ -70,11 +71,19 @@ func _ready() -> void:
 	map_id = get_meta("data").get("map", "eden")
 	def = G.data("maps/" + map_id)
 	G.cur_map = map_id; G.cur_act = def.act
+	var at: Variant = get_meta("data").get("at")      # where a portal sets the pilgrim down
+	G.cur_at = at if at != null else []
+	if not map_id in G.visited:
+		G.visited.append(map_id)
+	if Portals.node(map_id).get("kind", "") == "town":
+		G.last_town = map_id
+		if not map_id in G.waymarks_found:
+			G.waymarks_found.append(map_id)
 	G.base_cap = G.cap_for(int(def.get("base_cap", G.PROG["pilgrim_base_cap"])))
 	if def.has("burden"):
 		G.burden = def.burden and not G.flags.has("burden_gone")
 	kit = MapKit.new(self); combat = Combat.new(self); quests = Quests.new(self)
-	lessons = Lessons.new(self); scene = Cutscene.new(self); folk = Folk.new(self)
+	lessons = Lessons.new(self); scene = Cutscene.new(self); folk = Folk.new(self); portals = Portals.new(self)
 	cam_dist = float(def.get("cam_dist", cam_dist))
 	_build_env()
 	_build_player()
@@ -92,11 +101,13 @@ func _ready() -> void:
 	hud.banner(info("name"), info("sub"))
 	if G.weary:
 		get_tree().create_timer(WEARY_ON_ENTER_S).timeout.connect(combat._weary_end)
-	for line in def.get("enter_say", []):
-		G.say(line, G.INFO)
+	if not G.flags.has("done_" + map_id):   # the chapter's opening lines belong to its first telling
+		for line in def.get("enter_say", []):
+			G.say(line, G.INFO)
 	G.audio.music(String(def.get("music", "")))
 	G.save_game()   # chapter boundary: Continue returns to the start of this map (or its saved objective)
 	quests.begin()
+	portals.build()
 	hud.refresh()
 
 func info(k: String) -> Variant:
@@ -156,7 +167,7 @@ func _build_player() -> void:
 	var sheet: Texture2D = G.player_sheet if G.player_sheet else G.build_player_sheet()
 	pact.setup({"tex": sheet, "hframes": 10, "vframes": 5, "pixel": PLAYER_HEIGHT / G.PLAYER_CELL.y, "rows": true,
 		"anims": {"idle": [0], "walk": [1, 2, 3, 4], "attack": [5, 6], "sit": [7], "rest": [8], "cast": [9]}}, G.pname if G.job_id == G.PILGRIM else "%s · %s" % [G.pname, G.job_name()], Color.WHITE)
-	player.position = info("start")
+	player.position = v3(G.cur_at) if G.cur_at.size() >= 2 else info("start")
 
 func _build_camera() -> void:
 	cam_rig = Node3D.new(); add_child(cam_rig)
@@ -292,6 +303,12 @@ func ent(id: String) -> Dictionary:
 			return e
 	return {}
 
+## A gate the story has opened stops being a wall (the Wicket Gate, once Goodwill has let the pilgrim in).
+var gates: Array = []
+func open_gates() -> void:
+	for cs in gates:
+		(cs as CollisionShape3D).set_deferred("disabled", true)
+
 func show_ent(id: String, on: bool) -> void:
 	var e := ent(id)
 	if e.is_empty():
@@ -419,6 +436,7 @@ func _physics_process(delta: float) -> void:
 	_move(_wanted_direction(), delta)
 	_arrive()
 	quests.tick(delta)
+	portals.tick()
 	_auto_battle()
 	if is_combat():
 		combat._mob_tick(delta)

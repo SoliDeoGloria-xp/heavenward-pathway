@@ -87,7 +87,7 @@ func _continue_panel() -> void:
 
 func _continue() -> void:
 	if G.load_game():
-		G.goto("world", {"map": G.cur_map})
+		G.goto("world", {"map": G.cur_map, "at": G.cur_at} if G.cur_at.size() >= 2 else {"map": G.cur_map})
 	else:
 		G.delete_save(); phase = "start"; start_age()
 

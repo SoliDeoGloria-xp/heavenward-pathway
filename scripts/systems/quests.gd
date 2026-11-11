@@ -107,6 +107,8 @@ func complete() -> void:
 	var fx: Dictionary = o.get("on_done", {})
 	apply(fx)
 	obj_idx += 1
+	if obj_idx >= objectives.size() and def.get("resumable", false):
+		G.flags["done_" + w.map_id] = true   # the story here is told; the map stays open to walk (see Portals)
 	_save()
 	if o.type == "exit":
 		leave(o.to)
@@ -134,7 +136,7 @@ func _save() -> void:
 
 func leave(to: String) -> void:
 	w.ending = true; G.sfx("warp")
-	G.goto("world", {"map": to})
+	Portals.go(w.map_id, to)
 
 # ------------------------------------------------------------------ effects (declarative, so progress can be replayed after a load)
 func apply(fx: Dictionary, replay: bool = false) -> void:
@@ -148,6 +150,8 @@ func apply(fx: Dictionary, replay: bool = false) -> void:
 		G.burden = fx.burden
 	if fx.has("armor"):
 		G.armor = true; G.recalc()
+	if fx.get("open_gate", false):
+		w.open_gates()
 	if fx.get("unlock", "") == "snapshot":
 		w.snapshot_unlocked = true
 	if replay:
@@ -266,7 +270,10 @@ func use_ent(e: Dictionary) -> bool:
 			return true
 	if e.has("dialog"):
 		busy = true
-		w.scene.play(e.dialog, func() -> void: busy = false)
+		w.scene.play(e.dialog, func() -> void:
+			busy = false
+			if e.get("kind", "") == "door":   # a door speaks first, then leads on (see Portals)
+				e.fn.call())
 		return true
 	return false
 

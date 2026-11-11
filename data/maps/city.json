@@ -9,6 +9,12 @@
   -12,
   3
  ],
+ "bounds": [
+  -24,
+  -14,
+  48,
+  28
+ ],
  "music": "city",
  "burden": true,
  "resumable": true,

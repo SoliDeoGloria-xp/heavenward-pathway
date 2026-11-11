@@ -703,7 +703,8 @@
      "warp",
      "goodwill"
     ],
-    "flag": "gate_passed"
+    "flag": "gate_passed",
+    "open_gate": true
    }
   },
   {

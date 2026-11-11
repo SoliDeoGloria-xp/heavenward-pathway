@@ -2,6 +2,18 @@
 
 Made while building, where the brief and the design doc left room. Each can be changed in data.
 
+## The world graph (0.6.0, phase 1)
+
+- **A road is two one-way edges** in `data/world.json`. Kinds: `portal` (walk in), `door` (use an entity), `exit` (the map's own exit objective), `story` (a scripted scene change). Only Eden to the City is `story_oneway`.
+- **A forward portal is the story's own exit light.** It opens when the map's last objective is done (flag `done_<map>`); before that the exit objective makes the same trip, so the chapter is told once. The way back is always open.
+- **Recommended levels are what is true today** (City 5-6 up to the Shadow 11-12). The region bands from the world plan (City 1-10, Slough 8-16, Interpreter and Cross 14-20, Hill 18-26) are stored beside them as targets. They do not fit the locked rule that a Pilgrim stops at Base 10 until the Calling at the Palace. **Open question for the owner; phases 2 and 3 wait on it.**
+- **Interpreter's House and Palace Beautiful are the two towns so far.** Each has a Waymark point in data; nothing stands there yet (phase 4 builds travel).
+- **"Waymark" already means something** in this game: the short messages pilgrims leave on the road. The world plan uses the same word for fast-travel points. One of the two needs another name. **Open question for the owner.**
+- **The Palace's return portal is by the south path**, where the pilgrim arrives from the Hill, not on the west side as the build notes suggested: the validator requires an arrival point to be near the road back.
+- **A KO still raises the pilgrim at the start of the same map.** The last town is saved, but returning there on a KO waits for towns that have a rest point (phase 2).
+- **A finished map keeps its always-present foes** (the City's Slothlings, the Lions' Path shades) and nothing else. Real spawn tables come in phase 2.
+- No game-original names were added in this phase.
+
 ## Art bible (0.5.0)
 
 One rule set for every picture in the game. It is code, not a wish: `tools/artkit.py` holds it, the import tools apply it, `tools/conform.py --check` fails CI when a picture breaks it.

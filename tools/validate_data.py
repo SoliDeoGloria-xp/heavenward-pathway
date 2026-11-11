@@ -7,6 +7,9 @@ Checks (see the build brief): every objective has XP; every map has a start and 
 match the design budget per act (data/acts.json) and in total; boss XP is 150-250; required-kill
 monster XP is 15-25% of quest XP; every Scripture cite is [BSB: Book ch:v]; no reserved (divine)
 names are used as a speaker or entity; every referenced dialogue, entity, mob, skill and map exists.
+World graph (data/world.json): every map is a node and can be reached; every road has a way back
+unless marked story_oneway; every town has a Waymark; portals and arrival points are inside their
+maps and clear of each other; level ranges rise without gaps.
 """
 import json, re, sys
 from pathlib import Path
@@ -198,6 +201,119 @@ def main() -> int:
             if tip not in ids:
                 err(f"lessons: {mid_}.{tip} has no matching objective")
 
+    # ---- world graph (data/world.json): nodes are the maps, edges the roads between them
+    world = load("world")
+    nodes, edges, regions = world.get("nodes", {}), world.get("edges", []), world.get("regions", {})
+    DEFAULT_BOUNDS = [-24, -14, 48, 28]
+    PORTAL_CLEAR, ARRIVE_MIN, ARRIVE_MAX, TRIGGER = 3.0, 2.0, 6.0, 1.3
+    def inside(mid: str, pt) -> bool:
+        b = maps[mid].get("bounds", DEFAULT_BOUNDS)
+        return b[0] <= pt[0] <= b[0] + b[2] and b[1] <= pt[1] <= b[1] + b[3]
+    def dist(a, b) -> float:
+        return ((a[0] - b[0]) ** 2 + (a[-1] - b[-1]) ** 2) ** 0.5
+    for mid_ in maps:
+        if mid_ not in nodes:
+            err(f"world: map {mid_} is not a node of the world graph")
+    for nid, n in nodes.items():
+        if nid not in maps:
+            err(f"world: node {nid} has no map file"); continue
+        if n.get("kind") not in ("town", "field", "danger", "story", "instance"):
+            err(f"world: node {nid} has unknown kind {n.get('kind')}")
+        if n.get("region") not in regions:
+            err(f"world: node {nid} is in unknown region {n.get('region')}")
+        lv = n.get("level", [])
+        if not (len(lv) == 2 and 1 <= lv[0] <= lv[1] <= prog.get("max_base", 99)):
+            err(f"world: node {nid} needs a level range [low, high]")
+        if n.get("kind") == "town" and not ("waymark" in n and inside(nid, n["waymark"])):
+            err(f"world: town {nid} needs a Waymark point inside its bounds")
+    links = {}
+    for e in edges:
+        a_, b_ = e.get("from"), e.get("to")
+        ew = f"world edge {a_}->{b_}"
+        if a_ not in nodes or b_ not in nodes or a_ not in maps or b_ not in maps:
+            err(f"{ew}: unknown map"); continue
+        if (a_, b_) in links:
+            err(f"{ew}: listed twice")
+        links[(a_, b_)] = e
+        kind = e.get("kind")
+        if kind not in ("portal", "door", "exit", "story"):
+            err(f"{ew}: unknown kind {kind}")
+        if "arrive" in e and not inside(b_, e["arrive"]):
+            err(f"{ew}: arrival point {e['arrive']} is outside {b_}")
+        if kind in ("portal", "door", "exit") and "arrive" not in e:
+            err(f"{ew}: needs an arrival point")
+        scripted = (ROOT / "scripts" / "maps" / f"{a_}.gd").exists()
+        ent_at = {x["id"]: x["at"] for x in maps[a_].get("ents", [])}
+        if kind in ("portal", "door") and "ent" in e and e["ent"] not in ent_at and not scripted:
+            err(f"{ew}: unknown entity {e['ent']}")
+        if kind == "door" and not ("ent" in e and "needs" in e):
+            err(f"{ew}: a door needs an entity and the flag that opens it")
+        if kind == "portal":
+            if "at" not in e or not inside(a_, e["at"]):
+                err(f"{ew}: portal needs a position inside {a_}"); continue
+            if e.get("forward") and not any(o.get("type") == "exit" and o.get("to") == b_ and dist(o["zone"], e["at"]) < 0.1 for o in maps[a_]["objectives"]):
+                err(f"{ew}: a forward portal stands on its map's exit zone")
+            if not e.get("forward"):   # a way back must not sit on top of the story
+                spots = [x for i, x in ent_at.items()] + [o["zone"] for o in maps[a_]["objectives"] if "zone" in o] + [pt for o in maps[a_]["objectives"] for pt in o.get("points", [])]
+                for sp in spots:
+                    if dist(sp, e["at"]) < PORTAL_CLEAR:
+                        err(f"{ew}: portal at {e['at']} is within {PORTAL_CLEAR} of a story spot {sp}")
+    for (a_, b_), e in links.items():
+        back = links.get((b_, a_))
+        if back is None:
+            if not e.get("story_oneway"):
+                err(f"world edge {a_}->{b_}: no way back (add the return edge or mark it story_oneway)")
+            continue
+        if "arrive" in e and back.get("kind") == "portal" and "at" in back:
+            d_ = dist(e["arrive"], back["at"])
+            if not ARRIVE_MIN <= d_ <= ARRIVE_MAX:
+                err(f"world edge {a_}->{b_}: arrives {d_:.1f} from the portal back (want {ARRIVE_MIN}-{ARRIVE_MAX}, so the pilgrim is not bounced)")
+        for other in edges:
+            if other.get("from") == b_ and other.get("kind") == "portal" and other is not back and "arrive" in e and "at" in other and dist(e["arrive"], other["at"]) < TRIGGER:
+                err(f"world edge {a_}->{b_}: arrives on top of the portal to {other.get('to')}")
+    def reach(start: str) -> set:
+        seen, todo = {start}, [start]
+        while todo:
+            cur_ = todo.pop()
+            for (a_, b_) in links:
+                if a_ == cur_ and b_ not in seen:
+                    seen.add(b_); todo.append(b_)
+        return seen
+    start_node = world.get("start", "")
+    if start_node in nodes:
+        for nid in set(nodes) - reach(start_node):
+            err(f"world: {nid} cannot be reached from {start_node}")
+        towns = [n_ for n_, v in nodes.items() if v.get("kind") == "town"]
+        for nid in nodes:
+            if nid == start_node:
+                continue
+            got = reach(nid)
+            for other in set(nodes) - got - {start_node}:
+                err(f"world: no road from {nid} to {other}")
+            if towns and not any(t in got for t in towns):
+                err(f"world: no town can be reached from {nid}")
+    else:
+        err("world: 'start' must name a node")
+    for mid_, d in maps.items():   # every scripted trip between maps is a road on the graph
+        for o in d.get("objectives", []):
+            if o.get("type") in ("exit", "travel") and (mid_, o.get("to")) not in links:
+                err(f"map {mid_} objective {o.get('id')}: its trip to {o.get('to')} is not an edge of the world graph")
+    # level ranges rise along the story and leave no gap; region bands are ordered and overlap only at the edges
+    chain = [a for a in acts.get("order", []) if a in nodes]
+    for prev, nxt in zip(chain, chain[1:]):
+        lo0, hi0 = nodes[prev].get("level", [1, 1]); lo1, _hi1 = nodes[nxt].get("level", [1, 1])
+        if lo1 < lo0 or lo1 > hi0 + 1:
+            err(f"world: level range of {nxt} ({lo1}+) does not follow {prev} ({lo0}-{hi0})")
+    bands = [(rid, r.get("band", [])) for rid, r in regions.items() if not r.get("prologue")]
+    for (r0, b0), (r1, b1) in zip(bands, bands[1:]):
+        if len(b0) != 2 or len(b1) != 2:
+            err(f"world: regions {r0} and {r1} need a band [low, high]"); continue
+        overlap = b0[1] - b1[0]
+        if b1[0] < b0[0] or overlap < 0 or overlap > 0.5 * min(b0[1] - b0[0], b1[1] - b1[0]):
+            err(f"world: band of {r1} {b1} overlaps badly with {r0} {b0}")
+    for rid, r in regions.items():
+        check_name(f"world region {rid}", r.get("name", ""))
+
     # ---- budgets
     total = [0, 0]
     for a in acts.get("order", []):
@@ -220,7 +336,7 @@ def main() -> int:
         for e in errors:
             print("  -", e)
         return 1
-    print(f"validate_data: OK · {len(maps)} maps · {len(dialogue)} dialogue scenes · quest XP {total[0]}/{total[1]} · required-kill mob XP {kill_xp} ({share:.0%}) · planned {minutes} min")
+    print(f"validate_data: OK · {len(maps)} maps · world graph {len(nodes)} nodes, {len(edges)} roads · {len(dialogue)} dialogue scenes · quest XP {total[0]}/{total[1]} · required-kill mob XP {kill_xp} ({share:.0%}) · planned {minutes} min")
     return 0
 
 if __name__ == "__main__":

@@ -25,9 +25,10 @@ func _ready() -> void:
 	b.add_child(grid)
 	b.add_child(UIKit.label("From the garden to the gate, the cross, the hill, the House and the two valleys. " + NEXT, 19, UIKit.SUB, false, true))
 	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END; row.add_theme_constant_override("separation", 10)
-	row.add_child(UIKit.button("Return to the House", func() -> void:
+	# the road stays open: every map walked so far can be walked again, back to the City
+	row.add_child(UIKit.button("Walk the road again", func() -> void:
 		G.hp = G.hp_max; G.zeal = G.zeal_max; G.weary = false
-		G.map_state.erase("palace"); G.goto("world", {"map": "palace"}), 260, true))
+		G.goto("world", {"map": "shadow", "at": [20.0, 0.3]}), 260, true))
 	row.add_child(UIKit.button("Title", func() -> void: G.goto("title"), 160))
 	b.add_child(row)
 	b.add_child(UIKit.label("Music is arranged from public-domain hymn tunes. Scripture is cited as [BSB: reference]. Bunyan quotations are public domain (1678).", 16, UIKit.SUB, false, true))

@@ -71,3 +71,12 @@ Play on a phone in landscape. Note the time at each ★.
 - [ ] Note any picture that looks smoother, blurrier, larger-pixelled or differently lit than the things around it.
 - [ ] Walk in a circle and turn the camera: the view should glide, never jerk. Note the device and refresh rate if it does.
 - [ ] Is the parchment interface readable in daylight? Is any text too small?
+
+## Added in 0.6.0 phase 1: roads between maps
+
+- [ ] In the Slough, walk west into the small glow: you are in the City again, with no quest. Walk east into the shining light: back in the Slough, at the same objective.
+- [ ] After Goodwill opens the Wicket Gate, walk through it on foot to the light beyond. (Before this build the gate was a wall.)
+- [ ] Finish the story, press "Walk the road again", and walk back to the City and forward again. Note any portal that is hidden by scenery, hard to reach, or sets you down inside something.
+- [ ] Does any portal take you when you did not mean it to? Does the label say clearly where it leads?
+- [ ] At the Palace after the Calling: the yard, the Lions' Path and the Muster board each lead to their side map again and bring you back beside them.
+- [ ] Continue a save made in 0.5.0: you are where you were, and the way back is open.
