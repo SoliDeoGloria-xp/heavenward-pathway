@@ -377,5 +377,32 @@
     "denarii": 30
    }
   }
+ ],
+ "wanderer": {
+  "mob": "mocker",
+  "name": "The Mocker of the Lane",
+  "lv": 6
+ },
+ "gather": [
+  {
+   "id": "fig",
+   "at": [
+    -14,
+    -5
+   ],
+   "name": "A Wayside Fig Tree",
+   "item": "Wayside Fig",
+   "prop": "tree_fig"
+  },
+  {
+   "id": "honey",
+   "at": [
+    14,
+    6.5
+   ],
+   "name": "Honey in the Rock",
+   "item": "Honey from the Rock",
+   "prop": "rock_b"
+  }
  ]
 }

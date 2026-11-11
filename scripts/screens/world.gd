@@ -60,6 +60,7 @@ var lessons: Lessons
 var scene: Cutscene
 var folk: Folk
 var portals: Portals
+var life: FieldLife
 var map                          # hand-built map script (scripts/maps/<id>.gd) or the DataMap builder
 
 ## Map data stores ground positions as [x, z].
@@ -112,6 +113,7 @@ func _ready() -> void:
 	quests.begin()
 	portals.build()
 	combat.lair_ready()
+	life = FieldLife.new(self); life.begin()
 	hud.refresh()
 
 func info(k: String) -> Variant:
@@ -440,6 +442,9 @@ func _stand() -> void:
 	sitting = false; pact.play("idle")
 
 func set_auto(on: bool) -> void:
+	if on and kind != "field":   # the fields are for steady work; story fights, bosses and danger zones want the pilgrim's own hand
+		auto_on = false
+		G.say("Auto battle works only in the fields.", G.WARN); return
 	auto_on = on
 	G.say("Auto battle %s." % ("on" if on else "off"), G.SYS)
 
@@ -463,6 +468,7 @@ func _physics_process(delta: float) -> void:
 	if is_combat():
 		combat._mob_tick(delta)
 	combat.lair_tick()
+	life.tick(delta)
 	if combat.boss != null:
 		combat._boss_tick(delta)
 	combat._allies_tick(delta)
@@ -565,7 +571,7 @@ func _arrive() -> void:
 
 ## Auto battle stays within the Tier 1 scope: auto-attack and the first two Pilgrim skills, in fields only.
 func _auto_battle() -> void:
-	if not (auto_on and is_combat()):
+	if not (auto_on and kind == "field"):
 		return
 	if combat.target == null or not combat.target.alive:
 		combat.target = combat._nearest_mob(AUTO_SEEK_RANGE)

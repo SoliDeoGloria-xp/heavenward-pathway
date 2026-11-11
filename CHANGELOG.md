@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.6.0 (in progress) — a world you can roam
+## 0.6.0 (versionCode 7) — a world you can roam
 
-Built in phases from `WORLD_BUILD_PROMPT.md`. The version number and versionCode change when the pass is finished.
+Built in phases from `WORLD_BUILD_PROMPT.md`. First pass: regions 1 to 4 (levels 1 to 26). The new maps are kit-built placeholders and nobody has hand-played this build; see PLAYTEST.md.
 
 ### Phase 1: the world graph and portals
 
@@ -45,6 +45,24 @@ Built in phases from `WORLD_BUILD_PROMPT.md`. The version number and versionCode
 - **The vendor** (Buy, Sell, Storage) is shelves of tiles with the price on each; the chosen item's card holds the button.
 - **Messages** are cards with a coloured edge, newest at the bottom, sorted by tabs (All, Journey, System, Warnings).
 - Choosing a tile no longer makes the window slide in again or jump back to the top.
+
+### Phase 4: the world map and the minimap
+
+- **World map** (More → World, or tap the minimap): the places you have walked, the roads between them, a "?" where a known road leads on, each field's levels in the colour that compares them with you, and your Gleaning there. Drag to look around, tap a place to read about it.
+- **A Milestone opens the same map** with the towns you have reached listed under it; travel is free.
+- **The minimap** now draws the map's roads, water, bad ground and walls from its data, a gold dot at every way out, and a ringed mark for the field's wandering foe.
+
+### Phase 5: field life
+
+- **A named wandering foe** comes to each field 40 seconds after you do, Greater and at the field's top level, marked on the minimap. It pays Denarii and returns eight minutes after it falls.
+- **Gathering and cooking.** Each field has a fig tree and honey in the rock, which grow back in three minutes. A cooking pot in each new town makes Fig Cake and Honeyed Bread.
+- **Faithful walks and fights beside you in the fields** once you have met him at the end of the Valley of the Shadow.
+- **Day and night** in fields and towns, a 48-minute round.
+- **Auto battle works only in fields.** In story fights, towns and danger zones the button says so.
+
+### Skills
+
+- **A Calling's skills now last the Calling.** After the Calling each Job Level gives 1 skill point (a Pilgrim still gets 2), skills open at Job 1, 1, 8, 16, 24 and 32, and each level of a skill costs more than the last (1, 1, 2, 2, 3). Before, all six skills were full by about Job 15 with 35 levels left and nothing to spend on.
 
 ## 0.5.0 (versionCode 6) — one look
 

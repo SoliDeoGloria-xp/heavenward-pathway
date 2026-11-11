@@ -190,6 +190,22 @@
    "price": 12,
    "icon": "honey_from_the_rock",
    "zeal": 30
+  },
+  "Wayside Fig": {
+   "price": 0,
+   "icon": "fig",
+   "heal": 25
+  },
+  "Fig Cake": {
+   "price": 0,
+   "icon": "bread",
+   "heal": 110
+  },
+  "Honeyed Bread": {
+   "price": 0,
+   "icon": "bread",
+   "heal": 45,
+   "zeal": 30
   }
  },
  "shop": [
@@ -292,5 +308,19 @@
   "kills": 10,
   "reward_manna": 1,
   "reward_denarii": 25
+ },
+ "recipes": {
+  "Fig Cake": {
+   "needs": {
+    "Wayside Fig": 2,
+    "Bread of Provision": 1
+   }
+  },
+  "Honeyed Bread": {
+   "needs": {
+    "Honey from the Rock": 1,
+    "Bread of Provision": 1
+   }
+  }
  }
 }

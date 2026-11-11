@@ -102,6 +102,9 @@ var visited: Array = []         # map ids the pilgrim has stood on (the world ma
 var last_town := ""             # the last House or town entered
 var milestones: Array = []      # towns whose Milestone (fast-travel point) has been reached
 var lairs := {}                 # danger-zone map id -> unix time its boss was last overcome
+var wanderers := {}             # field id -> unix time its wandering foe was last overcome
+var wanderers_down := {}        # field id -> times overcome
+var gathered := {}              # "<map>:<spot>" -> unix time it was last gathered
 var lamb_name := ""
 var ledger := {"quest": [0, 0], "mob": [0, 0], "board": [0, 0]}   # [base, job] XP by source, for pacing checks
 var gleanings := {}             # field id -> {"n": foes overcome since taken, "active": bool, "done": times received}
@@ -175,7 +178,7 @@ func reset() -> void:
 	for k in STATS: stat[k] = STAT_START
 	stat_pts = 0; skill_pts = 0; skill_lv = {}; tips_seen = {}
 	job_id = PILGRIM; trial_job = ""; armor = false; flags = {}; map_state = {}; cur_map = "eden"; lamb_name = ""
-	cur_at = []; visited = []; last_town = ""; milestones = []; lairs = {}
+	cur_at = []; visited = []; last_town = ""; milestones = []; lairs = {}; wanderers = {}; wanderers_down = {}; gathered = {}
 	ledger = {"quest": [0, 0], "mob": [0, 0], "board": [0, 0]}; act_xp = {}; cur_act = "eden"; played_ms = 0
 	gleanings = {}; weekly = {}
 	gear = []; gear_uid = 0; equipped = {}; storage = []; denarii = 0; stones = {}; fruit_stone = ""; bestiary = {}; daily = {}
@@ -241,16 +244,39 @@ func reset_stats() -> void:
 
 func learn_skill(id: String) -> bool:
 	var info: Dictionary = SKILL_INFO[id]
-	if skill_pts <= 0 or int(skill_lv.get(id, 0)) >= int(info.max):
+	if int(skill_lv.get(id, 0)) >= int(info.max) or skill_pts < skill_cost(id) or job < skill_job_lv(id):
 		return false
 	if info.has("req") and int(skill_lv.get(info.req.skill, 0)) < int(info.req.lv):
 		say("%s needs %s at level %d first." % [info.name, SKILL_INFO[info.req.skill].name, int(info.req.lv)], WARN)
 		return false
-	skill_lv[id] = int(skill_lv.get(id, 0)) + 1; skill_pts -= 1
+	skill_pts -= skill_cost(id); skill_lv[id] = int(skill_lv.get(id, 0)) + 1
 	recalc()
 	say("%s is now level %d." % [info.name, skill_lv[id]], INFO)
 	haptic(25); stats_changed.emit()
 	return true
+
+## Points the next level of a skill costs: 1 for a Pilgrim's skills; a Calling's skills cost more as they rise.
+func skill_cost(id: String) -> int:
+	_load_prog()
+	if SKILL_INFO[id].job == PILGRIM:
+		return 1
+	var cost: Array = PROG["skill"].cost
+	return int(cost[clampi(int(skill_lv.get(id, 0)), 0, cost.size() - 1)])
+
+## The Job Level at which a Calling's skill opens: by its place among that Calling's skills.
+func skill_job_lv(id: String) -> int:
+	_load_prog()
+	var mine: String = SKILL_INFO[id].job
+	if mine == PILGRIM:
+		return 1
+	var n := 0
+	for other in SKILL_ORDER:
+		if other == id:
+			break
+		if SKILL_INFO[other].job == mine:
+			n += 1
+	var tiers: Array = PROG["skill"].tiers
+	return int(tiers[clampi(n, 0, tiers.size() - 1)])
 
 func has_skill(id: String) -> bool:
 	return int(skill_lv.get(id, 0)) > 0
@@ -513,8 +539,9 @@ func add_xp(amount: int, job_amount: int = -1, region: String = "", src: String 
 		level_up.emit("Base Level Up!")
 	var jcap := int(PROG["first_job_gate"]["job"]) if job_id == PILGRIM else int(PROG["max_job"])
 	while job < jcap and jxp >= job_total(job + 1):
-		job += 1; skill_pts += 2
-		say("Job Level %d! +2 skill points (More → Skills)." % job, INFO)
+		var gain: int = int(PROG["skill"].pilgrim_pts) if job_id == PILGRIM else int(PROG["skill"].calling_pts)
+		job += 1; skill_pts += gain
+		say("Job Level %d! +%d skill point%s (More → Skills)." % [job, gain, "" if gain == 1 else "s"], INFO)
 		level_up.emit("Job Level Up!")
 	if lvl >= base_cap and region == "eden":
 		say("Base Level %d: Eden Isle can teach you no further." % base_cap, INFO)
@@ -591,7 +618,7 @@ func lords_day() -> bool:
 # ------------------------------------------------------------------ save / continue (one local slot)
 const SAVED := ["pname", "hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "manna", "bag", "weary", "burden", "kos", "snaps",
 	"stat", "stat_pts", "skill_lv", "skill_pts", "guide", "tips_seen", "minor", "marks", "secrets", "house_rested",
-	"job_id", "armor", "flags", "map_state", "cur_map", "cur_at", "visited", "last_town", "milestones", "lairs", "lamb_name", "ledger", "act_xp", "cur_act",
+	"job_id", "armor", "flags", "map_state", "cur_map", "cur_at", "visited", "last_town", "milestones", "lairs", "wanderers", "wanderers_down", "gathered", "lamb_name", "ledger", "act_xp", "cur_act",
 	"gear", "gear_uid", "equipped", "storage", "denarii", "stones", "fruit_stone", "bestiary", "daily", "gleanings", "weekly"]
 const SAVED_INTS := ["hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "kos", "snaps", "stat_pts", "skill_pts", "marks", "gear_uid", "denarii"]
 

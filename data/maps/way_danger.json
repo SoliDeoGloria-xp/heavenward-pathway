@@ -472,5 +472,32 @@
     "denarii": 90
    }
   }
+ ],
+ "wanderer": {
+  "mob": "wood_shade",
+  "name": "The Shade of the Great Wood",
+  "lv": 22
+ },
+ "gather": [
+  {
+   "id": "fig",
+   "at": [
+    -14,
+    -5
+   ],
+   "name": "A Wayside Fig Tree",
+   "item": "Wayside Fig",
+   "prop": "tree_fig"
+  },
+  {
+   "id": "honey",
+   "at": [
+    14,
+    6.5
+   ],
+   "name": "Honey in the Rock",
+   "item": "Honey from the Rock",
+   "prop": "rock_b"
+  }
  ]
 }

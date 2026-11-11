@@ -518,6 +518,16 @@ func town_check() -> void:
 	await _use(nw, "lampkeeper"); await wait(0.5)
 	check(nw.hud.dialog_active(), "townsfolk speak when spoken to")
 	await _settle(nw)
+	nw.set_auto(true)
+	check(not nw.auto_on, "Auto battle is refused outside the fields")
+	G.goto("world", {"map": "city_square"})
+	w = await _wait_map("city_square", nw)
+	G.bag_add("Wayside Fig", 2); G.bag_add("Bread of Provision", 1)
+	await _use(w, "pot"); await shot("ui_cook")
+	check(w.hud.more_tiles.has("cook_Fig Cake") and not w.hud.more_tiles["cook_Fig Cake"].disabled, "the cooking pot offers what the bag can make")
+	w.hud.more_tiles["cook_Fig Cake"].pressed.emit(); await wait(0.3)
+	check(int(G.bag.get("Fig Cake", 0)) == 1 and int(G.bag.get("Wayside Fig", 0)) == 0, "cooking turns gathered food into a better dish")
+	w.hud.clear_overlay()
 
 ## A field: foes carry their level, pay XP by it, and a fallen pilgrim wakes in the last town.
 var _earned := 0
@@ -572,11 +582,35 @@ func field_finds() -> void:
 	w.ent("secret_cache").fn.call(); await wait(0.5)
 	check(G.denarii == coin + 25, "a field's cache pays its Denarii")
 	await shot("field_finds"); w.hud.clear_overlay()
+	await field_life_check(w)
 	G.last_town = "city_square"
 	w.combat._ko(); await wait(0.6); await shot("field_ko")
 	w.hud.clear_overlay(); w.combat.rise()
 	var nw = await _wait_map("city_square", w)
 	check(nw != null and nw.map_id == "city_square" and G.weary, "a pilgrim who falls in a field wakes, weary, in the last town")
+
+## Field life: gathering, the wandering foe, Faithful, Auto in fields only, day and night.
+func field_life_check(w) -> void:
+	var figs: int = int(G.bag.get("Wayside Fig", 0))
+	check(not w.ent("gather_fig").hidden, "a field has things to gather")
+	w.player.position = w.ent("gather_fig").pos + Vector3(1.2, 0, 1.0); await wait(0.3)
+	w.ent("gather_fig").fn.call(); await wait(0.3)
+	check(int(G.bag.get("Wayside Fig", 0)) == figs + 1 and w.ent("gather_fig").hidden and G.gathered.has("sloth_meadow:fig"), "gathering gives the item and the spot rests a while")
+	G.gathered["sloth_meadow:fig"] = 0.0; w.life.slow_t = 0.0; await wait(0.4)
+	check(not w.ent("gather_fig").hidden, "what was gathered grows back")
+	check(w.life.companion != null, "Faithful walks beside a pilgrim who has met him")
+	check(w.life.wanderer.is_empty() and w.life.wander_in < INF, "the wandering foe has not come yet")
+	w.life.wander_in = 0.1; await wait(0.6)
+	var wd: Dictionary = w.life.wanderer
+	check(not wd.is_empty() and wd.alive and wd.name == "The Whelp of the Meadow" and wd.greater and int(wd.level) == 4, "the field's named foe comes, Greater and at the field's top level")
+	await shot("field_wanderer")
+	var coin: int = G.denarii
+	w.combat.hit_mob(wd, 99999); await wait(0.6)
+	check(G.wanderers.has("sloth_meadow") and int(G.wanderers_down["sloth_meadow"]) == 1 and G.denarii > coin, "overcoming it is remembered and rewarded")
+	w.set_auto(true)
+	check(w.auto_on, "Auto battle works in a field")
+	w.set_auto(false)
+	check(FieldLife.night_at(0.0) == 0.0 and FieldLife.night_at(FieldLife.DAY_S * 0.8) == 1.0, "the day has a night in it")
 
 ## A danger zone's last floor: the boss wakes as the pilgrim draws near, and falls.
 func danger_check() -> void:
@@ -728,6 +762,10 @@ func menus_check() -> void:
 	check(G.denarii < coin and int(G.bag["Bread of Provision"]) == bread, "the vendor sells from the card under the shelf")
 	w.hud.more_tiles["shop_sell"].pressed.emit(); await wait(0.3); await shot("ui_shop_sell")
 	w.hud.more_tiles["shop_store"].pressed.emit(); await wait(0.3)
+	w.hud.clear_overlay()
+	w.hud.open_world_map(); await wait(0.5); await shot("ui_world_map")
+	check(w.hud.more_tiles.has("world_map"), "the world map opens from the menu")
+	w.hud.more_tiles["world_map"].picked.emit("sloth_meadow"); await wait(0.3)
 	w.hud.clear_overlay()
 	w.hud.open_chat(); await wait(0.4); await shot("ui_messages")
 	check(w.hud.more_tiles.has("chat_system"), "Messages has tabs that sort")

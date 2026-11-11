@@ -2,6 +2,28 @@
 
 Made while building, where the brief and the design doc left room. Each can be changed in data.
 
+## The owner's direction (2026-11-10)
+
+- **Pacing accepted**, on the condition that levels and skills progress as in a good RPG. The skill rules below were changed to meet that.
+- **MMO elements are wanted in future.** The game is single-player for now, but nothing should close the door: a shared town hub, parties and queued Musters, Congregations, mentoring a lower-level pilgrim, trade and chat. What this build already keeps ready for it: the world is a graph of separate maps (each can become a shared or private instance), towns are safe hubs with boards and Milestones, foes have explicit levels, notice types and spawn tables, XP has a per-source ledger, the party code runs a Muster with AI companions, and `G.ONLINE` gates the Friends tile. What a server would have to own: saves, spawn state and boss timers (now kept in the save file by device clock), and anything bought or traded.
+
+## World UI and field life (0.6.0, phases 4 and 5)
+
+- **The world map shows only what the pilgrim knows**: walked places in full, and a "?" for a place a walked road leads to.
+- **Travel is at Milestones only.** The map opened from the menu informs; it does not move you.
+- **Tapping the minimap opens the world map** (it opened The Way before; that is still in the menu).
+- **Wandering foes are named for their field** ("The Whelp of the Meadow"). Twelve more game-original names for review.
+- **Gathering and Cooking are plain actions, not levelled skills yet.** The GDD's Gathering and Cooking skill lines are not built. Fig Cake and Honeyed Bread use the bread icon until they have their own.
+- **Only Faithful is a companion.** Hopeful joins the story after Vanity Fair, which is not built. Faithful strikes for 40% of the pilgrim's Attack and cannot fall.
+- **Day and night change the light only.** Foes do not change with the hour.
+- **Not built in this pass:** timed field events, ambient creatures, weather that changes (each map keeps the one weather of its look), a redesigned portrait layout (windows fit a portrait screen and every button is at least 56 px tall, but the layouts are the landscape ones narrowed), the lengthened Eden, and Phase 6 (regions 6 to 13).
+
+## Skill progression (0.6.0)
+
+- A Pilgrim: 2 points a Job Level, every skill level costs 1 (unchanged; it is what the tutorial teaches).
+- In a Calling: 1 point a Job Level (51 in all with the 2 given at the Calling). Its six skills open at Job 1, 1, 8, 16, 24, 32. A skill's levels cost 1, 1, 2, 2, 3 points, so one skill costs 9 to fill and the whole Calling 49 to 54. A pilgrim must choose what to raise first and finishes near Job 50. Numbers are in `data/progression.json` `skill`.
+- A save from 0.5.0 that already holds a Calling keeps the levels and points it has.
+
 ## Progression past Base 10 (0.6.0, phase 3) — a proposal for the owner to tune
 
 Levels 1 to 10 are untouched: their costs are the quest budget (2,210 Base / 855 Job to the Calling). From Base 10 the old rule (800 XP growing 1.12x a level, against foes that paid 3 + level) made level 98 cost about 19 million XP, some 50,000 even-level kills. It is replaced by a table built from a pacing plan, `data/progression.json` `pace`, by `tools/gen_progression.py`.
@@ -55,6 +77,8 @@ Owner's answers, 2026-11-10: the Base 10 cap before the Calling stays, so each r
 
 - Places: Sloth Meadow, Neighbours' Lane, The Old Cellars, The Old Cellars: the Vault, The Foot of Mount Sinai, The Slough Bog, The Slough Bog: the Deep Mire, The House Gardens, The Hill before the Cross, The Dusty Cellar, The Dusty Cellar: the Unswept Room, The Arbour Rest.
 - Foes: Gossip, Mocker, Grudge, Hoarder, Miser, Bog Lurker, Sinker, Ember of the Mount, Legalist, Weedling, Dust Mote, Self-Trust, Scorner, Backward Glance, Heavy Heart, Dust Wraith, Prowler, Snare, Shade of the Wood, Ruin, Stumbler in the Dark, Pitfall, The Keeper of the Cellars, Dread of the Deep Mire, The Stirred Dust.
+- Wandering foes: The Whelp of the Meadow, The Mocker of the Lane, The Grudge of the Road, The Despondling of the Shallows, The Sinker of the Deeps, The Ember under the Mount, The Weedling of the Gardens, The Self-Trust by the Wall, The Backward Glance on the Hill, The Pretender of the Slopes, The Loiterer by the Spring, The Shade of the Great Wood.
+- Food: Wayside Fig, Fig Cake, Honeyed Bread (and gathering "Honey from the Rock" from a rock in a field).
 - Words: every townsperson's line, landmark inscription and field page in `data/dialogue.json` whose id begins with a new map's id (35 short scenes). They paraphrase and cite; no Scripture text is embedded. Monsters named for guilt and looking back stand in the field before the Cross (Backward Glance, Heavy Heart): confirm that is fitting so near that place.
 
 ## The world graph (0.6.0, phase 1)

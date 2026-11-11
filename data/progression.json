@@ -336,5 +336,25 @@
   85470,
   91640,
   97070
- ]
+ ],
+ "skill": {
+  "about": "Skill progression. A Pilgrim gains 2 points a Job Level and every Pilgrim skill level costs 1. In a Calling: 1 point a Job Level, skills open at the Job Levels in 'tiers' (by their order in the Calling), and each level of a skill costs more than the last ('cost'), so 50 Job Levels is about enough for the whole Calling and never enough to do it carelessly.",
+  "pilgrim_pts": 2,
+  "calling_pts": 1,
+  "tiers": [
+   1,
+   1,
+   8,
+   16,
+   24,
+   32
+  ],
+  "cost": [
+   1,
+   1,
+   2,
+   2,
+   3
+  ]
+ }
 }

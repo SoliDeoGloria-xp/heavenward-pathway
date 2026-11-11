@@ -109,3 +109,14 @@ Play on a phone in landscape. Note the time at each ★.
 - [ ] At a Provisioner: buy, sell, store and take back. Are the tiles big enough? Is the price easy to read?
 - [ ] Which other windows still feel like plain lists (Skills, Status, the Way, Codex, the town board)? Name them and they will be next.
 
+## Added in 0.6.0 phases 4 and 5: world map and field life
+
+- [ ] Open the world map from More and by tapping the minimap. Drag it. Is it clear where you are and where you have not been?
+- [ ] At a Milestone, travel to another town. Does the window fit your screen held both ways?
+- [ ] Does the minimap help you find the ways out of a field?
+- [ ] Stay in a field for a minute: the named foe should come and show on the minimap. Too strong, too weak, too often?
+- [ ] Gather a fig and honey, cook at a town's pot, eat the result.
+- [ ] After the story's end, enter a field: Faithful should walk with you and strike what you strike. Is he in the way?
+- [ ] Turn Auto on in a field, then try it in a town and a danger zone.
+- [ ] After the Calling, spend skill points over several Job Levels. Do you always have something to want, without feeling starved?
+

@@ -293,6 +293,10 @@ def main() -> int:
         if n.get("kind") == "town" and not ("milestone" in n and inside(nid, n["milestone"])):
             err(f"world: town {nid} needs a Milestone point inside its bounds")
         check_name(f"world node {nid}", maps[nid].get("name", ""))
+        if not (isinstance(n.get("map"), list) and len(n["map"]) == 2):
+            err(f"world: node {nid} needs a place on the world map (\"map\": [column, row])")
+        elif any(o is not n and o.get("map") == n["map"] for o in nodes.values()):
+            err(f"world: node {nid} shares its place on the world map with another")
         band = regions.get(n.get("region"), {}).get("band", [1, 99])
         if n.get("kind") in ("field", "danger") and len(lv) == 2 and lv[1] > band[1]:
             err(f"world: {nid} (level {lv}) goes above its region's band {band}")

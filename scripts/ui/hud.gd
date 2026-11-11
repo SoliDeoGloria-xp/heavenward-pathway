@@ -170,7 +170,7 @@ func _build_minimap(L: bool) -> void:
 	var box := VBoxContainer.new(); box.add_theme_constant_override("separation", 2)
 	box.custom_minimum_size = Vector2(200, 240)
 	minimap = Minimap.new(); minimap.hud = self; minimap.custom_minimum_size = Vector2(200, 200)
-	minimap.gui_input.connect(func(e): if _is_tap(e): open_sheet("way"))
+	minimap.gui_input.connect(func(e): if _is_tap(e): open_world_map())
 	box.add_child(minimap)
 	coord_lbl = UIKit.outlined("", 17, Color.WHITE); coord_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(coord_lbl)
@@ -233,7 +233,8 @@ func _build_combat(L: bool) -> void:
 	auto_btn = TouchBtn.new(92, "res://assets/ui/btn_small.png", "auto", "Auto")
 	auto_btn.tex_on = G.tex("res://assets/ui/btn_auto_on.png"); auto_btn.caption_size = 17; auto_btn.kind = "utility"; auto_btn.state_text = "OFF"
 	auto_btn.pressed.connect(func():
-		auto_btn.on = not auto_btn.on; auto_btn.state_text = "ON" if auto_btn.on else "OFF"; auto_btn.queue_redraw(); world.set_auto(auto_btn.on))
+		world.set_auto(not auto_btn.on)   # the world may refuse: Auto works only in the fields
+		auto_btn.on = world.auto_on; auto_btn.state_text = "ON" if auto_btn.on else "OFF"; auto_btn.queue_redraw())
 	root.add_child(auto_btn); _corner(auto_btn, side, false, cx + (4.0 if G.portrait else 336.0), cy + (372.0 if G.portrait else 4.0)); hud_nodes.append(auto_btn); combat_nodes.append(auto_btn)
 	item_btn = TouchBtn.new(92, "res://assets/ui/btn_small.png", "bread", "Item")
 	item_btn.caption_size = 17; item_btn.kind = "utility"
@@ -501,7 +502,7 @@ func open_more() -> void:
 	var w := UIKit.window("Menu", Vector2(600 if G.portrait else 720, 0))
 	var grid := GridContainer.new(); grid.columns = 4 if G.portrait else 5; grid.add_theme_constant_override("h_separation", 12); grid.add_theme_constant_override("v_separation", 12)
 	var items := [["status", "Status", "status"], ["skills", "Skills", "skills"], ["bag", "Satchel", "bag"], ["equip", "Equipment", "equip"], ["way", "The Way", "quest"],
-		["codex", "Codex", "library"], ["guide", "Guide", "guide"], ["waymark", "Waymark", "scroll"], ["chat", "Messages", "talk"], ["settings", "Settings", "settings"]]
+		["world", "World", "quest"], ["codex", "Codex", "library"], ["guide", "Guide", "guide"], ["waymark", "Waymark", "scroll"], ["chat", "Messages", "talk"], ["settings", "Settings", "settings"]]
 	if G.ONLINE:
 		items.insert(items.size() - 1, ["", "Friends", "friends"])
 	more_tiles.clear()
@@ -522,6 +523,7 @@ func open_more() -> void:
 		b.pressed.connect(func():
 			if tab == "chat": open_chat()
 			elif tab == "waymark": waymark_place()
+			elif tab == "world": open_world_map()
 			elif tab == "guide": open_sheet("guide")
 			elif tab == "": _locked(nm)
 			else: open_sheet(tab))
@@ -722,6 +724,32 @@ func shop() -> void:
 func storage() -> void:
 	GearUI.shop(self, "store")
 
+## The town's cooking pot: what was gathered in the fields becomes better food for the road.
+func cook() -> void:
+	_dim()
+	var w := UIKit.window("The Cooking Pot", Vector2(minf(720.0, get_viewport().get_visible_rect().size.x - 24.0), 0))
+	w.body.add_child(UIKit.label("Figs and honey are gathered in the fields; bread is bought from a Provisioner. Cooked food restores more than its parts.", 16, UIKit.SUB, false, true))
+	var items: Dictionary = G.data("items")
+	for id in items.recipes.keys():
+		var r: Dictionary = items.recipes[id]; var dish: String = id
+		var have := true; var needs: Array = []
+		for k in r.needs.keys():
+			needs.append("%s %d of %d" % [k, int(G.bag.get(k, 0)), int(r.needs[k])])
+			have = have and int(G.bag.get(k, 0)) >= int(r.needs[k])
+		var c: Dictionary = items.consumables[dish]
+		var does := "Restores %d Health%s." % [int(c.get("heal", 0)), (" and %d Zeal" % int(c.zeal)) if c.has("zeal") else ""]
+		var b := UIKit.button("Cook", func() -> void:
+			for k in r.needs.keys():
+				for i in int(r.needs[k]):
+					G.bag_take(k)
+			G.bag_add(dish, 1); G.sfx("equip"); G.say("You cooked %s." % dish, G.INFO); cook(), 150, have)
+		b.disabled = not have
+		more_tiles["cook_" + dish] = b
+		w.body.add_child(ItemUI.card(String(c.icon), "%s  (you carry %d)" % [dish, int(G.bag.get(dish, 0))], UIKit.INK, [does, "Needs: " + " · ".join(needs)], [b]))
+	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
+	row.add_child(UIKit.button("Close", func() -> void: clear_overlay(), 140)); w.body.add_child(row)
+	_center(w.root)
+
 ## A town's rest point: sit, and be restored. Weariness lifts.
 func rest_point() -> void:
 	if not world.sitting:
@@ -737,26 +765,71 @@ static func town_spot(town: String) -> Array:
 	var m: Array = Portals.node(town).milestone
 	return [float(m[0]), float(m[1]) + 2.0]
 
-## The Milestone: free travel between the towns the pilgrim has reached.
+## The Milestone: free travel between the towns the pilgrim has reached. It opens the world map with
+## the towns listed under it.
 func milestone() -> void:
+	open_world_map(true)
+
+## The world map (More → World, or a tap on the minimap). At a Milestone it also offers travel.
+func open_world_map(travel: bool = false) -> void:
 	_dim()
-	var w := UIKit.window("Milestone  ·  %s" % String(world.info("name")), Vector2(640, 0))
-	w.body.add_child(UIKit.label("A stone that marks how far the road has come. From here you may go at once to any town you have reached. It costs nothing.", 17, UIKit.SUB, false, true))
-	for town in G.data("world").nodes.keys():
-		if not town in G.milestones:
-			continue
-		var t: String = town
-		var here: bool = t == world.map_id
-		var b := UIKit.button(String(G.data("maps/" + t).name) + ("  (you are here)" if here else ""), func() -> void:
-			clear_overlay(); world.ending = true; G.sfx("warp"); G.save_game()
-			G.goto("world", {"map": t, "at": town_spot(t)}), 0, not here)
-		b.disabled = here
-		more_tiles["milestone_" + t] = b
-		w.body.add_child(b)
-	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
-	row.add_child(UIKit.button("Close", func() -> void: clear_overlay(), 140))
-	w.body.add_child(row)
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	var w := UIKit.window(("Milestone  ·  %s" % String(world.info("name"))) if travel else "The World", Vector2(minf(1040.0, view.x - 24.0), 0))
+	var top := HBoxContainer.new(); top.add_theme_constant_override("separation", 8)
+	var say := UIKit.label("A stone that marks how far the road has come. Choose a town you have reached; going there costs nothing." if travel
+		else "Drag to look around. Tap a place to see whom it suits. You travel between towns at a Milestone.", 16, UIKit.SUB, false, true)
+	say.size_flags_horizontal = Control.SIZE_EXPAND_FILL; top.add_child(say)
+	top.add_child(UIKit.button("✕", clear_overlay, 56))
+	w.body.add_child(top)
+	var wm := WorldMap.new(); wm.here = world.map_id; wm.chosen = world.map_id
+	wm.custom_minimum_size = Vector2(0, clampf(view.y - (430.0 if travel else 330.0), 200.0, 380.0))
+	w.body.add_child(wm)
+	var legend := HBoxContainer.new(); legend.add_theme_constant_override("separation", 14)
+	for k in [["town", "Town"], ["field", "Field"], ["danger", "Danger"], ["story", "The story's road"]]:
+		var chip := HBoxContainer.new(); chip.add_theme_constant_override("separation", 5)
+		var dot := ColorRect.new(); dot.color = Color(String(WorldMap.KIND_COLOR[k[0]])); dot.custom_minimum_size = Vector2(16, 16); dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		chip.add_child(dot); chip.add_child(UIKit.label(k[1], 15, UIKit.SUB, true)); legend.add_child(chip)
+	w.body.add_child(legend)
+	var info := VBoxContainer.new(); w.body.add_child(info)
+	var show := func(id: String) -> void:
+		for c in info.get_children():
+			c.queue_free()
+		var n: Dictionary = Portals.node(id)
+		if not id in G.visited:
+			info.add_child(ItemUI.hint("A place you have not yet walked. A road you know leads there."))
+			return
+		var kind_name: String = {"town": "Town, a safe place", "field": "Field", "danger": "Danger zone", "story": "On the story's road", "instance": "A side place of the Palace"}[n.kind]
+		var lines: Array = [kind_name + ("" if n.kind == "town" else "  ·  suits Base Level %d to %d" % [int(n.level[0]), int(n.level[1])]), String(G.data("world").regions[n.region].name)]
+		if n.kind == "field":
+			var g := G.gleaning(id)
+			lines.append("Gleaning: %d of %d" % [int(g.n), G.gleaning_goal()] if g.active else "Gleaning: take it at a town board")
+		var buttons: Array = []
+		if travel and n.kind == "town" and id in G.milestones and id != world.map_id:
+			buttons.append(UIKit.button("Travel", func() -> void: _milestone_go(id), 170, true))
+		elif n.kind == "town" and id != world.map_id:
+			lines.append("Travel here from any Milestone." if id in G.milestones else "")
+		info.add_child(ItemUI.card("", String(G.data("maps/" + id).name) + ("  (you are here)" if id == world.map_id else ""), UIKit.BLUE_INK, lines, buttons))
+	wm.picked.connect(show)
+	show.call(world.map_id)
+	if travel:
+		var row := HFlowContainer.new(); row.add_theme_constant_override("h_separation", 8); row.add_theme_constant_override("v_separation", 6)
+		for town in G.data("world").nodes.keys():
+			if not town in G.milestones:
+				continue
+			var t: String = town
+			var here: bool = t == world.map_id
+			var b := UIKit.button(String(G.data("maps/" + t).name).trim_prefix("The ") + (" (here)" if here else ""), func() -> void: _milestone_go(t), 0, not here)
+			b.disabled = here
+			more_tiles["milestone_" + t] = b
+			row.add_child(b)
+		w.body.add_child(row)
+	more_tiles["world_map"] = wm
 	_center(w.root)
+	wm.center_on.call_deferred(world.map_id)
+
+func _milestone_go(town: String) -> void:
+	clear_overlay(); world.ending = true; G.sfx("warp"); G.save_game()
+	G.goto("world", {"map": town, "at": town_spot(town)})
 
 ## The town board. Gleanings: an errand in each field of this country, taken and received here, that
 ## never expires and may be taken again at once. Below them the goals board, which waits as long as it must.
@@ -818,7 +891,8 @@ func _sheet_skills(b: VBoxContainer) -> void:
 	var head := HBoxContainer.new()
 	var t := UIKit.label("Skills · %s (Job Lv %d)" % [G.job_name(), G.job], 26, UIKit.BLUE_INK, true); t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(t); head.add_child(_points_chip("Skill points", G.skill_pts)); b.add_child(head)
-	b.add_child(UIKit.label("Each Job Level gives 2 skill points. Spend 1 to learn a skill or raise it a level. Learned skills appear on your skill bar by themselves.", 18, UIKit.SUB, false, true))
+	b.add_child(UIKit.label("Each Job Level gives 2 skill points. Spend 1 to learn a skill or raise it a level. Learned skills appear on your skill bar by themselves." if G.job_id == G.PILGRIM
+		else "Each Job Level gives 1 skill point. A Calling's skills open as your Job Level rises, and each level of a skill costs more than the last, so choose what to raise first.", 18, UIKit.SUB, false, true))
 	for id in G.SKILL_ORDER:
 		if not G.skill_open(id):
 			continue
@@ -849,11 +923,15 @@ func _sheet_skills(b: VBoxContainer) -> void:
 			nums += "\nOnly in Eden: it is a non-combat skill for tending the garden."
 		v.add_child(UIKit.label(nums, 17, UIKit.INK, false, true))
 		h.add_child(v)
-		var lbl := "Learn" if lv == 0 else ("Level up" if lv < int(info.max) else "Max")
-		var can := G.skill_pts > 0 and lv < int(info.max)
+		var cost := G.skill_cost(id); var opens := G.skill_job_lv(id)
+		if G.job < opens:
+			nums += "\nOpens at Job Level %d." % opens
+			ic.modulate = Color(1, 1, 1, 0.3)
+		var lbl := "Max" if lv >= int(info.max) else ("Job Lv %d" % opens if G.job < opens else ("%s · %d pt%s" % ["Learn" if lv == 0 else "Level up", cost, "" if cost == 1 else "s"]))
+		var can := G.skill_pts >= cost and lv < int(info.max) and G.job >= opens
 		var bt := UIKit.button(lbl, func():
 			if G.learn_skill(id):
-				open_sheet("skills"), 150, can)
+				open_sheet("skills"), 180, can)
 		bt.disabled = not can
 		bt.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		skill_learn[id] = bt
@@ -1557,6 +1635,31 @@ class Minimap extends Control:
 	var hud
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_STOP
+	## Roads, water, bad ground and walls from the map's own data, then the ways out.
+	func _terrain(w, r: Rect2, to_map: Callable) -> void:
+		var ground: Color = w.info("mini")
+		for p in w.def.get("props", []):
+			var t: String = p.get("t", "")
+			if t in ["path", "water"] and p.has("at") and p.has("size"):
+				var half := Vector3(float(p.size[0]), 0, float(p.size[1])) * 0.5
+				var c := World.v3(p.at)
+				var a: Vector2 = to_map.call(c - half); var b: Vector2 = to_map.call(c + half)
+				var box := Rect2(a, b - a).intersection(r)
+				var tile: String = p.get("tile", "")
+				var col := Color("4f8fc7", 0.75) if t == "water" else (Color("2a2832", 0.55) if tile in ["pit", "mire"] else ground.lightened(0.22))
+				draw_rect(box, col)
+			elif t in ["wall", "ridge", "fence"] and p.has("from") and p.has("to"):
+				var a2: Vector2 = to_map.call(World.v3(p.from)); var b2: Vector2 = to_map.call(World.v3(p.to))
+				draw_line(a2.clamp(r.position, r.end), b2.clamp(r.position, r.end), ground.darkened(0.45), 3.0)
+		for z in w.def.get("zones", []):
+			if z.has("hurt") or z.has("drain"):
+				var za: Array = z.area
+				var a3: Vector2 = to_map.call(Vector3(za[0], 0, za[1])); var b3: Vector2 = to_map.call(Vector3(za[0] + za[2], 0, za[1] + za[3]))
+				draw_rect(Rect2(a3, b3 - a3).intersection(r), Color("b33a35", 0.35))
+		if w.portals != null:
+			for way in w.portals.ways():
+				var at: Vector2 = to_map.call(way.pos)
+				draw_circle(at, 7, Color("1a1622")); draw_circle(at, 5, Color("fbe58a"))
 	func _draw() -> void:
 		var w = hud.world
 		if w == null: return
@@ -1568,8 +1671,9 @@ class Minimap extends Control:
 			return r.position + Vector2((p.x - b.position.x) / b.size.x, (p.z - b.position.y) / b.size.y) * r.size
 		if w.map_id == "eden":
 			draw_rect(Rect2(r.position + Vector2(0, 2), Vector2(r.size.x, 8)), Color("4f8fc7"))
+		_terrain(w, r, to_map)
 		for e in w.ents:
-			if e.hidden or e.get("kind", "") == "secret": continue
+			if e.hidden or e.get("kind", "") in ["secret", "portal"]: continue
 			if e.get("kind", "") == "waymark":
 				draw_circle(to_map.call(e.pos), 3, Color("9fd3e8")); continue
 			draw_circle(to_map.call(e.pos), 5, Color("4f8fc7") if e.id in ["evangelist", "lamb", "watchful"] else Color("e8b83e"))
@@ -1578,7 +1682,9 @@ class Minimap extends Control:
 		for al in w.combat.allies:
 			draw_circle(to_map.call(al.actor.position), 4, Color("8cb84f"))
 		for m in w.combat.mobs:
-			if m.alive: draw_circle(to_map.call(m.actor.position), 7 if m.get("boss", false) else 4, Color("e0704a"))
+			if m.alive and m.get("wanderer", false):   # the field's named foe: a ring you can see from across the map
+				draw_circle(to_map.call(m.actor.position), 9, Color("1a1622")); draw_circle(to_map.call(m.actor.position), 7, Color("b33a35")); draw_circle(to_map.call(m.actor.position), 3, Color("fbe58a"))
+			elif m.alive: draw_circle(to_map.call(m.actor.position), 7 if m.get("boss", false) else 4, Color("e0704a"))
 		var q = w.quests.quest_target()
 		if q != null:
 			var qp: Vector2 = to_map.call(q.pos if q is Dictionary else q)

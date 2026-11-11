@@ -240,6 +240,12 @@ MAPS = [
 ]
 SPEC = {m["id"]: m for m in MAPS}
 
+# each field's named wandering foe (game-original names: review)
+WANDERERS = {"sloth_meadow": "The Whelp of the Meadow", "neighbours_lane": "The Mocker of the Lane", "evangelists_road": "The Grudge of the Road",
+             "slough_shallows": "The Despondling of the Shallows", "slough_deeps": "The Sinker of the Deeps", "sinai_foot": "The Ember under the Mount",
+             "house_gardens": "The Weedling of the Gardens", "wall_road": "The Self-Trust by the Wall", "cross_hill": "The Backward Glance on the Hill",
+             "hill_slopes": "The Pretender of the Slopes", "spring_foot": "The Loiterer by the Spring", "way_danger": "The Shade of the Great Wood"}
+
 # ------------------------------------------------------------------ roads: (a, a side or [x, z], b, b side or [x, z], flag that opens it)
 ROADS = [
     ("city", [0, 10.5], "city_square", "N", None),
@@ -354,6 +360,11 @@ def build_field(m, i):
     d["side"].append({"id": "page", "type": "interact", "ent": "page", "dialog": m["id"] + ".page", "xp": [0, 0], "text": "The Dreamer's Page: %s" % m["name"], "page": True})
     sat, stitle, stext, coin = m["secret"]
     d["secrets"] = [{"id": "cache", "at": sat, "title": stitle, "text": stext, "reward": {"denarii": coin}}]
+    # field life: a named wandering foe (the first foe of the table, at the field's top level) and things to gather
+    strong = m["spawns"][2]
+    d["wanderer"] = {"mob": strong[0], "name": WANDERERS[m["id"]], "lv": m["level"][1]}
+    d["gather"] = [{"id": "fig", "at": [-14, -5], "name": "A Wayside Fig Tree", "item": "Wayside Fig", "prop": "tree_fig"},
+                   {"id": "honey", "at": [14, 6.5], "name": "Honey in the Rock", "item": "Honey from the Rock", "prop": "rock_b"}]
     talk = {m["id"] + ".landmark": [{"who": title, "text": text, "src": src}], m["id"] + ".page": [{"who": "The Dreamer", "text": ptext, "src": psrc}]}
     return d, talk
 
@@ -399,6 +410,7 @@ def build_town(m, i):
         {"id": "rest", "kind": "spot", "name": rest_name, "at": [9, -5.5], "act": "Rest", "icon": "sit", "ui": "rest_point", "prop": rest_p},
         {"id": "board", "kind": "spot", "name": "Town Board", "at": [6, 6.5], "act": "Read", "icon": "scroll", "ui": "board", "prop": {"t": "kit", "name": "signpost"}},
         {"id": "milestone", "kind": "milestone", "name": "Milestone", "at": [-6, -1.8], "act": "Travel", "icon": "warp", "ui": "milestone"},
+        {"id": "pot", "kind": "spot", "name": "Cooking Pot", "at": [12.5, -1.5], "act": "Cook", "icon": "hand", "ui": "cook", "prop": {"t": "kit", "name": "hearth"}},
     ]
     talk = {}
     for k, (who, look, at, text, src) in enumerate(m["folk"]):
@@ -444,6 +456,8 @@ def main():
         save("maps/" + m["id"], d)
         dialogue.update(talk)
         node = {"kind": kinds[m["shape"]], "region": m["region"], "level": m["level"]}
+        if "map" in world["nodes"].get(m["id"], {}):   # its place on the world map is kept in world.json
+            node["map"] = world["nodes"][m["id"]]["map"]
         if m["shape"] == "town":
             node["milestone"] = [-6, -1.8]
         if m["review"]:
