@@ -323,6 +323,8 @@ func travel_go() -> void:
 	leave(cur().to)
 
 func _side_done(sd: Dictionary) -> void:
+	if sd.get("page", false) and objectives.is_empty():
+		G.weekly_note("finds")   # a field's page counts toward the goals board
 	busy = false
 	done_side.append(sd.id)
 	var xv: Array = sd.get("xp", [0, 0])
@@ -431,6 +433,7 @@ func _find_secret(id: String, title: String, text: String, reward: Dictionary) -
 		G.manna += float(reward.manna)
 	if reward.has("denarii"):
 		G.denarii += int(reward.denarii); G.sfx("coin")
+	G.weekly_note("finds")
 	G.say("Secret found (%d/%d): %s" % [found.size(), secret_ids.size(), title], G.INFO)
 	w.hud.secret_card(title, text, found.size(), secret_ids.size())
 	G.haptic(30)

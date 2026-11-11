@@ -47,6 +47,8 @@ Foes drop Denarii and road gear (four slots, Clay to Radiant). Vendors buy, sell
 4. Point the previous map's `exit` objective at the new map, and add the map to `data/world.json`: a node (`kind`, `region`, `level`) and two edges, one each way, with the portal's position (`at`) and where it sets the pilgrim down (`arrive`). `scripts/systems/portals.gd` builds the portals from that file.
 5. Run `python3 tools/validate_data.py`, then the autotest. The bot plays any data map without new test code.
 
+**Levelling past Base 10** comes from the pacing plan in `data/progression.json` (`pace`: target minutes per level). Change the plan, run `python3 tools/gen_progression.py` (it prints the table), and the validator and the autotest's balance report check the result.
+
 **Towns, fields and danger zones** have no story objectives. `tools/gen_fields.py` holds a short spec for each (name, level range, look, spawn rows, landmark, cache, page, townsfolk) and the roads between them, and writes the maps, the world-graph nodes and edges, the new foes and the dialogue. Edit the spec and run it again; it overwrites only the maps it lists. A spawn row is `(foe, count, lowest level, highest level, notice, where)` with notice one of `aggressive`, `passive`, `alert`.
 
 Only a place that needs hand-built geometry gets a script in `scripts/maps/<id>.gd` (Eden, the City, the Palace and the Lions' Gate have one).

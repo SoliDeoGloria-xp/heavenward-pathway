@@ -177,7 +177,7 @@ func _spawn_mob(id: String, pos: Vector3, sp: Dictionary = {}, lv_override: int 
 	var bars := _hp_bars(a)
 	var shown: String = ("Greater " + String(md.name)) if (greater and not md.get("greater", false)) else String(md.name)
 	var m := {"id": id, "name": shown, "level": lv, "greater": greater, "drop": md.get("drop", ""), "actor": a, "hp": hp, "max": hp, "atk": atk,
-		"xp": xp_for(lv, greater), "notice": String(sp.get("aggro", md.get("aggro", "aggressive"))), "respawn_s": back, "alive": true, "next": 0.0, "home": pos, "wander": pos, "wander_t": randf_range(1, 4), "family": md.family, "only": md.get("only", ""),
+		"xp": xp_for(lv, greater), "notice": String(sp.get("aggro", md.get("aggro", "aggressive"))), "respawn_s": back, "table": sp.has("lv"), "alive": true, "next": 0.0, "home": pos, "wander": pos, "wander_t": randf_range(1, 4), "family": md.family, "only": md.get("only", ""),
 		"reach": float(G.PROG["ranged_reach"]) if md.get("kind", "") == "ranged" else MOB_REACH,
 		"bg": bars[0], "fg": bars[1], "trail": bars[2], "aggro": false, "respawn": 0.0, "tele": false, "tele_pos": Vector3.ZERO, "trail_v": 1.0, "was_aggro": false}
 	mobs.append(m)
@@ -207,8 +207,7 @@ func recolor_nameplates(_kind: String = "") -> void:
 			_nameplate(m)
 
 static func xp_for(lv: int, greater: bool) -> int:
-	var rules: Dictionary = G.PROG["mob_xp"]
-	return (int(rules.base) + int(rules.per_level) * lv) * (int(rules.greater_mult) if greater else 1)
+	return G.kill_xp(lv, greater)
 
 ## Common monster XP = 3 + level; Greater x4; a boss pays its bonus on top of its objective (150-250 in all).
 static func mob_xp(md: Dictionary) -> int:
@@ -427,6 +426,10 @@ func _boss_intro(pos: Vector3, title: String) -> void:
 ## Kill XP is optional extra on top of the quest budget (ledger source "mob").
 func _pay_kill(m: Dictionary) -> void:
 	var xp := int(m.xp)
+	if m.get("table", false):   # a field's foe: paid by how it compares with the pilgrim, and counted for the boards
+		xp = maxi(1, int(round(xp * G.gap_mult(int(m.level), G.lvl))))
+		m["paid"] = xp
+		G.gleaning_note_kill(w.map_id); G.weekly_note("kills")
 	if xp > 0:
 		G.add_xp(xp, int(round(xp * float(G.PROG["mob"].job_share))), w.map_id, "mob")
 

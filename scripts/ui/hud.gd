@@ -665,25 +665,57 @@ func milestone() -> void:
 	w.body.add_child(row)
 	_center(w.root)
 
-## The town board: the places of this region and whom they suit. Errands are posted here in a later phase.
+## The town board. Gleanings: an errand in each field of this country, taken and received here, that
+## never expires and may be taken again at once. Below them the goals board, which waits as long as it must.
 func board() -> void:
 	_dim()
 	var region: String = Portals.node(world.map_id).region
-	var w := UIKit.window("Town Board  ·  %s" % String(G.data("world").regions[region].name), Vector2(700, 0))
-	w.body.add_child(UIKit.label("The fields and dangers of this country. The colour of a name tells how its foes compare with you.", 17, UIKit.SUB, false, true))
+	var w := UIKit.window("Town Board  ·  %s" % String(G.data("world").regions[region].name), Vector2(820, 0))
+	w.body.add_child(UIKit.label("Gleanings. Take one, overcome %d foes in that field, and receive it at any town board. Nothing expires and nothing is lost by waiting. A name's colour tells how its foes compare with you." % G.gleaning_goal(), 16, UIKit.SUB, false, true))
 	var nodes: Dictionary = G.data("world").nodes
 	for id in nodes.keys():
 		var n: Dictionary = nodes[id]
 		if n.region != region or not n.kind in ["field", "danger"]:
 			continue
-		var seen: bool = id in G.visited
-		var line := "%s  ·  %s  ·  Lv %d-%d%s" % [String(G.data("maps/" + String(id)).name), "Danger" if n.kind == "danger" else "Field", int(n.level[0]), int(n.level[1]), "" if seen else "  ·  not yet walked"]
-		var l := UIKit.label(line, 19, UIKit.INK, true, true)
+		var field: String = id
+		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 10)
+		var line := "%s  ·  %s  ·  Lv %d-%d" % [String(G.data("maps/" + field).name), "Danger" if n.kind == "danger" else "Field", int(n.level[0]), int(n.level[1])]
+		var l := UIKit.label(line, 18, UIKit.INK, true, true)
 		l.add_theme_color_override("font_color", Combat.con_color(int(n.level[0]), G.lvl).darkened(0.6))
-		w.body.add_child(l)
-	var row := HBoxContainer.new(); row.alignment = BoxContainer.ALIGNMENT_END
-	row.add_child(UIKit.button("Close", func() -> void: clear_overlay(), 140))
-	w.body.add_child(row)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(l)
+		if n.kind == "field":
+			var g := G.gleaning(field); var r := G.gleaning_reward(field)
+			var b: Button
+			if not g.active:
+				b = UIKit.button("Take  (+%d XP)" % int(r[0]), func() -> void: G.gleaning(field).active = true; G.sfx("tap"); G.save_game(); board(), 210, true)
+			elif int(g.n) >= G.gleaning_goal():
+				b = UIKit.button("Receive", func() -> void:
+					if G.gleaning_receive(field):
+						G.sfx("quest"); G.say("Gleaning received: +%d XP, +%d Denarii." % [int(r[0]), int(r[2])], G.INFO); G.save_game()
+					board(), 210, true)
+			else:
+				b = UIKit.button("%d of %d" % [int(g.n), G.gleaning_goal()], Callable(), 210)
+				b.disabled = true
+			more_tiles["glean_" + field] = b
+			row.add_child(b)
+		w.body.add_child(row)
+	var st := G.weekly_state()
+	var goals := "Goals board (set %d): overcome foes in the fields %d of %d  ·  Gleanings received %d of %d  ·  caches or pages found %d of %d." % [int(st.set), int(st.kills), int(G.WEEKLY_GOALS.kills), int(st.gleanings), int(G.WEEKLY_GOALS.gleanings), int(st.finds), int(G.WEEKLY_GOALS.finds)]
+	w.body.add_child(UIKit.label(goals + " These goals wait for you: they do not expire, and a new set comes only after this one, in a later week.", 16, UIKit.SUB, false, true))
+	var row2 := HBoxContainer.new(); row2.alignment = BoxContainer.ALIGNMENT_END; row2.add_theme_constant_override("separation", 10)
+	if st.received:
+		row2.add_child(UIKit.label("Received. A new set is posted next week.", 16, UIKit.SUB))
+	else:
+		var wb := UIKit.button("Receive %d Denarii" % G.WEEKLY_DENARII, func() -> void:
+			if G.weekly_receive():
+				G.sfx("coin"); G.say("Goals received: +%d Denarii." % G.WEEKLY_DENARII, G.INFO); G.save_game()
+			board(), 0, G.weekly_done())
+		wb.disabled = not G.weekly_done()
+		more_tiles["weekly"] = wb
+		row2.add_child(wb)
+	row2.add_child(UIKit.button("Close", func() -> void: clear_overlay(), 140))
+	w.body.add_child(row2)
 	_center(w.root)
 
 func bench() -> void:
@@ -864,8 +896,16 @@ func _sheet_settings(b: VBoxContainer) -> void:
 		var idx: int = i
 		row.add_child(UIKit.button(TEXT_SIZE_NAMES[i], func() -> void: G.settings.text_size = float(idx); _setting_changed("text_size"); open_sheet("settings"), 150, int(G.settings.text_size) == i))
 	b.add_child(row)
-	b.add_child(UIKit.label("Camera: pinch to zoom, two-finger swipe to rotate. On the Lord's Day the game rests: only quiet Scripture reading is open. Your journey saves by itself at each chapter and objective.", 16, UIKit.SUB, false, true))
-	b.add_child(UIKit.button("Save and return to title", func() -> void: G.save_game(); G.goto("title"), 0))
+	b.add_child(UIKit.label("Camera: pinch to zoom, two-finger swipe to rotate. On the Lord's Day the game rests: only quiet Scripture reading is open. ", 16, UIKit.SUB, false, true))
+	var when := "not yet saved this session" if G.last_saved_unix <= 0.0 else "last saved %d s ago" % int(Time.get_unix_time_from_system() - G.last_saved_unix)
+	b.add_child(UIKit.label("Save file: slot %d of %d (%s). Your journey saves by itself every half minute, at each map, objective and Gleaning, and when you leave the app. Continue brings you back to the very spot." % [G.slot + 1, G.SAVE_SLOTS, when], 16, UIKit.SUB, false, true))
+	var save_row := HBoxContainer.new(); save_row.add_theme_constant_override("separation", 10)
+	var save_now := UIKit.button("Save now", func() -> void:
+		world.autosave(); G.say("Journey saved (slot %d)." % (G.slot + 1), G.INFO); open_sheet("settings"), 200, true)
+	more_tiles["save_now"] = save_now
+	save_row.add_child(save_now)
+	save_row.add_child(UIKit.button("Save and return to title", func() -> void: world.autosave(); G.goto("title"), 0))
+	b.add_child(save_row)
 
 func _slider_row(key: String, text: String, low: float) -> HBoxContainer:
 	var row := HBoxContainer.new()

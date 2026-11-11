@@ -426,6 +426,74 @@ func _walk_from(here: String, parent: String = "") -> void:
 			_walked["%s>%s" % [to, here]] = true
 			await _take_road(here)
 
+# ------------------------------------------------------------------ balance report (the pacing plan against the game's own numbers)
+const FIRST_PASS_TOP := 26         # levels above this have no fields yet: reported, not failed
+
+func _plan_minutes(anchors: Array, x: float) -> float:
+	for i in anchors.size() - 1:
+		var a: Array = anchors[i]; var b: Array = anchors[i + 1]
+		if x >= float(a[0]) and x <= float(b[0]):
+			return lerpf(float(a[1]), float(b[1]), (x - float(a[0])) / (float(b[0]) - float(a[0])))
+	return float(anchors[-1][1])
+
+## XP per hour for a pilgrim of level `lv` with the standard build, hunting even-level foes and taking Gleanings.
+func _xp_per_hour(lv: int) -> float:
+	var pace: Dictionary = G.PROG["pace"]; var mob: Dictionary = G.PROG["mob"]; var weak: Dictionary = G.PROG["weakness"]
+	var st := {"for": G.STAT_START + lv - 1, "ste": G.STAT_START + lv - 1, "dil": G.STAT_START, "sob": G.STAT_START, "hop": G.STAT_START, "wis": G.STAT_START}
+	var d: Dictionary = G._base_numbers(st, lv)
+	var wk := 0.0
+	for fam in weak.families.keys():
+		wk += 1.0 + minf(float(weak.cap), float(weak.per_point) * maxi(0, int(st[weak.families[fam]]) - G.STAT_START))
+	wk /= weak.families.size()
+	var dps: float = float(d.atk) * (1.0 - float(d.miss)) * (1.0 + float(d.crit)) / float(d.interval) * float(pace.skill_factor) * wk
+	var hp: float = float(mob.hp_base) + float(mob.hp_per_lv) * lv
+	return 3600.0 / (hp / dps + float(pace.overhead_s)) * G.kill_xp(lv) / (1.0 - float(pace.board_share))
+
+func _field_for(lv: int) -> String:
+	var best := ""
+	for id in Portals.graph().nodes.keys():
+		var n: Dictionary = Portals.node(id)
+		if n.kind in ["field", "danger"] and not n.get("later", false) and lv >= int(n.level[0]) and lv <= int(n.level[1]):
+			if best == "" or n.kind == "field":
+				best = id
+	return best
+
+func balance_report() -> void:
+	var pace: Dictionary = G.PROG["pace"]
+	var was_job := G.job_id
+	G.job_id = FINAL_JOB   # the first job's table
+	var to_calling := 0
+	for a in G.data("acts").order:
+		if G.data("acts").acts[a].get("pilgrim", false):
+			to_calling += int(G.data("acts").acts[a].minutes)
+	print("[balance] Base  1-10 | story: %.1f h planned to the Calling, %d quest XP | fields from level 1 for those who would rather hunt" % [to_calling / 60.0, G.base_total(10)])
+	var total := 0.0; var worst := 0.0
+	for band in pace.bands:
+		var want := 0.0; var got := 0.0; var gaps: Array = []; var where := {}
+		for lv in range(int(band[0]), int(band[1])):
+			want += _plan_minutes(pace.anchors, lv) / 60.0
+			got += G.base_cost(lv) / _xp_per_hour(lv)
+			worst = maxf(worst, G.base_cost(lv) / _xp_per_hour(lv))
+			var f := _field_for(lv)
+			if f == "":
+				gaps.append(lv)
+			else:
+				where[f] = true
+		total += got
+		var off: float = absf(got - want) / want
+		var built: bool = int(band[1]) <= FIRST_PASS_TOP
+		print("[balance] Base %2d-%-2d | target %5.1f h | expected %5.1f h (%+3.0f%%) | %6.0f XP/h at %d | %s" % [band[0], band[1], want, got, (got - want) / want * 100.0, _xp_per_hour(int(band[0])), band[0],
+			", ".join(where.keys()) if gaps.is_empty() else ("no field yet for levels %s" % [gaps] if not built else "MISSING a field for levels %s" % [gaps])])
+		check(off <= float(pace.tolerance), "balance: Base %d-%d is %.0f%% off its target hours" % [band[0], band[1], off * 100.0])
+		check(not built or gaps.is_empty(), "balance: no field or danger zone suits levels %s" % [gaps])
+	var job_h := 0.0
+	for jl in range(1, int(G.PROG["max_job"])):
+		job_h += _plan_minutes(pace.job_anchors, jl) / 60.0
+	print("[balance] Base 10-99: %.0f h expected · dearest single level %.1f h · first job 1-50 planned over %.0f h · level 99 needs %d XP in all" % [total, worst, job_h, G.base_total(int(G.PROG["max_base"]))])
+	check(worst <= 3.3, "balance: no single level should cost more than a few hours (dearest is %.1f h)" % worst)
+	check(G.gap_mult(1, 99) > 0.0 and G.gap_mult(99, 1) <= 1.25 and G.gap_mult(20, 20) == 1.0, "the level-gap modifier is gentle and never zero")
+	G.job_id = was_job
+
 # ------------------------------------------------------------------ towns, fields and danger zones
 ## A town: every service answers, and the Milestone carries the pilgrim to another town.
 func town_check() -> void:
@@ -467,7 +535,7 @@ func field_loop(map_id: String) -> void:
 		check(m.actor.name_lbl.text.begins_with("Lv %d" % int(m.level)), "%s: nameplates show the foe's level" % map_id)
 	check(w.combat.mobs.size() >= 15, "%s: a field is well stocked (%d foes)" % [map_id, w.combat.mobs.size()])
 	var t0: float = w.t; _earned = 0
-	w.combat.mob_slain.connect(func(m: Dictionary) -> void: _earned += int(m.xp))
+	w.combat.mob_slain.connect(func(m: Dictionary) -> void: _earned += int(m.get("paid", m.xp)))
 	while is_instance_valid(w) and w.combat.slain < FIELD_KILLS and w.t - t0 < FIGHT_TIMEOUT_S:
 		if w.combat.dead:
 			break
@@ -484,7 +552,7 @@ func field_loop(map_id: String) -> void:
 		await wait(0.5)
 	check(w.combat.slain >= FIELD_KILLS, "%s: %d foes should fall within the time (got %d)" % [map_id, FIELD_KILLS, w.combat.slain])
 	var earned := _earned
-	check(G.ledger.mob[0] - before == earned and earned > 0, "%s: kills pay XP by the foe's level (%d paid, %d expected)" % [map_id, G.ledger.mob[0] - before, earned])
+	check(G.ledger.mob[0] - before == earned and earned > 0, "%s: kills pay XP by the foe's level and its gap from the pilgrim (%d paid, %d expected)" % [map_id, G.ledger.mob[0] - before, earned])
 	check(G.ledger.quest == quest, "%s: a field pays no quest XP" % map_id)
 	await shot("field_%s" % map_id)
 	print("[field] %-18s Lv %2d-%-2d | %d foes | %d kills in %3.0f s | %4d XP | pilgrim Base %d" % [map_id, lv[0], lv[1], w.combat.mobs.size(), w.combat.slain, w.t - t0, earned, G.lvl])
@@ -536,11 +604,60 @@ func danger_check() -> void:
 	w.player.position = Vector3(-15, 0, 4); await wait(1.2)
 	check(G.hp < G.hp_max or true, "hazards are walked in play, not here")
 
+## Take a Gleaning at a town board, do it in its field, receive it; then the save file must hold all of it.
+func gleaning_check() -> void:
+	G.goto("world", {"map": "city_square"})
+	var w = await _wait_map("city_square", null)
+	await _use(w, "board")
+	check(w.hud.more_tiles.has("glean_sloth_meadow"), "the town board offers a Gleaning for each field of its region")
+	w.hud.more_tiles["glean_sloth_meadow"].pressed.emit(); await wait(0.3)
+	check(G.gleaning("sloth_meadow").active, "a Gleaning is taken at the board")
+	w.hud.clear_overlay()
+	G.gleanings["sloth_meadow"].n = G.gleaning_goal() - FIELD_KILLS
+	await field_loop("sloth_meadow")
+	check(int(G.gleaning("sloth_meadow").n) == G.gleaning_goal(), "foes overcome in the field count toward its Gleaning (%d)" % int(G.gleaning("sloth_meadow").n))
+	# the save file: walk somewhere, save as the app would on being closed, and read the file back
+	var fw = world()
+	fw.combat.calm_all = true
+	fw.player.position = Vector3(11.0, 0, -6.0); await wait(0.3)
+	G.notification(NOTIFICATION_APPLICATION_PAUSED)
+	var xp_then: int = G.xp
+	check(FileAccess.file_exists(G.save_path()) and FileAccess.file_exists(G.save_path() + ".bak"), "the save file and its backup exist")
+	G.xp = 0; G.gleanings = {}
+	check(G.load_game() and G.xp == xp_then and int(G.gleaning("sloth_meadow").n) == G.gleaning_goal() and G.cur_map == "sloth_meadow", "leaving the app saves the journey: XP, Gleaning and map come back")
+	check(G.cur_at.size() == 2 and absf(float(G.cur_at[0]) - 11.0) < 0.5 and absf(float(G.cur_at[1]) + 6.0) < 0.5, "the save file keeps the very spot (%s)" % [G.cur_at])
+	G.slot = G.SAVE_SLOTS - 1   # a spare slot: break its file and see the backup take over
+	G.save_game(); G.save_game()
+	FileAccess.open(G.save_path(), FileAccess.WRITE).store_string("{ broken")
+	check(G.load_game() and G.cur_map == "sloth_meadow" and G.xp == xp_then, "a broken save file falls back to its backup")
+	G.delete_save()
+	check(not G.has_save(), "deleting a save removes its backup too")
+	G.slot = 0
+	check(G.load_game(), "the journey's own slot is untouched")
+	G.goto("world", {"map": "city_square"})
+	w = await _wait_map("city_square", fw)
+	var before: int = G.ledger.board[0]; var coin: int = G.denarii; var quest: Array = G.ledger.quest.duplicate()
+	await _use(w, "board"); await shot("ui_town_gleanings")
+	w.hud.more_tiles["glean_sloth_meadow"].pressed.emit(); await wait(0.3)
+	var r: Array = G.gleaning_reward("sloth_meadow")
+	check(G.ledger.board[0] - before == int(r[0]) and G.denarii - coin == int(r[2]) and not G.gleaning("sloth_meadow").active, "receiving a Gleaning pays its XP and Denarii, and it can be taken again")
+	check(G.ledger.quest == quest, "a Gleaning pays no quest XP")
+	check(int(G.weekly_state().gleanings) == 1 and int(G.weekly_state().kills) >= FIELD_KILLS, "the goals board counts Gleanings and foes")
+	w.hud.clear_overlay()
+	w.hud.open_sheet("settings"); await wait(0.4)
+	check(w.hud.more_tiles.has("save_now"), "Settings has a Save now button")
+	w.hud.more_tiles["save_now"].pressed.emit(); await wait(0.4); await shot("ui_save_now")
+	check(Time.get_unix_time_from_system() - G.last_saved_unix < 5.0, "Save now writes the save file")
+	w.hud.clear_overlay()
+
 func wilds() -> void:
+	balance_report()
 	await town_check()
 	for f in FIELD_LOOPS:
 		if failures.is_empty():
 			await field_loop(f)
+	if failures.is_empty():
+		await gleaning_check()
 	if failures.is_empty():
 		await field_finds()
 	if failures.is_empty():

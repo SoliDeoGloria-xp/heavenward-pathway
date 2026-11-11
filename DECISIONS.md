@@ -2,6 +2,38 @@
 
 Made while building, where the brief and the design doc left room. Each can be changed in data.
 
+## Progression past Base 10 (0.6.0, phase 3) — a proposal for the owner to tune
+
+Levels 1 to 10 are untouched: their costs are the quest budget (2,210 Base / 855 Job to the Calling). From Base 10 the old rule (800 XP growing 1.12x a level, against foes that paid 3 + level) made level 98 cost about 19 million XP, some 50,000 even-level kills. It is replaced by a table built from a pacing plan, `data/progression.json` `pace`, by `tools/gen_progression.py`.
+
+**The plan (target minutes for one level):** Base 10: 12 · 20: 30 · 30: 50 · 50: 90 · 70: 120 · 90: 160 · 98: 180, straight lines between. No level costs more than 3 hours. Base 10 to 99 is about 139 hours; to 26 (the top of this pass) about 7.5 hours after the Calling.
+
+**The maths.** `cost(L) = minutes(L) / 60 x kills_per_hour(L) x kill_xp(L) / (1 - board_share)`
+
+- `kill_xp(L) = 3 + L + (L - 10)^2 / 4` past level 10 (unchanged at 10 and below): 13 at level 10, 48 at 20, 93 at 26, 453 at 50, 2,037 at 98. A Greater foe pays four times that.
+- `kills_per_hour` is about 365 at every level: an even-level foe (40 + 22 x level Health) falls in about 5 seconds to the standard build (each level's two points to Fortitude and Steadfastness, no gear, skills adding 40%), plus 5 seconds to reach the next.
+- `board_share` 0.2: a fifth of all XP is expected from Gleanings.
+- So: level 10 costs 1,190 XP (73 kills), level 20 11,040 (184), level 26 29,820 (257), level 50 309,190 (546), level 98 2,769,970 (1,088 kills, 3 hours).
+
+**The level gap (field foes only).** Within 2 levels: full pay. Above: +5% a level, at most +25%. Below: -10% a level, never under 20%. Story fights are not touched, so the quest pacing stands.
+
+**The first job** has its own table (`job_first`): 6 minutes for Job 1 rising to 66 for Job 49, about 29 hours, so Job 50 arrives near Base 47. Job XP stays half of Base XP from foes. Stat points (2 a Base level) and skill points (2 a Job level) are unchanged.
+
+**Gleanings.** Each field has one at its region's town board: overcome 20 of its foes, then receive a quarter of what those foes pay again, plus Denarii. Never expires, can be taken again at once, nothing is lost by dropping it. Board XP has its own ledger line and is no part of the quest budget.
+
+**The goals board** holds one set of three goals (100 field foes, 3 Gleanings, 2 finds) for 300 Denarii. A set never expires; a new one is posted only after the old is received and a new week has begun. Missing a week costs nothing. Flagged against the locked rule "no dailies, no FOMO": the owner asked for a weekly board that never punishes absence, and this is the reading that keeps both.
+
+**What the balance report is, and is not.** The autotest recomputes the hours per band from the game's own stat, foe and XP code and fails if any band is more than 25% off the plan or any level to 26 has no field. It is a model: it proves the tables match the plan and that a later change to stats or foes will be caught. It does not prove a person plays at that speed. Nobody has hand-played these fields.
+
+**The owner should decide:** the hours (139 to the cap; the anchors are one line of data), the 20% board share, and the Gleaning size.
+
+## The save file (0.6.0)
+
+- The journey is written to `user://save_<slot>.json` on entering a map, on every objective and Gleaning, **every 30 seconds while walking, and when the app goes to the background or closes**. Before this, time spent hunting in a field was saved only on leaving the map.
+- **Continue returns the pilgrim to the very spot** (on maps that keep their state; Eden and the side maps begin again from their start).
+- The file is written beside the old one and swapped in, and the old one is kept as `.bak`; a broken file falls back to its backup.
+- Settings shows the slot and when it was last saved, with a **Save now** button.
+
 ## Towns, fields and danger zones (0.6.0, phase 2)
 
 Owner's answers, 2026-11-10: the Base 10 cap before the Calling stays, so each region has two tiers; fast-travel points are called **Milestones** ("Waymark" stays the name of the messages pilgrims leave).

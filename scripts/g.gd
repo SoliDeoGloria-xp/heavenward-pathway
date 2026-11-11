@@ -103,7 +103,9 @@ var last_town := ""             # the last House or town entered
 var milestones: Array = []      # towns whose Milestone (fast-travel point) has been reached
 var lairs := {}                 # danger-zone map id -> unix time its boss was last overcome
 var lamb_name := ""
-var ledger := {"quest": [0, 0], "mob": [0, 0]}   # [base, job] XP by source, for pacing checks
+var ledger := {"quest": [0, 0], "mob": [0, 0], "board": [0, 0]}   # [base, job] XP by source, for pacing checks
+var gleanings := {}             # field id -> {"n": foes overcome since taken, "active": bool, "done": times received}
+var weekly := {}                # the goals board: {"set": n, "week": "YYYY-Www" it was posted, "kills", "gleanings", "finds"}
 var act_xp := {}                # act id -> [base, job] quest XP earned there
 var cur_act := "eden"
 var played_ms := 0              # play time carried across saves
@@ -174,7 +176,8 @@ func reset() -> void:
 	stat_pts = 0; skill_pts = 0; skill_lv = {}; tips_seen = {}
 	job_id = PILGRIM; trial_job = ""; armor = false; flags = {}; map_state = {}; cur_map = "eden"; lamb_name = ""
 	cur_at = []; visited = []; last_town = ""; milestones = []; lairs = {}
-	ledger = {"quest": [0, 0], "mob": [0, 0]}; act_xp = {}; cur_act = "eden"; played_ms = 0
+	ledger = {"quest": [0, 0], "mob": [0, 0], "board": [0, 0]}; act_xp = {}; cur_act = "eden"; played_ms = 0
+	gleanings = {}; weekly = {}
 	gear = []; gear_uid = 0; equipped = {}; storage = []; denarii = 0; stones = {}; fruit_stone = ""; bestiary = {}; daily = {}
 	Gear.equip(int(Gear.add("wooden_staff").uid))
 	_sheet_cache = {}; player_sheet = null
@@ -283,6 +286,78 @@ func page_skills(page: int, in_eden: bool) -> Array:
 	var pages := bar_pages(in_eden)
 	return pages[page] if page < pages.size() else []
 
+# ------------------------------------------------------------------ Gleanings (the town boards) and the goals board
+## A Gleaning is an errand in one field: overcome so many of its foes, then receive the reward at any
+## town board. It never expires, can be taken again at once, and nothing is lost by leaving it.
+func gleaning(field: String) -> Dictionary:
+	if not gleanings.has(field):
+		gleanings[field] = {"n": 0, "active": false, "done": 0}
+	return gleanings[field]
+
+func gleaning_goal() -> int:
+	_load_prog()
+	return int(PROG["gleaning"].kills)
+
+## [base XP, job XP, Denarii] for a field's Gleaning: a share of what its foes pay for the same work.
+func gleaning_reward(field: String) -> Array:
+	var lv: Array = data("world").nodes[field].level
+	var mid := int(round((float(lv[0]) + float(lv[1])) / 2.0))
+	var base := int(round(gleaning_goal() * kill_xp(mid) * float(PROG["gleaning"].xp_share)))
+	return [base, int(round(base * float(PROG["mob"].job_share))), int(PROG["gleaning"].denarii_per_level) * mid]
+
+func gleaning_note_kill(field: String) -> void:
+	var g := gleaning(field)
+	if g.active and int(g.n) < gleaning_goal():
+		g.n = int(g.n) + 1
+		if int(g.n) >= gleaning_goal():
+			say("Gleaning complete: %s. Receive it at any town board." % String(data("maps/" + field).name), INFO)
+
+func gleaning_receive(field: String) -> bool:
+	var g := gleaning(field)
+	if not g.active or int(g.n) < gleaning_goal():
+		return false
+	var r := gleaning_reward(field)
+	g.n = 0; g.active = false; g.done = int(g.done) + 1
+	denarii += int(r[2])
+	add_xp(int(r[0]), int(r[1]), "", "board")
+	weekly_note("gleanings")
+	return true
+
+## The goals board holds one set of three goals. A set stays until it is finished, however long that
+## takes; a new set is posted once the old one is received and a new week has begun.
+const WEEKLY_GOALS := {"kills": 100, "gleanings": 3, "finds": 2}
+const WEEKLY_DENARII := 300
+
+func week_id() -> String:
+	var now := Time.get_date_dict_from_system()
+	var days := int(Time.get_unix_time_from_datetime_dict({"year": now.year, "month": now.month, "day": now.day, "hour": 0, "minute": 0, "second": 0}) / 86400.0)
+	return "w%d" % ((days + 3) / 7)   # weeks that turn over on Monday
+
+func weekly_state() -> Dictionary:
+	if weekly.is_empty() or (weekly.get("received", false) and weekly.get("week", "") != week_id()):
+		weekly = {"set": int(weekly.get("set", 0)) + 1, "week": week_id(), "kills": 0, "gleanings": 0, "finds": 0, "received": false}
+	return weekly
+
+func weekly_note(what: String) -> void:
+	var st := weekly_state()
+	if not st.received:
+		st[what] = mini(int(st[what]) + 1, int(WEEKLY_GOALS[what]))
+
+func weekly_done() -> bool:
+	var st := weekly_state()
+	for k in WEEKLY_GOALS.keys():
+		if int(st[k]) < int(WEEKLY_GOALS[k]):
+			return false
+	return true
+
+func weekly_receive() -> bool:
+	var st := weekly_state()
+	if st.received or not weekly_done():
+		return false
+	st.received = true; st.week = week_id()
+	denarii += WEEKLY_DENARII
+	return true
+
 # ------------------------------------------------------------------ daily portion and codex
 func today() -> String:
 	return Time.get_date_string_from_system()
@@ -371,7 +446,7 @@ func _load_prog() -> void:
 	PROG = JSON.parse_string(f.get_as_text()) if f else {}
 	if PROG.is_empty():
 		PROG = {"base_cost": [40, 60, 90, 130, 190, 260, 350, 470, 620], "job_cost": [20, 30, 45, 60, 80, 100, 130, 170, 220],
-			"base_after10": {"start": 800, "growth": 1.12}, "job_after10": {"start": 220, "growth": 1.10}, "max_base": 99, "max_job": 50}
+			"base_table": [], "job_first": [], "job_after10": {"start": 220, "growth": 1.10}, "max_base": 99, "max_job": 50}
 
 ## XP needed to go from level L to L+1.
 func base_cost(L: int) -> int:
@@ -379,13 +454,36 @@ func base_cost(L: int) -> int:
 	var t: Array = PROG["base_cost"]
 	if L <= t.size():
 		return int(t[L - 1])
-	return int(round(float(PROG["base_after10"]["start"]) * pow(float(PROG["base_after10"]["growth"]), L - t.size())))
+	# past Base 10 the costs come from the pacing plan (tools/gen_progression.py writes the table)
+	var after: Array = PROG["base_table"]
+	return int(after[clampi(L - t.size() - 1, 0, after.size() - 1)])
+
+## What an even-level foe pays: a small steady sum to Base 10, then rising faster so that late levels are still earned by fighting.
+func kill_xp(lv: int, greater: bool = false) -> int:
+	_load_prog()
+	var r: Dictionary = PROG["mob_xp"]
+	var over: int = maxi(0, lv - int(r.get("quad_from", 10)))
+	var n: int = int(r.base) + int(r.per_level) * lv + over * over / int(r.get("quad_div", 4))
+	return n * (int(r.greater_mult) if greater else 1)
+
+## Field foes pay by how they compare with the pilgrim: full within a few levels, a little more above,
+## less below, and never nothing.
+func gap_mult(mob_lv: int, my_lv: int) -> float:
+	_load_prog()
+	var g: Dictionary = PROG["mob_xp"]["gap"]
+	var diff := mob_lv - my_lv
+	if diff > int(g.even):
+		return minf(float(g.above_cap), 1.0 + float(g.above_step) * (diff - int(g.even)))
+	if diff < -int(g.even):
+		return maxf(float(g.below_floor), 1.0 - float(g.below_step) * (-diff - int(g.even)))
+	return 1.0
 
 func job_cost(L: int) -> int:
 	_load_prog()
 	var t: Array = PROG["job_cost"]
-	if job_id != PILGRIM:   # first job: 220 x 1.10^(JL-9), from the design doc
-		return int(round(float(PROG["job_after10"]["start"]) * pow(float(PROG["job_after10"]["growth"]), L - t.size())))
+	if job_id != PILGRIM:   # the first job levels beside the Base levels, on its own plan
+		var first: Array = PROG["job_first"]
+		return int(first[clampi(L - 1, 0, first.size() - 1)])
 	if L <= t.size():
 		return int(t[L - 1])
 	return int(round(float(PROG["job_after10"]["start"]) * pow(float(PROG["job_after10"]["growth"]), L - t.size())))
@@ -402,6 +500,8 @@ func add_xp(amount: int, job_amount: int = -1, region: String = "", src: String 
 	if job_amount < 0:
 		job_amount = int(amount * 0.4)
 	xp += amount; jxp += job_amount
+	if not ledger.has(src):
+		ledger[src] = [0, 0]
 	ledger[src][0] += amount; ledger[src][1] += job_amount
 	if src == "quest":
 		var a: Array = act_xp.get(cur_act, [0, 0])
@@ -492,14 +592,14 @@ func lords_day() -> bool:
 const SAVED := ["pname", "hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "manna", "bag", "weary", "burden", "kos", "snaps",
 	"stat", "stat_pts", "skill_lv", "skill_pts", "guide", "tips_seen", "minor", "marks", "secrets", "house_rested",
 	"job_id", "armor", "flags", "map_state", "cur_map", "cur_at", "visited", "last_town", "milestones", "lairs", "lamb_name", "ledger", "act_xp", "cur_act",
-	"gear", "gear_uid", "equipped", "storage", "denarii", "stones", "fruit_stone", "bestiary", "daily"]
+	"gear", "gear_uid", "equipped", "storage", "denarii", "stones", "fruit_stone", "bestiary", "daily", "gleanings", "weekly"]
 const SAVED_INTS := ["hair_style", "hair_col", "robe_col", "lvl", "job", "xp", "jxp", "kos", "snaps", "stat_pts", "skill_pts", "marks", "gear_uid", "denarii"]
 
 func save_path(i: int = -1) -> String:
 	return SAVE_FILE % (slot if i < 0 else i)
 
 func has_save(i: int = -1) -> bool:
-	return FileAccess.file_exists(save_path(i))
+	return FileAccess.file_exists(save_path(i)) or FileAccess.file_exists(save_path(i) + ".bak")
 
 func any_save() -> bool:
 	for i in SAVE_SLOTS:
@@ -509,25 +609,57 @@ func any_save() -> bool:
 
 ## One line for the title screen's slot list; "" for an empty slot.
 func slot_summary(i: int) -> String:
-	var f := FileAccess.open(save_path(i), FileAccess.READ)
-	var d0: Variant = JSON.parse_string(f.get_as_text()) if f else null
+	var d0: Variant = _read_save(i)
 	if not (d0 is Dictionary):
 		return ""
 	var job_label: String = "Pilgrim" if d0.get("job_id", PILGRIM) == PILGRIM else String(JOBS[d0.job_id].name)
 	return "%s · %s · Base %d · %s · %d min" % [d0.get("pname", "Pilgrim"), job_label, int(d0.get("lvl", 1)), String(data("maps/" + String(d0.get("cur_map", "eden"))).name), int(d0.get("played_ms", 0)) / 60000]
 
+signal saved                     # the journey was written to its save file
+
+var last_saved_unix := 0.0
+
+## Writes the journey to its save file (user://save_<slot>.json). The file is written whole beside
+## the old one and then swapped in, and the old one is kept as .bak, so a save cut short by the app
+## closing cannot leave a broken file.
 func save_game() -> void:
-	var out := {"version": SAVE_VERSION, "played_ms": played_ms + Time.get_ticks_msec() - start_ms, "lords_day_mode": lords_day()}
+	var out := {"version": SAVE_VERSION, "played_ms": played_ms + Time.get_ticks_msec() - start_ms, "lords_day_mode": lords_day(),
+		"saved_at": Time.get_datetime_string_from_system(false, true), "game_version": String(ProjectSettings.get_setting("application/config/version", ""))}
 	for k in SAVED:
 		out[k] = get(k)
-	var f := FileAccess.open(save_path(), FileAccess.WRITE)
-	if f:
-		f.store_string(JSON.stringify(out))
+	var path := save_path()
+	var f := FileAccess.open(path + ".tmp", FileAccess.WRITE)
+	if f == null:
+		return
+	f.store_string(JSON.stringify(out)); f.close()
+	var dir := DirAccess.open("user://")
+	if dir == null:
+		return
+	if dir.file_exists(path.get_file()):
+		dir.rename(path.get_file(), path.get_file() + ".bak")
+	dir.rename(path.get_file() + ".tmp", path.get_file())
+	last_saved_unix = Time.get_unix_time_from_system()
+	saved.emit()
+
+## The save file's text, or "" when neither it nor its backup can be read.
+func _read_save(i: int = -1) -> Variant:
+	for path in [save_path(i), save_path(i) + ".bak"]:
+		var f := FileAccess.open(path, FileAccess.READ)
+		var d0: Variant = JSON.parse_string(f.get_as_text()) if f else null
+		if d0 is Dictionary:
+			return d0
+	return null
+
+## The app is going to the background or closing: write the journey down first.
+func _notification(what: int) -> void:
+	if what in [NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_WM_GO_BACK_REQUEST, NOTIFICATION_APPLICATION_FOCUS_OUT]:
+		if is_inside_tree():
+			for n in get_tree().get_nodes_in_group("world"):
+				n.autosave()
 
 ## Returns false when there is no usable save (the title then offers only a new game).
 func load_game() -> bool:
-	var f := FileAccess.open(save_path(), FileAccess.READ)
-	var d0: Variant = JSON.parse_string(f.get_as_text()) if f else null
+	var d0: Variant = _read_save()
 	if not (d0 is Dictionary) or int(d0.get("version", 0)) != SAVE_VERSION:
 		return false
 	reset()
@@ -538,6 +670,9 @@ func load_game() -> bool:
 	for k in skill_lv.keys(): skill_lv[k] = int(skill_lv[k])
 	for k in bag.keys(): bag[k] = int(bag[k])
 	for k in equipped.keys(): equipped[k] = int(equipped[k])
+	for src in ["quest", "mob", "board"]:
+		if not ledger.has(src):
+			ledger[src] = [0, 0]
 	for it in gear + storage:
 		for k in ["uid", "rarity", "plus"]: it[k] = int(it[k])
 	played_ms = int(d0.get("played_ms", 0)); start_ms = Time.get_ticks_msec()
@@ -574,8 +709,9 @@ func _world_state(old_save: bool) -> void:
 			flags["done_" + String(m3)] = true
 
 func delete_save() -> void:
-	if has_save():
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path()))
+	for path in [save_path(), save_path() + ".bak", save_path() + ".tmp"]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 func minutes_played() -> int:
 	return maxi(1, int((played_ms + Time.get_ticks_msec() - start_ms) / 60000.0))

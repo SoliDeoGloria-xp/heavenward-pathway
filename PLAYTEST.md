@@ -91,3 +91,13 @@ Play on a phone in landscape. Note the time at each ★.
 - [ ] In a danger zone, step on the bad ground, go down the stairs, wake the boss. Fall on purpose: you should wake in the last town, weary, with no XP lost.
 - [ ] Note every new map that looks empty, and every prop that blocks a road or hides a portal. These maps are plain kit-built placeholders.
 - [ ] Theology review: the names and lines listed under "Awaiting theological review" in DECISIONS.md.
+
+## Added in 0.6.0 phase 3: levelling, Gleanings and the save file
+
+- [ ] **Save file.** Hunt in a field for a minute, then swipe the app away without using any menu. Open it and press Continue: are you on the same spot with the same XP? Try again by pressing Home, waiting, and coming back.
+- [ ] More → Settings: does it show the slot and "last saved"? Does "Save now" answer at once?
+- [ ] Take a Gleaning at a town board, overcome 20 foes in that field, receive it. Is it clear where to hand it in? Take it again.
+- [ ] After the Calling, time one level between Base 10 and 13 in a field at your level. The plan says 12 to 18 minutes. Faster or slower, and by how much?
+- [ ] Hunt foes five levels below you and five above. Does the difference in XP feel fair?
+- [ ] Does the goals board read as something that waits for you, not something you can miss?
+

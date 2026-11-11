@@ -394,6 +394,15 @@ def main() -> int:
     for rid, r in regions.items():
         check_name(f"world region {rid}", r.get("name", ""))
 
+    # ---- the XP tables past Base 10 must be the ones the pacing plan gives (tools/gen_progression.py)
+    sys.path.insert(0, str(ROOT / "tools"))
+    import gen_progression
+    plan_base, plan_job = gen_progression.build(prog)
+    if prog.get("base_table") != plan_base or prog.get("job_first") != plan_job:
+        err("progression: base_table / job_first do not match the pacing plan; run tools/gen_progression.py")
+    if len(plan_base) != prog.get("max_base", 99) - 10 or any(b <= a for a, b in zip(plan_base, plan_base[1:])):
+        err("progression: base_table must hold one rising cost for each level from 10 to max_base - 1")
+
     # ---- budgets
     total = [0, 0]
     for a in acts.get("order", []):

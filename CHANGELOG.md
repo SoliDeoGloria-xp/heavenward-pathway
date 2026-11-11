@@ -28,6 +28,15 @@ Built in phases from `WORLD_BUILD_PROMPT.md`. The version number and versionCode
 - `tools/gen_fields.py` writes these maps from short specs; the validator checks what each kind of place must have.
 - Fixed: effects and timers that outlived a map change no longer raise script errors.
 
+### Phase 3: progression past Base 10, Gleanings, and a proper save file
+
+- **The XP curve past Base 10 is rebuilt** from a pacing plan (minutes per level) instead of 800 x 1.12 per level. Level 99 is reachable: about 139 hours from the Calling, no level over 3 hours. The maths is in DECISIONS.md; `tools/gen_progression.py` writes the tables and the validator fails if they drift from the plan.
+- **Foes pay by level** (rising faster past 10), and **field foes pay by the gap** between their level and yours: a little more above you, less below, never nothing.
+- **The first job has its own table** (about 29 hours for Job 1 to 50).
+- **Gleanings** at every town board: overcome 20 foes in a field, receive XP and Denarii. They never expire and can be taken again at once. A **goals board** sits below them and waits as long as it must.
+- **The save file.** The game now saves every 30 seconds, and when the app is closed or put in the background, as well as at each map, objective and Gleaning. Continue returns you to the very spot. Each save keeps a backup, and Settings has a **Save now** button showing the slot and when it was last saved.
+- **Autotest**: a balance report (hours per band against the plan, 25% tolerance, a field for every level to 26), a Gleaning taken and received, and the save file read back after a simulated app close and after being broken on purpose.
+
 ## 0.5.0 (versionCode 6) — one look
 
 - **An art bible, enforced by tools.** 32 colours, a one-pixel ink outline, light from the upper left, one shadow, 48 sprite pixels per world unit. See DECISIONS.md.

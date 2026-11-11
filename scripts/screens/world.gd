@@ -77,6 +77,7 @@ func _ready() -> void:
 	if not map_id in G.visited:
 		G.visited.append(map_id)
 	kind = String(Portals.node(map_id).get("kind", "story"))
+	add_to_group("world")
 	if kind == "town":
 		G.last_town = map_id
 		if not map_id in G.milestones:
@@ -306,6 +307,22 @@ func ent(id: String) -> Dictionary:
 			return e
 	return {}
 
+# ------------------------------------------------------------------ the save file
+## The journey is written down when a map is entered, when an objective is done, every AUTOSAVE_S
+## while walking, and when the app goes to the background or closes. Continue returns the pilgrim
+## to the very spot.
+const AUTOSAVE_S := 30.0
+var _next_autosave := AUTOSAVE_S
+
+func autosave() -> void:
+	if ending:
+		return
+	# keep the spot only where the map itself is kept (Eden and the side maps begin again from their start)
+	if def.get("resumable", false) and not (combat.dead or cinema or quests.busy):
+		G.cur_at = [snappedf(player.position.x, 0.01), snappedf(player.position.z, 0.01)]
+	G.save_game()
+	_next_autosave = t + AUTOSAVE_S
+
 ## A gate the story has opened stops being a wall (the Wicket Gate, once Goodwill has let the pilgrim in).
 var gates: Array = []
 func open_gates() -> void:
@@ -440,6 +457,8 @@ func _physics_process(delta: float) -> void:
 	_arrive()
 	quests.tick(delta)
 	portals.tick()
+	if t >= _next_autosave:
+		autosave()
 	_auto_battle()
 	if is_combat():
 		combat._mob_tick(delta)
